@@ -117,7 +117,7 @@ In other words, the object, or value, doesn't have a name; it's actually the nam
 To further clarify this distinction, I'll draw diagrams like this:  
 
 ```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/name-value/binding-1.png")
+#knitr::include_graphics("diagrams/name-value/binding-1.png")
 ```
 
 The name, `x`, is drawn with a rounded rectangle. It has an arrow that points to (or binds or references) the value, the vector `c(1, 2, 3)`. The arrow points in opposite direction to the assignment arrow: `<-` creates a binding from the name on the left-hand side to the object on the right-hand side.
@@ -128,7 +128,7 @@ Thus, you can think of a name as a reference to a value. For example, if you run
 y <- x
 ```
 ```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/name-value/binding-2.png")
+#knitr::include_graphics("diagrams/name-value/binding-2.png")
 ```
 
 You might have noticed that the value `c(1, 2, 3)` has a label: `0x74b`. While the vector doesn't have a name, I'll occasionally need to refer to an object independent of its bindings. To make that possible, I'll label values with a unique identifier. These identifiers have a special form that looks like the object's memory "address", i.e. the location in memory where the object is stored. But because the actual memory addresses changes every time the code is run, we use these identifiers instead.
@@ -152,10 +152,10 @@ It can take some time to get your head around the distinction between names and 
 R has strict rules about what constitutes a valid name. A __syntactic__ name must consist of letters[^letters], digits, `.` and `_` but can't begin with `_` or a digit. Additionally, you can't use any of the __reserved words__ like `TRUE`, `NULL`, `if`, and `function` (see the complete list in `?Reserved`). A name that doesn't follow these rules is a __non-syntactic__ name; if you try to use them, you'll get an error:
 
 ```{r, eval = FALSE}
-_abc <- 1
+#_abc <- 1
 #> Error: unexpected input in "_"
 
-if <- 10
+#if <- 10
 #> Error: unexpected assignment in "if <-"
 ```
 
@@ -189,8 +189,15 @@ You _can_ also create non-syntactic bindings using single or double quotes (e.g.
     d <- 1:10
     ```
 
-1.  The following code accesses the mean function in multiple ways. Do they all 
-    point to the same underlying function object? Verify this with 
+```{r}
+obj_addr(a)
+obj_addr(b)
+obj_addr(c)
+obj_addr(d)
+```
+
+
+1.  The following code accesses the mean function in multiple ways. Do they all point to the same underlying function object? Verify this with 
     `lobstr::obj_addr()`.
     
     ```{r, eval = FALSE}
@@ -200,6 +207,15 @@ You _can_ also create non-syntactic bindings using single or double quotes (e.g.
     evalq(mean)
     match.fun("mean")
     ```
+
+```{r}
+obj_addr(mean)
+obj_addr(base::mean)
+obj_addr(get("mean"))
+obj_addr(evalq(mean))
+obj_addr(match.fun("mean"))
+```
+
     
 1.  By default, base R data import functions, like `read.csv()`, will 
     automatically convert non-syntactic names to syntactic ones. Why might 
@@ -229,7 +245,7 @@ x
 Modifying `y` clearly didn't modify `x`. So what happened to the shared binding? While the value associated with `y` changed, the original object did not. Instead, R created a new object, `0xcd2`, a copy of `0x74b` with one value changed, then rebound `y` to that object.
 
 ```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/name-value/binding-3.png")
+#knitr::include_graphics("diagrams/name-value/binding-3.png")
 ```
 
 This behaviour is called __copy-on-modify__. Understanding it will radically improve your intuition about the performance of R code. A related way to describe this behaviour is to say that R objects are unchangeable, or __immutable__. However, I'll generally avoid that term because there are a couple of important exceptions to copy-on-modify that you'll learn about in Section \@ref(modify-in-place). 
