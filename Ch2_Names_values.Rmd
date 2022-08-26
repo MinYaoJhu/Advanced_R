@@ -117,7 +117,7 @@ In other words, the object, or value, doesn't have a name; it's actually the nam
 To further clarify this distinction, I'll draw diagrams like this:  
 
 ```{r, echo = FALSE, out.width = NULL}
-#knitr::include_graphics("diagrams/name-value/binding-1.png")
+knitr::include_graphics("diagrams/name-value/binding-1.png")
 ```
 
 The name, `x`, is drawn with a rounded rectangle. It has an arrow that points to (or binds or references) the value, the vector `c(1, 2, 3)`. The arrow points in opposite direction to the assignment arrow: `<-` creates a binding from the name on the left-hand side to the object on the right-hand side.
@@ -128,7 +128,7 @@ Thus, you can think of a name as a reference to a value. For example, if you run
 y <- x
 ```
 ```{r, echo = FALSE, out.width = NULL}
-#knitr::include_graphics("diagrams/name-value/binding-2.png")
+knitr::include_graphics("diagrams/name-value/binding-2.png")
 ```
 
 You might have noticed that the value `c(1, 2, 3)` has a label: `0x74b`. While the vector doesn't have a name, I'll occasionally need to refer to an object independent of its bindings. To make that possible, I'll label values with a unique identifier. These identifiers have a special form that looks like the object's memory "address", i.e. the location in memory where the object is stored. But because the actual memory addresses changes every time the code is run, we use these identifiers instead.
@@ -245,7 +245,7 @@ x
 Modifying `y` clearly didn't modify `x`. So what happened to the shared binding? While the value associated with `y` changed, the original object did not. Instead, R created a new object, `0xcd2`, a copy of `0x74b` with one value changed, then rebound `y` to that object.
 
 ```{r, echo = FALSE, out.width = NULL}
-#knitr::include_graphics("diagrams/name-value/binding-3.png")
+knitr::include_graphics("diagrams/name-value/binding-3.png")
 ```
 
 This behaviour is called __copy-on-modify__. Understanding it will radically improve your intuition about the performance of R code. A related way to describe this behaviour is to say that R objects are unchangeable, or __immutable__. However, I'll generally avoid that term because there are a couple of important exceptions to copy-on-modify that you'll learn about in Section \@ref(modify-in-place). 
@@ -298,6 +298,21 @@ z <- f(x)
 
 untracemem(x)
 ```
+
+```{r}
+f <- function(a) {
+  a+1
+}
+
+x <- c(1, 2, 3)
+cat(tracemem(x), "\n")
+
+z <- f(x)
+# there's no copy here!
+
+untracemem(x)
+```
+
 
 While `f()` is running, the `a` inside the function points to the same value as the `x` does outside the function:
 
@@ -417,6 +432,11 @@ This has a profound impact on the amount of memory a character vector uses but i
 ### Exercises
 
 1.  Why is `tracemem(1:10)` not useful?
+
+```{r}
+tracemem(1:10)
+```
+
 
 1.  Explain why `tracemem()` shows two copies when you run this code.
     Hint: carefully look at the difference between this code and the code 
