@@ -25,31 +25,44 @@ Answer the following questions to see if you can safely skip this chapter. You c
     that contains the sum of `1` and `2`? You may only use `$`, not `[[`.
     What makes `1`, `2`, and `3` challenging as variable names?
 
-    ```{r}
-    df <- data.frame(runif(3), runif(3))
-    names(df) <- c(1, 2)
-    ```
-    
 ```{r}
-df$"1"
-df$"2"
-df$"1" + df$"2"
+df <- data.frame(runif(3), runif(3))
+names(df) <- c(1, 2)
+```
+
+> Before reading:
+
+```{r}
 df$"3" <- df$"1" + df$"2"
-df
+str(df)
+```
+
+> After reading:
+
+```{r}
+df$`3` <- df$`1` + df$`2`
+str(df)
 ```
 
 > Using numbers for column name is confusing.   
 
-1.  In the following code, how much memory does `y` occupy?
+2.  In the following code, how much memory does `y` occupy?
    
     ```{r}
     x <- runif(1e6)
     y <- list(x, x, x)
     ```
 
-> 24 MB.
+> Before reading: 24 MB. Based on the number shows in the environment.
 
-1.  On which line does `a` get copied in the following example?
+> After reading: 8 MB.
+
+```{r}
+lobstr::obj_size(y)
+```
+> The number in the environment probably from utils::object.size().
+
+3.  On which line does `a` get copied in the following example?
 
     ```{r}
     a <- c(1, 5, 3, 2)
@@ -57,7 +70,9 @@ df
     b[[1]] <- 10
     ```
 
-> on the line : b <- a
+> Before reading: `a` get copied on the line : `b <- a`
+
+> After reading: `a` get copied on the line : `b[[1]] <- 10`
 
 ### Outline {-}
 
@@ -196,8 +211,9 @@ obj_addr(c)
 obj_addr(d)
 ```
 
+> `a`, `b`, and `c` all point to the same object. `d` is another object.
 
-1.  The following code accesses the mean function in multiple ways. Do they all point to the same underlying function object? Verify this with 
+2.  The following code accesses the mean function in multiple ways. Do they all point to the same underlying function object? Verify this with 
     `lobstr::obj_addr()`.
     
     ```{r, eval = FALSE}
@@ -216,16 +232,22 @@ obj_addr(evalq(mean))
 obj_addr(match.fun("mean"))
 ```
 
+> Yes. They all point to the same underlying function object.
     
-1.  By default, base R data import functions, like `read.csv()`, will 
+3.  By default, base R data import functions, like `read.csv()`, will 
     automatically convert non-syntactic names to syntactic ones. Why might 
     this be problematic? What option allows you to suppress this behaviour?
-    
-1.  What rules does `make.names()` use to convert non-syntactic names into
-    syntactic ones?
 
-1.  I slightly simplified the rules that govern syntactic names. Why is `.123e1`
-    not a syntactic name? Read `?make.names` for the full details.
+>
+
+4.  What rules does `make.names()` use to convert non-syntactic names into
+    syntactic ones?
+    
+>
+
+5.  I slightly simplified the rules that govern syntactic names. Why is `.123e1` not a syntactic name? Read `?make.names` for the full details.
+
+> 
 
 ## Copy-on-modify
 \index{copy-on-modify}
@@ -435,21 +457,49 @@ This has a profound impact on the amount of memory a character vector uses but i
 
 ```{r}
 tracemem(1:10)
+tracemem(1:10)
 ```
 
+> This `tracemem()` function marks an object so that a message is printed whenever the internal code copies the object. When we enter `1:10`, it creates a new object. Therefore, the address is different every time, but it's not a copy of the original one so that no new message, like tracemem [0x7f80c0e0ffc8 -> 0x7f80c4427f40], will show up. 
 
-1.  Explain why `tracemem()` shows two copies when you run this code.
+2.  Explain why `tracemem()` shows two copies when you run this code.
     Hint: carefully look at the difference between this code and the code 
     shown earlier in the section.
      
     ```{r, results = FALSE}
     x <- c(1L, 2L, 3L)
     tracemem(x)
-    
+    str(x)
     x[[3]] <- 4
+    str(x)
     ```
 
-1.  Sketch out the relationship between the following objects:
+```{r}
+    x <- c(1L, 2L, 3L)
+    tracemem(x)
+    str(x)
+    x[[3]] <- 4L
+    str(x)
+```
+```{r}
+    x <- c(1, 2, 3)
+    tracemem(x)
+    str(x)
+    x[[3]] <- 4
+    str(x)
+```
+
+```{r}
+    x <- c(1, 2, 3)
+    tracemem(x)
+    str(x)
+    x[[3]] <- 4L
+    str(x)
+```
+
+> It seems like `x <- c(1L, 2L, 3L)` creates a vector with integers. Therefore, to add a `4` number, R will need to make a copy of x as a numeric vector and then make another copy to make changes on `x[[3]]`.
+
+3.  Sketch out the relationship between the following objects:
 
     ```{r}
     a <- 1:10
@@ -457,14 +507,32 @@ tracemem(1:10)
     c <- list(b, a, 1:10)
     ```
 
-1.  What happens when you run this code?
+```{r}
+ref(a, b, c)
+```
+
+```{r, echo = FALSE, out.width = NULL}
+knitr::include_graphics("diagrams/name-value/R_advance_2.3.6_Q3.png")
+```
+
+4.  What happens when you run this code?
 
     ```{r}
     x <- list(1:10)
+    tracemem(x)
     x[[2]] <- x
+    untracemem(x)
     ```
+
+```{r}
+ref(x)
+```
     
     Draw a picture.
+
+```{r, echo = FALSE, out.width = NULL}
+knitr::include_graphics("diagrams/name-value/R_advance_2.3.6_Q4.png")
+```
 
 ## Object size
 \indexc{object.size} 
@@ -534,31 +602,83 @@ obj_size(1:1e9)
     obj_size(y)
     ```
 
-1.  Take the following list. Why is its size somewhat misleading?
+> It's because the `utils::object.size()` function is different from `lobstr::obj_size()`. The `utils::object.size()` function does not correctly account for shared references and will return too large sizes.
+
+2.  Take the following list. Why is its size somewhat misleading?
 
     ```{r}
     funs <- list(mean, sd, var)
     obj_size(funs)
     ```
 
-1.  Predict the output of the following code:
+```{r}
+    obj_size(list(mean, sd, var))
+
+    obj_size(mean)
+    obj_size(sd)
+    obj_size(var)
+    
+    obj_size(mean)+obj_size(sd)+obj_size(var)
+```
+
+> The size of `obj_size(list(mean, sd, var))` is smaller than `obj_size(mean)+obj_size(sd)+obj_size(var)`. The definition of these functions might share the same reference points in base R. Therefore, the list size is smaller than adding them up individually. For example, sd(x) is equivalent to sqrt(var(x)).
+
+```{r}
+    obj_size(mean)+obj_size(sqrt)+obj_size(var)
+```
+
+3.  Predict the output of the following code:
 
     ```{r, results = FALSE}
     a <- runif(1e6)
     obj_size(a)
-    
+    ```
+
+```{r}
     b <- list(a, a)
     obj_size(b)
+```
+
+> 8.00 MB. Because `b` is composed of `a`, the size of `b` is the same as `a`.
+
+```{r}
     obj_size(a, b)
-    
-    b[[1]][[1]] <- 10
-    obj_size(b)
+```
+
+> 8.00 MB. Because there are shared values, the combined size of `a` and `b` is the same as the size of `a`.
+
+```{r}
+str(b)    
+b[[1]][[1]] <- 10
+str(b)
+obj_size(b)
+```
+
+> 16.00 MB. Because one of the vectors in `b` has been changed, and it's different from `a`.
+
+```{r}
     obj_size(a, b)
-    
-    b[[2]][[1]] <- 10
-    obj_size(b)
-    obj_size(a, b)
-    ```
+```
+
+> 16.00 MB. Because there are shared values, the combined size of `a` and `b` is the same as the size of `b`.
+
+```{r}
+str(b) 
+b[[2]][[1]] <- 10
+str(b) 
+
+obj_size(b)
+```
+
+> 16.00 MB. Since we modified the vectors in `b` separately, there are two separate 8 MB vectors in `b`. 
+
+```{r}
+obj_size(a)
+obj_size(b)
+obj_size(a, b)
+```
+
+> 24.00 MB. Since `a` and `b` don't have shared reference points now, `obj_size(a, b)` is the same as `obj_size(a)+obj_size(b)`.
 
 ## Modify-in-place
 \index{modify-in-place}
@@ -576,6 +696,7 @@ If an object has a single name bound to it, R will modify it in place:
 
 ```{r}
 v <- c(1, 2, 3)
+tracemem(v)
 ```
 
 ```{r, echo = FALSE, out.width = NULL}
@@ -614,12 +735,22 @@ Let's explore the subtleties with a case study using for loops. For loops have a
 
 ```{r, cache = TRUE}
 x <- data.frame(matrix(runif(5 * 1e4), ncol = 5))
-medians <- vapply(x, median, numeric(1))
+str(x)
+```
 
+```{r}
+medians <- vapply(x, median, numeric(1))
+str(medians)
+```
+
+
+```{r}
 for (i in seq_along(medians)) {
   x[[i]] <- x[[i]] - medians[[i]]
 }
 ```
+
+
 
 This loop is surprisingly slow because each iteration of the loop copies the data frame. You can see this by using `tracemem()`:
 
@@ -659,12 +790,16 @@ We can reduce the number of copies by using a list instead of a data frame. Modi
 y <- as.list(x)
 cat(tracemem(y), "\n")
 #> <0x7f80c5c3de20>
-  
+```
+
+```{r}
 for (i in 1:5) {
   y[[i]] <- y[[i]] - medians[[i]]
 }
 #> tracemem[0x7f80c5c3de20 -> 0x7f80c48de210]: 
 ```
+
+
 
 While it's not hard to determine when a copy is made, it is hard to prevent it. If you find yourself resorting to exotic tricks to avoid copies, it may be time to rewrite your function in C++, as described in Chapter \@ref(rcpp).
 
@@ -717,14 +852,64 @@ This is a unique property of environments!
 
     ```{r}
     x <- list()
+    cat(tracemem(x), "\n")
+
     x[[1]] <- x
+
+    ref(x)
     ```
 
-1.  Wrap the two methods for subtracting medians into two functions, then
-    use the 'bench' package [@bench] to carefully compare their speeds. How does
-    performance change as the number of columns increase?
+> Because R uses copy-on-modify on `x[[1]] <- x`, the new `x` is a new list with one object, which is an empty list.
 
-1.  What happens if you attempt to use `tracemem()` on an environment?
+2.  Wrap the two methods for subtracting medians into two functions, then use the 'bench' package [@bench] to carefully compare their speeds. How does performance change as the number of columns increase?
+
+```{r}
+nc = 1000
+x <- data.frame(matrix(runif(nc * 1e4), ncol = nc))
+medians <- vapply(x, median, numeric(1))
+```
+
+
+```{r}
+normalization_slow <- function(x, medians) {
+  for (i in seq_along(medians)) {
+    x[[i]] <- x[[i]] - medians[[i]]
+  }
+}
+```
+
+
+```{r}
+normalization_fast <- function(x, medians) {
+  y <- as.list(x)
+  for (i in 1:5) {
+    y[[i]] <- y[[i]] - medians[[i]]
+  }
+}
+```
+
+
+```{r}
+library(bench)
+
+bench::mark(normalization_slow(x, medians))
+```
+
+```{r}
+bench::mark(normalization_fast(x, medians))
+```
+
+> With 1000 columns, it's much faster using a list! It improves from 387ms to 158µs.
+
+3.  What happens if you attempt to use `tracemem()` on an environment?
+
+```{r}
+# tracemem(e1)
+# Error in tracemem(e1) : 
+#  'tracemem' is not useful for promise and environment objects
+```
+
+> It shows an error message: 'tracemem' is not useful for promise and environment objects.
 
 ## Unbinding and the garbage collector {#gc}
 \index{garbage collector} 
