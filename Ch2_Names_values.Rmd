@@ -291,6 +291,8 @@ From then on, whenever that object is copied, `tracemem()` will print a message 
 
 ```{r trace2, dependson = "trace1", eval = FALSE}
 y <- x
+
+tracemem(y)
 y[[3]] <- 4L
 #> tracemem[0x7f80c0e0ffc8 -> 0x7f80c4427f40]: 
 ```
@@ -298,6 +300,8 @@ y[[3]] <- 4L
 If you modify `y` again, it won't get copied. That's because the new object now only has a single name bound to it, so R applies modify-in-place optimisation. We'll come back to this in Section \@ref(modify-in-place).
 
 ```{r trace3, dependson = "trace2"}
+tracemem(y)
+
 y[[3]] <- 5L
 
 untracemem(x)
@@ -521,8 +525,17 @@ knitr::include_graphics("diagrams/name-value/R_advance_2.3.6_Q3.png")
 
     ```{r}
     x <- list(1:10)
+    x
     tracemem(x)
+    obj_addr(x)
+    obj_addrs(x)
+    
     x[[2]] <- x
+    x
+    x[[2]]
+    str(x)
+    obj_addr(x)
+    obj_addrs(x)
     untracemem(x)
     ```
 
@@ -624,6 +637,9 @@ obj_size(1:1e9)
 ```
 
 > The size of `obj_size(list(mean, sd, var))` is smaller than `obj_size(mean)+obj_size(sd)+obj_size(var)`. The definition of these functions might share the same reference points in base R. Therefore, the list size is smaller than adding them up individually. For example, sd(x) is equivalent to sqrt(var(x)).
+
+> Because the mean function is recycled.
+
 
 ```{r}
     obj_size(mean)+obj_size(sqrt)+obj_size(var)
