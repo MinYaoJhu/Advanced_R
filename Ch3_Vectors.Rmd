@@ -7,6 +7,11 @@ output:
     keep_md: yes
 ---
 
+```{r}
+library(tidyverse)
+```
+
+
 # Vectors {#vectors-chap}
 
 ## Introduction
@@ -244,14 +249,14 @@ as.integer(c("1", "1.5", "a"))
    `?complex`.)
 
 ```{r}
-?raw
+#?raw
 xx <- raw(2)
 xx
 str(xx)
 ```
 
 ```{r}
-?complex
+#?complex
 z <- complex(length.out = 1, real = 2, imaginary = 3, modulus = 4, argument = 5)
 z
 str(z)
@@ -296,7 +301,27 @@ str(z)
 1. Why is the default missing value, `NA`, a logical vector? What's special
    about logical vectors? (Hint: think about `c(FALSE, NA_character_)`.)
 
+> Since the fixed order for coercing is character → double → integer → logical, having the default missing value, NA, a logical vector will not change the types of other values in the same vector.
+
 1. Precisely what do `is.atomic()`, `is.numeric()`, and `is.vector()` test for?
+
+```{r}
+#?is.atomic()
+```
+
+> is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise.
+
+```{r}
+#?is.numeric()
+```
+
+> is.numeric only return true if the base type of the class is double or integer and values can reasonably be regarded as numeric (e.g., arithmetic on them makes sense, and comparison should be done via the base type).
+
+```{r}
+#?is.vector()
+```
+
+> is.vector(x) returns TRUE if x is a vector of the specified mode having no attributes other than names.
 
 ## Attributes {#attributes}
 \index{attributes}
@@ -431,8 +456,55 @@ str(array(1:3, 3))         # "array" vector
 1.  How is `setNames()` implemented? How is `unname()` implemented?
     Read the source code.
 
+```{r}
+?setNames()
+?unname()
+```
+
+> here is how is setNames() implemented:
+
+```{r}
+getAnywhere(setNames)
+```
+
+```{r}
+x <- setNames(1:3, c("a", "b", "c"))
+str(x)
+```
+
+> data is the first argument, name vector is the second argument.
+
+> here is how is unname() implemented:
+
+```{r}
+getAnywhere(unname)
+```
+```{r}
+unname(x) %>% str()
+```
+
+> remove their name by setting them to NULL
+
 1.  What does `dim()` return when applied to a 1-dimensional vector?
     When might you use `NROW()` or `NCOL()`?
+    
+```{r}
+vector <- c(1:10)
+vector
+
+dim(vector)
+
+NROW(vector)
+NCOL(vector)
+nrow(vector)
+ncol(vector)
+
+#?NROW()
+```
+
+> dim() returns NULL when applied to a 1-dimensional vector.
+
+> nrow and ncol return the number of rows or columns present in x. NCOL and NROW do the same treating a vector as 1-column matrix, even a 0-length vector.
 
 1.  How would you describe the following three objects? What makes them
     different from `1:5`?
@@ -441,7 +513,22 @@ str(array(1:3, 3))         # "array" vector
     x1 <- array(1:5, c(1, 1, 5))
     x2 <- array(1:5, c(1, 5, 1))
     x3 <- array(1:5, c(5, 1, 1))
+    
+    str(x1)
+    str(x2)
+    str(x3)
+    str(1:5)
     ```
+
+```{r}
+attributes(x1)
+attributes(x2)
+attributes(x3)
+attributes(1:5)
+```
+
+> All of them are 3d array. x1 has five elements in the x-dimension, x2 has five elements in the y-dimension, and x3 has five elements in the z-dimension.
+> `1:5` doen't have dim attributes.
 
 1.  An early draft used this code to illustrate `structure()`:
 
@@ -452,6 +539,22 @@ str(array(1:3, 3))         # "array" vector
     But when you print that object you don't see the comment attribute.
     Why? Is the attribute missing, or is there something else special about
     it? (Hint: try using help.)
+    
+```{r}
+#?comment
+#?attributes() # These functions access an object's attributes. 
+#?attr() # Get or set specific attributes of an object.
+#?structure() # structure returns the given object with further attributes set.
+```
+
+> Contrary to other attributes, the comment is not printed (by print or print.default).
+
+> Note that some attributes (namely class, comment, dim, dimnames, names, row.names and tsp) are treated specially and have restrictions on the values which can be set. (Note that this is not true of levels which should be set for factors via the levels replacement function.)
+
+```{r}
+attributes(structure(1:5, comment = "my attribute"))
+```
+
 
 ## S3 atomic vectors
 \index{attributes!S3}
