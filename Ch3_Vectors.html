@@ -370,6 +370,15 @@ pre code {
 </div>
 
 
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <div id="vectors-chap" class="section level1">
 <h1>Vectors</h1>
 <div id="introduction" class="section level2">
@@ -630,14 +639,13 @@ warning and a missing value:</p>
 <li>How do you create raw and complex scalars? (See <code>?raw</code>
 and <code>?complex</code>.)</li>
 </ol>
-<pre class="r"><code>?raw</code></pre>
-<pre><code>## starting httpd help server ... done</code></pre>
-<pre class="r"><code>xx &lt;- raw(2)
+<pre class="r"><code>#?raw
+xx &lt;- raw(2)
 xx</code></pre>
 <pre><code>## [1] 00 00</code></pre>
 <pre class="r"><code>str(xx)</code></pre>
 <pre><code>##  raw [1:2] 00 00</code></pre>
-<pre class="r"><code>?complex
+<pre class="r"><code>#?complex
 z &lt;- complex(length.out = 1, real = 2, imaginary = 3, modulus = 4, argument = 5)
 z</code></pre>
 <pre><code>## [1] 1.134649-3.835697i</code></pre>
@@ -680,13 +688,36 @@ true? Why is <code>&quot;one&quot; &lt; 2</code> false?</li>
 FALSE.</p>
 </blockquote>
 <ol style="list-style-type: decimal">
-<li><p>Why is the default missing value, <code>NA</code>, a logical
-vector? What’s special about logical vectors? (Hint: think about
-<code>c(FALSE, NA_character_)</code>.)</p></li>
-<li><p>Precisely what do <code>is.atomic()</code>,
-<code>is.numeric()</code>, and <code>is.vector()</code> test
-for?</p></li>
+<li>Why is the default missing value, <code>NA</code>, a logical vector?
+What’s special about logical vectors? (Hint: think about
+<code>c(FALSE, NA_character_)</code>.)</li>
 </ol>
+<blockquote>
+<p>Since the fixed order for coercing is character → double → integer →
+logical, having the default missing value, NA, a logical vector will not
+change the types of other values in the same vector.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>Precisely what do <code>is.atomic()</code>,
+<code>is.numeric()</code>, and <code>is.vector()</code> test for?</li>
+</ol>
+<pre class="r"><code>#?is.atomic()</code></pre>
+<blockquote>
+<p>is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE
+otherwise.</p>
+</blockquote>
+<pre class="r"><code>#?is.numeric()</code></pre>
+<blockquote>
+<p>is.numeric only return true if the base type of the class is double
+or integer and values can reasonably be regarded as numeric (e.g.,
+arithmetic on them makes sense, and comparison should be done via the
+base type).</p>
+</blockquote>
+<pre class="r"><code>#?is.vector()</code></pre>
+<blockquote>
+<p>is.vector(x) returns TRUE if x is a vector of the specified mode
+having no attributes other than names.</p>
+</blockquote>
 </div>
 </div>
 <div id="attributes" class="section level2">
@@ -873,16 +904,121 @@ know they exist in case you get strange output from a function
 <div id="exercises-1" class="section level3">
 <h3>Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>How is <code>setNames()</code> implemented? How is
-<code>unname()</code> implemented? Read the source code.</p></li>
-<li><p>What does <code>dim()</code> return when applied to a
-1-dimensional vector? When might you use <code>NROW()</code> or
-<code>NCOL()</code>?</p></li>
+<li>How is <code>setNames()</code> implemented? How is
+<code>unname()</code> implemented? Read the source code.</li>
+</ol>
+<pre class="r"><code>#?setNames()
+#?unname()</code></pre>
+<blockquote>
+<p>here is how is setNames() implemented:</p>
+</blockquote>
+<pre class="r"><code>getAnywhere(setNames)</code></pre>
+<pre><code>## A single object matching &#39;setNames&#39; was found
+## It was found in the following places
+##   package:stats
+##   namespace:methods
+##   namespace:stats
+## with value
+## 
+## function (object = nm, nm) 
+## {
+##     names(object) &lt;- nm
+##     object
+## }
+## &lt;bytecode: 0x000001d5b09d9f08&gt;
+## &lt;environment: namespace:stats&gt;</code></pre>
+<pre class="r"><code>x &lt;- setNames(1:3, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
+str(x)</code></pre>
+<pre><code>##  Named int [1:3] 1 2 3
+##  - attr(*, &quot;names&quot;)= chr [1:3] &quot;a&quot; &quot;b&quot; &quot;c&quot;</code></pre>
+<blockquote>
+<p>data is the first argument, name vector is the second argument.</p>
+</blockquote>
+<blockquote>
+<p>here is how is unname() implemented:</p>
+</blockquote>
+<pre class="r"><code>getAnywhere(unname)</code></pre>
+<pre><code>## A single object matching &#39;unname&#39; was found
+## It was found in the following places
+##   package:base
+##   namespace:base
+## with value
+## 
+## function (obj, force = FALSE) 
+## {
+##     if (!is.null(names(obj))) 
+##         names(obj) &lt;- NULL
+##     if (!is.null(dimnames(obj)) &amp;&amp; (force || !is.data.frame(obj))) 
+##         dimnames(obj) &lt;- NULL
+##     obj
+## }
+## &lt;bytecode: 0x000001d5b0d7e5a0&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>unname(x) %&gt;% str()</code></pre>
+<pre><code>##  int [1:3] 1 2 3</code></pre>
+<blockquote>
+<p>remove their name by setting them to NULL</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>What does <code>dim()</code> return when applied to a 1-dimensional
+vector? When might you use <code>NROW()</code> or
+<code>NCOL()</code>?</li>
+</ol>
+<pre class="r"><code>vector &lt;- c(1:10)
+vector</code></pre>
+<pre><code>##  [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+<pre class="r"><code>dim(vector)</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>NROW(vector)</code></pre>
+<pre><code>## [1] 10</code></pre>
+<pre class="r"><code>NCOL(vector)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>nrow(vector)</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>ncol(vector)</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>#?NROW()</code></pre>
+<blockquote>
+<p>dim() returns NULL when applied to a 1-dimensional vector.</p>
+</blockquote>
+<blockquote>
+<p>nrow and ncol return the number of rows or columns present in x. NCOL
+and NROW do the same treating a vector as 1-column matrix, even a
+0-length vector.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>How would you describe the following three objects? What makes
 them different from <code>1:5</code>?</p>
 <pre class="r"><code>x1 &lt;- array(1:5, c(1, 1, 5))
 x2 &lt;- array(1:5, c(1, 5, 1))
-x3 &lt;- array(1:5, c(5, 1, 1))</code></pre></li>
+x3 &lt;- array(1:5, c(5, 1, 1))
+
+str(x1)</code></pre>
+<pre><code>##  int [1, 1, 1:5] 1 2 3 4 5</code></pre>
+<pre class="r"><code>str(x2)</code></pre>
+<pre><code>##  int [1, 1:5, 1] 1 2 3 4 5</code></pre>
+<pre class="r"><code>str(x3)</code></pre>
+<pre><code>##  int [1:5, 1, 1] 1 2 3 4 5</code></pre>
+<pre class="r"><code>str(1:5)</code></pre>
+<pre><code>##  int [1:5] 1 2 3 4 5</code></pre></li>
+</ol>
+<pre class="r"><code>attributes(x1)</code></pre>
+<pre><code>## $dim
+## [1] 1 1 5</code></pre>
+<pre class="r"><code>attributes(x2)</code></pre>
+<pre><code>## $dim
+## [1] 1 5 1</code></pre>
+<pre class="r"><code>attributes(x3)</code></pre>
+<pre><code>## $dim
+## [1] 5 1 1</code></pre>
+<pre class="r"><code>attributes(1:5)</code></pre>
+<pre><code>## NULL</code></pre>
+<blockquote>
+<p>All of them are 3d array. x1 has five elements in the x-dimension, x2
+has five elements in the y-dimension, and x3 has five elements in the
+z-dimension. <code>1:5</code> doen’t have dim attributes.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>An early draft used this code to illustrate
 <code>structure()</code>:</p>
 <pre class="r"><code>structure(1:5, comment = &quot;my attribute&quot;)</code></pre>
@@ -891,6 +1027,23 @@ x3 &lt;- array(1:5, c(5, 1, 1))</code></pre></li>
 Why? Is the attribute missing, or is there something else special about
 it? (Hint: try using help.)</p></li>
 </ol>
+<pre class="r"><code>#?comment
+#?attributes() # These functions access an object&#39;s attributes. 
+#?attr() # Get or set specific attributes of an object.
+#?structure() # structure returns the given object with further attributes set.</code></pre>
+<blockquote>
+<p>Contrary to other attributes, the comment is not printed (by print or
+print.default).</p>
+</blockquote>
+<blockquote>
+<p>Note that some attributes (namely class, comment, dim, dimnames,
+names, row.names and tsp) are treated specially and have restrictions on
+the values which can be set. (Note that this is not true of levels which
+should be set for factors via the levels replacement function.)</p>
+</blockquote>
+<pre class="r"><code>attributes(structure(1:5, comment = &quot;my attribute&quot;))</code></pre>
+<pre><code>## $comment
+## [1] &quot;my attribute&quot;</code></pre>
 </div>
 </div>
 <div id="s3-atomic-vectors" class="section level2">
@@ -1067,18 +1220,89 @@ one_week_2</code></pre>
 <div id="exercises-2" class="section level3">
 <h3>Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>What sort of object does <code>table()</code> return? What is its
+<li>What sort of object does <code>table()</code> return? What is its
 type? What attributes does it have? How does the dimensionality change
-as you tabulate more variables?</p></li>
+as you tabulate more variables?</li>
+</ol>
+<pre class="r"><code># ?table()</code></pre>
+<blockquote>
+<p>table uses cross-classifying factors to build a contingency table of
+the counts at each combination of factor levels.</p>
+</blockquote>
+<pre class="r"><code>## Check the design:
+with(warpbreaks, table(wool, tension))</code></pre>
+<pre><code>##     tension
+## wool L M H
+##    A 9 9 9
+##    B 9 9 9</code></pre>
+<pre class="r"><code>table(state.division, state.region)</code></pre>
+<pre><code>##                     state.region
+## state.division       Northeast South North Central West
+##   New England                6     0             0    0
+##   Middle Atlantic            3     0             0    0
+##   South Atlantic             0     8             0    0
+##   East South Central         0     4             0    0
+##   West South Central         0     4             0    0
+##   East North Central         0     0             5    0
+##   West North Central         0     0             7    0
+##   Mountain                   0     0             0    8
+##   Pacific                    0     0             0    5</code></pre>
+<pre class="r"><code>t &lt;- table(state.division, state.region)
+
+typeof(t)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>attributes(t)</code></pre>
+<pre><code>## $dim
+## [1] 9 4
+## 
+## $dimnames
+## $dimnames$state.division
+## [1] &quot;New England&quot;        &quot;Middle Atlantic&quot;    &quot;South Atlantic&quot;    
+## [4] &quot;East South Central&quot; &quot;West South Central&quot; &quot;East North Central&quot;
+## [7] &quot;West North Central&quot; &quot;Mountain&quot;           &quot;Pacific&quot;           
+## 
+## $dimnames$state.region
+## [1] &quot;Northeast&quot;     &quot;South&quot;         &quot;North Central&quot; &quot;West&quot;         
+## 
+## 
+## $class
+## [1] &quot;table&quot;</code></pre>
+<ol style="list-style-type: decimal">
 <li><p>What happens to a factor when you modify its levels?</p>
 <pre class="r"><code>f1 &lt;- factor(letters)
-levels(f1) &lt;- rev(levels(f1))</code></pre></li>
+f1
+levels(f1)</code></pre></li>
+</ol>
+<pre class="r"><code>levels(f1) &lt;- rev(levels(f1))
+f1</code></pre>
+<pre><code>##  [1] z y x w v u t s r q p o n m l k j i h g f e d c b a
+## Levels: z y x w v u t s r q p o n m l k j i h g f e d c b a</code></pre>
+<pre class="r"><code>levels(f1)</code></pre>
+<pre><code>##  [1] &quot;z&quot; &quot;y&quot; &quot;x&quot; &quot;w&quot; &quot;v&quot; &quot;u&quot; &quot;t&quot; &quot;s&quot; &quot;r&quot; &quot;q&quot; &quot;p&quot; &quot;o&quot; &quot;n&quot; &quot;m&quot; &quot;l&quot; &quot;k&quot; &quot;j&quot; &quot;i&quot; &quot;h&quot;
+## [20] &quot;g&quot; &quot;f&quot; &quot;e&quot; &quot;d&quot; &quot;c&quot; &quot;b&quot; &quot;a&quot;</code></pre>
+<blockquote>
+<p>The same number of level, but the order changed.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>What does this code do? How do <code>f2</code> and
 <code>f3</code> differ from <code>f1</code>?</p>
 <pre class="r"><code>f2 &lt;- rev(factor(letters))
-
-f3 &lt;- factor(letters, levels = rev(letters))</code></pre></li>
+f2
+levels(f2)</code></pre>
+<blockquote>
+<p>The order of the factor elements is reversed.</p>
+</blockquote></li>
 </ol>
+<pre class="r"><code>f3 &lt;- factor(letters, levels = rev(letters))
+f3</code></pre>
+<pre><code>##  [1] a b c d e f g h i j k l m n o p q r s t u v w x y z
+## Levels: z y x w v u t s r q p o n m l k j i h g f e d c b a</code></pre>
+<pre class="r"><code>levels(f3)</code></pre>
+<pre><code>##  [1] &quot;z&quot; &quot;y&quot; &quot;x&quot; &quot;w&quot; &quot;v&quot; &quot;u&quot; &quot;t&quot; &quot;s&quot; &quot;r&quot; &quot;q&quot; &quot;p&quot; &quot;o&quot; &quot;n&quot; &quot;m&quot; &quot;l&quot; &quot;k&quot; &quot;j&quot; &quot;i&quot; &quot;h&quot;
+## [20] &quot;g&quot; &quot;f&quot; &quot;e&quot; &quot;d&quot; &quot;c&quot; &quot;b&quot; &quot;a&quot;</code></pre>
+<blockquote>
+<p>The order of the factor levels is reversed.</p>
+</blockquote>
 </div>
 </div>
 <div id="lists" class="section level2">
@@ -1166,6 +1390,10 @@ for a list with <code>is.list()</code>, and coerce to a list with
 ## 
 ## [[3]]
 ## [1] 3</code></pre>
+<pre class="r"><code>is.list(list(1:3))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(as.list(1:3))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 <p>You can turn a list into an atomic vector with <code>unlist()</code>.
 The rules for the resulting type are complex, not well documented, and
 not always equivalent to what you’d get with <code>c()</code>.</p>
@@ -1193,13 +1421,101 @@ structure.</p>
 <div id="exercises-3" class="section level3">
 <h3>Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>List all the ways that a list differs from an atomic
-vector.</p></li>
-<li><p>Why do you need to use <code>unlist()</code> to convert a list to
-an atomic vector? Why doesn’t <code>as.vector()</code> work?</p></li>
-<li><p>Compare and contrast <code>c()</code> and <code>unlist()</code>
-when combining a date and date-time into a single vector.</p></li>
+<li>List all the ways that a list differs from an atomic vector.</li>
 </ol>
+<blockquote>
+<p>In an atomic vector, all elements must be of the same type. In a
+list, the elements can be of different types.</p>
+</blockquote>
+<blockquote>
+<p>Because the elements of a list are references, creating a list does
+not involve copying the components into the list.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>Why do you need to use <code>unlist()</code> to convert a list to an
+atomic vector? Why doesn’t <code>as.vector()</code> work?</li>
+</ol>
+<pre class="r"><code>#?unlist()
+#?as.vector()</code></pre>
+<pre class="r"><code>L&lt;-list(1:3)
+is.list(L)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(L)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>L2&lt;-as.vector(L)
+is.list(L2)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(L2)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<blockquote>
+<p>L2 is still a list and a vector.</p>
+</blockquote>
+<pre class="r"><code>L&lt;-list(1:3)
+is.list(L)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(L)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>L2&lt;-unlist(L)
+is.list(L2)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>is.vector(L2)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<blockquote>
+<p>L2 is a vector, but not a list.</p>
+</blockquote>
+<blockquote>
+<p>as.vector, a generic, attempts to coerce its argument into a vector
+of mode mode (the default is to coerce to whichever vector mode is most
+convenient): if the result is atomic (is.atomic), all attributes are
+removed.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>Compare and contrast <code>c()</code> and <code>unlist()</code> when
+combining a date and date-time into a single vector.</li>
+</ol>
+<pre class="r"><code>today &lt;- Sys.Date()
+today</code></pre>
+<pre><code>## [1] &quot;2022-09-12&quot;</code></pre>
+<pre class="r"><code>typeof(today)</code></pre>
+<pre><code>## [1] &quot;double&quot;</code></pre>
+<pre class="r"><code>attributes(today)</code></pre>
+<pre><code>## $class
+## [1] &quot;Date&quot;</code></pre>
+<pre class="r"><code>now_ct &lt;- Sys.time()
+now_ct</code></pre>
+<pre><code>## [1] &quot;2022-09-12 17:52:55 BST&quot;</code></pre>
+<pre class="r"><code>typeof(now_ct)</code></pre>
+<pre><code>## [1] &quot;double&quot;</code></pre>
+<pre class="r"><code>attributes(now_ct)</code></pre>
+<pre><code>## $class
+## [1] &quot;POSIXct&quot; &quot;POSIXt&quot;</code></pre>
+<pre class="r"><code>c(today,now_ct)</code></pre>
+<pre><code>## [1] &quot;2022-09-12&quot; &quot;2022-09-12&quot;</code></pre>
+<pre class="r"><code>c(now_ct,today)</code></pre>
+<pre><code>## [1] &quot;2022-09-12 17:52:55 BST&quot; &quot;2022-09-12 00:00:00 BST&quot;</code></pre>
+<blockquote>
+<p>c() coerces all element types to the type of first element in the
+vector.</p>
+</blockquote>
+<pre class="r"><code>list(today,now_ct)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;2022-09-12&quot;
+## 
+## [[2]]
+## [1] &quot;2022-09-12 17:52:55 BST&quot;</code></pre>
+<pre class="r"><code>list(now_ct,today)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;2022-09-12 17:52:55 BST&quot;
+## 
+## [[2]]
+## [1] &quot;2022-09-12&quot;</code></pre>
+<pre class="r"><code>unlist(list(today,now_ct))</code></pre>
+<pre><code>## [1]      19247 1663001576</code></pre>
+<pre class="r"><code>unlist(list(now_ct,today))</code></pre>
+<pre><code>## [1] 1663001576      19247</code></pre>
+<blockquote>
+<p>unlist removes the attributes of the list.</p>
+</blockquote>
 </div>
 </div>
 <div id="tibble" class="section level2">
@@ -1583,21 +1899,113 @@ vectors. Also, the printed display can be confusing.</p>
 <pre class="r"><code>dfm[1, ]</code></pre>
 <pre><code>##    x y.1 y.2 y.3 z.a z.b
 ## 1 10   1   4   7   3   a</code></pre>
+<blockquote>
+<p>no output?</p>
+</blockquote>
 </div>
 <div id="exercises-4" class="section level3">
 <h3>Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Can you have a data frame with zero rows? What about zero
-columns?</p></li>
-<li><p>What happens if you attempt to set rownames that are not
-unique?</p></li>
-<li><p>If <code>df</code> is a data frame, what can you say about
-<code>t(df)</code>, and <code>t(t(df))</code>? Perform some experiments,
-making sure to try different column types.</p></li>
-<li><p>What does <code>as.matrix()</code> do when applied to a data
-frame with columns of different types? How does it differ from
-<code>data.matrix()</code>?</p></li>
+<li>Can you have a data frame with zero rows? What about zero
+columns?</li>
 </ol>
+<blockquote>
+<p>Yes!</p>
+</blockquote>
+<pre class="r"><code>df0 &lt;- data.frame()
+str(df0)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    0 obs. of  0 variables</code></pre>
+<pre class="r"><code>nrow(df0)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>ncol(df0)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<ol style="list-style-type: decimal">
+<li>What happens if you attempt to set rownames that are not
+unique?</li>
+</ol>
+<pre class="r"><code>#data.frame(row.names = c(&quot;a&quot;, &quot;b&quot;, &quot;b&quot;, &quot;c&quot;))</code></pre>
+<blockquote>
+<p>it will give me an error: Error in data.frame(row.names = c(“a”, “b”,
+“b”, “c”)) : duplicate row.names: b</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>If <code>df</code> is a data frame, what can you say about
+<code>t(df)</code>, and <code>t(t(df))</code>? Perform some experiments,
+making sure to try different column types.</li>
+</ol>
+<pre class="r"><code>df &lt;- data.frame(
+  age = c(35, 27, 18),
+  hair = c(&quot;blond&quot;, &quot;brown&quot;, &quot;black&quot;))
+df</code></pre>
+<pre><code>##   age  hair
+## 1  35 blond
+## 2  27 brown
+## 3  18 black</code></pre>
+<pre class="r"><code>str(df)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    3 obs. of  2 variables:
+##  $ age : num  35 27 18
+##  $ hair: chr  &quot;blond&quot; &quot;brown&quot; &quot;black&quot;</code></pre>
+<pre class="r"><code>is.matrix(df)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>t(df)</code></pre>
+<pre><code>##      [,1]    [,2]    [,3]   
+## age  &quot;35&quot;    &quot;27&quot;    &quot;18&quot;   
+## hair &quot;blond&quot; &quot;brown&quot; &quot;black&quot;</code></pre>
+<pre class="r"><code>str(t(df))</code></pre>
+<pre><code>##  chr [1:2, 1:3] &quot;35&quot; &quot;blond&quot; &quot;27&quot; &quot;brown&quot; &quot;18&quot; &quot;black&quot;
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : chr [1:2] &quot;age&quot; &quot;hair&quot;
+##   ..$ : NULL</code></pre>
+<pre class="r"><code>is.matrix(t(df))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(t(df))</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>t(t(df))</code></pre>
+<pre><code>##      age  hair   
+## [1,] &quot;35&quot; &quot;blond&quot;
+## [2,] &quot;27&quot; &quot;brown&quot;
+## [3,] &quot;18&quot; &quot;black&quot;</code></pre>
+<pre class="r"><code>str(t(t(df)))</code></pre>
+<pre><code>##  chr [1:3, 1:2] &quot;35&quot; &quot;27&quot; &quot;18&quot; &quot;blond&quot; &quot;brown&quot; &quot;black&quot;
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : NULL
+##   ..$ : chr [1:2] &quot;age&quot; &quot;hair&quot;</code></pre>
+<pre class="r"><code>is.matrix(t(t(df)))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(t(t(df)))</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<blockquote>
+<p>the output is a matrix</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>What does <code>as.matrix()</code> do when applied to a data frame
+with columns of different types? How does it differ from
+<code>data.matrix()</code>?</li>
+</ol>
+<pre class="r"><code>#?as.matrix
+#?data.matrix()</code></pre>
+<blockquote>
+<p>as.matrix attempts to turn its argument into a matrix. data.matrix()
+Return the matrix obtained by converting all the variables in a data
+frame to numeric mode and then binding them together as the columns of a
+matrix. Factors and ordered factors are replaced by their internal
+codes.</p>
+</blockquote>
+<pre class="r"><code>df</code></pre>
+<pre><code>##   age  hair
+## 1  35 blond
+## 2  27 brown
+## 3  18 black</code></pre>
+<pre class="r"><code>as.matrix(df)</code></pre>
+<pre><code>##      age  hair   
+## [1,] &quot;35&quot; &quot;blond&quot;
+## [2,] &quot;27&quot; &quot;brown&quot;
+## [3,] &quot;18&quot; &quot;black&quot;</code></pre>
+<pre class="r"><code>data.matrix(df)</code></pre>
+<pre><code>##      age hair
+## [1,]  35    2
+## [2,]  27    3
+## [3,]  18    1</code></pre>
 </div>
 </div>
 <div id="null" class="section level2">

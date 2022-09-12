@@ -457,8 +457,8 @@ str(array(1:3, 3))         # "array" vector
     Read the source code.
 
 ```{r}
-?setNames()
-?unname()
+#?setNames()
+#?unname()
 ```
 
 > here is how is setNames() implemented:
@@ -691,22 +691,56 @@ attributes(one_week_2)
 1.  What sort of object does `table()` return? What is its type? What 
     attributes does it have? How does the dimensionality change as you
     tabulate more variables?
+    
+```{r}
+# ?table()
+```
+
+> table uses cross-classifying factors to build a contingency table of the counts at each combination of factor levels.
+
+```{r}
+## Check the design:
+with(warpbreaks, table(wool, tension))
+table(state.division, state.region)
+
+t <- table(state.division, state.region)
+
+typeof(t)
+attributes(t)
+```
+
 
 1.  What happens to a factor when you modify its levels? 
     
     ```{r, results = FALSE}
-    f1 <- factor(letters)
-    levels(f1) <- rev(levels(f1))
+f1 <- factor(letters)
+f1
+levels(f1)
     ```
+    
+```{r}
+levels(f1) <- rev(levels(f1))
+f1
+levels(f1)
+```
+> The same number of level, but the order changed.
 
 1.  What does this code do? How do `f2` and `f3` differ from `f1`?
 
     ```{r, results = FALSE}
-    f2 <- rev(factor(letters))
+f2 <- rev(factor(letters))
+f2
+levels(f2)
 
-    f3 <- factor(letters, levels = rev(letters))
     ```
+> The order of the factor elements is reversed.
 
+```{r}
+f3 <- factor(letters, levels = rev(letters))
+f3
+levels(f3)
+```
+> The order of the factor levels is reversed.
 
 ## Lists
 \index{lists} 
@@ -779,6 +813,12 @@ list(1:3)
 as.list(1:3)
 ```
 
+```{r}
+is.list(list(1:3))
+is.list(as.list(1:3))
+```
+
+
 You can turn a list into an atomic vector with `unlist()`. The rules for the resulting type are complex, not well documented, and not always equivalent to what you'd get with `c()`. 
 
 ### Matrices and arrays {#list-array}
@@ -801,11 +841,78 @@ These data structures are relatively esoteric but they can be useful if you want
 
 1.  List all the ways that a list differs from an atomic vector.
 
+> In an atomic vector, all elements must be of the same type. In a list, the elements can be of different types.
+
+> Because the elements of a list are references, creating a list does not involve copying the components into the list.
+
 1.  Why do you need to use `unlist()` to convert a list to an 
-    atomic vector? Why doesn't `as.vector()` work? 
+    atomic vector? Why doesn't `as.vector()` work?
+    
+```{r}
+#?unlist()
+#?as.vector()
+```
+
+```{r}
+L<-list(1:3)
+is.list(L)
+is.vector(L)
+L2<-as.vector(L)
+is.list(L2)
+is.vector(L2)
+```
+
+> L2 is still a list and a vector.
+
+```{r}
+L<-list(1:3)
+is.list(L)
+is.vector(L)
+L2<-unlist(L)
+is.list(L2)
+is.vector(L2)
+```
+> L2 is a vector, but not a list.
+
+> as.vector, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
 
 1.  Compare and contrast `c()` and `unlist()` when combining a 
     date and date-time into a single vector.
+
+```{r}
+today <- Sys.Date()
+today
+
+typeof(today)
+attributes(today)
+```
+
+```{r}
+now_ct <- Sys.time()
+now_ct
+
+typeof(now_ct)
+attributes(now_ct)
+```
+
+```{r}
+c(today,now_ct)
+c(now_ct,today)
+```
+
+> c() coerces all element types to the type of first element in the vector.
+
+```{r}
+list(today,now_ct)
+list(now_ct,today)
+```
+
+```{r}
+unlist(list(today,now_ct))
+unlist(list(now_ct,today))
+```
+
+> unlist removes the attributes of the list.
 
 ## Data frames and tibbles {#tibble}
 \index{data frames}
@@ -1114,17 +1221,75 @@ Matrix and data frame columns require a little caution. Many functions that work
 dfm[1, ]
 ```
 
+> no output?
+
 ### Exercises
 
 1.  Can you have a data frame with zero rows? What about zero columns?
 
+> Yes!
+
+```{r}
+df0 <- data.frame()
+str(df0)
+nrow(df0)
+ncol(df0)
+```
+
+
 1.  What happens if you attempt to set rownames that are not unique?
+
+```{r}
+#data.frame(row.names = c("a", "b", "b", "c"))
+```
+
+> it will give me an error: Error in data.frame(row.names = c("a", "b", "b", "c")) : duplicate row.names: b
 
 1.  If `df` is a data frame, what can you say about `t(df)`, and `t(t(df))`? 
     Perform some experiments, making sure to try different column types.
+    
+```{r}
+df <- data.frame(
+  age = c(35, 27, 18),
+  hair = c("blond", "brown", "black"))
+df
+str(df)
+is.matrix(df)
+```
+
+```{r}
+t(df)
+str(t(df))
+is.matrix(t(df))
+is.list(t(df))
+```
+
+```{r}
+t(t(df))
+str(t(t(df)))
+is.matrix(t(t(df)))
+is.list(t(t(df)))
+```
+
+> the output is a matrix
 
 1.  What does `as.matrix()` do when applied to a data frame with 
     columns of different types? How does it differ from `data.matrix()`?
+
+```{r}
+#?as.matrix
+#?data.matrix()
+```
+
+> as.matrix attempts to turn its argument into a matrix.
+> data.matrix() Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes.
+
+```{r}
+df
+as.matrix(df)
+data.matrix(df)
+```
+
 
 ## `NULL`
 \indexc{NULL}

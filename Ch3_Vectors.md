@@ -7,6 +7,23 @@ output:
     keep_md: yes
 ---
 
+
+```r
+library(tidyverse)
+```
+
+```
+## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+```
+
+
 # Vectors {#vectors-chap}
 
 ## Introduction
@@ -376,14 +393,7 @@ as.integer(c("1", "1.5", "a"))
 
 
 ```r
-?raw
-```
-
-```
-## starting httpd help server ... done
-```
-
-```r
+#?raw
 xx <- raw(2)
 xx
 ```
@@ -402,7 +412,7 @@ str(xx)
 
 
 ```r
-?complex
+#?complex
 z <- complex(length.out = 1, real = 2, imaginary = 3, modulus = 4, argument = 5)
 z
 ```
@@ -474,7 +484,30 @@ str(z)
 1. Why is the default missing value, `NA`, a logical vector? What's special
    about logical vectors? (Hint: think about `c(FALSE, NA_character_)`.)
 
+> Since the fixed order for coercing is character → double → integer → logical, having the default missing value, NA, a logical vector will not change the types of other values in the same vector.
+
 1. Precisely what do `is.atomic()`, `is.numeric()`, and `is.vector()` test for?
+
+
+```r
+#?is.atomic()
+```
+
+> is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise.
+
+
+```r
+#?is.numeric()
+```
+
+> is.numeric only return true if the base type of the class is double or integer and values can reasonably be regarded as numeric (e.g., arithmetic on them makes sense, and comparison should be done via the base type).
+
+
+```r
+#?is.vector()
+```
+
+> is.vector(x) returns TRUE if x is a vector of the specified mode having no attributes other than names.
 
 ## Attributes {#attributes}
 \index{attributes}
@@ -695,8 +728,145 @@ str(array(1:3, 3))         # "array" vector
 1.  How is `setNames()` implemented? How is `unname()` implemented?
     Read the source code.
 
+
+```r
+#?setNames()
+#?unname()
+```
+
+> here is how is setNames() implemented:
+
+
+```r
+getAnywhere(setNames)
+```
+
+```
+## A single object matching 'setNames' was found
+## It was found in the following places
+##   package:stats
+##   namespace:methods
+##   namespace:stats
+## with value
+## 
+## function (object = nm, nm) 
+## {
+##     names(object) <- nm
+##     object
+## }
+## <bytecode: 0x000001d5b09d9f08>
+## <environment: namespace:stats>
+```
+
+
+```r
+x <- setNames(1:3, c("a", "b", "c"))
+str(x)
+```
+
+```
+##  Named int [1:3] 1 2 3
+##  - attr(*, "names")= chr [1:3] "a" "b" "c"
+```
+
+> data is the first argument, name vector is the second argument.
+
+> here is how is unname() implemented:
+
+
+```r
+getAnywhere(unname)
+```
+
+```
+## A single object matching 'unname' was found
+## It was found in the following places
+##   package:base
+##   namespace:base
+## with value
+## 
+## function (obj, force = FALSE) 
+## {
+##     if (!is.null(names(obj))) 
+##         names(obj) <- NULL
+##     if (!is.null(dimnames(obj)) && (force || !is.data.frame(obj))) 
+##         dimnames(obj) <- NULL
+##     obj
+## }
+## <bytecode: 0x000001d5b0d7e5a0>
+## <environment: namespace:base>
+```
+
+```r
+unname(x) %>% str()
+```
+
+```
+##  int [1:3] 1 2 3
+```
+
+> remove their name by setting them to NULL
+
 1.  What does `dim()` return when applied to a 1-dimensional vector?
     When might you use `NROW()` or `NCOL()`?
+    
+
+```r
+vector <- c(1:10)
+vector
+```
+
+```
+##  [1]  1  2  3  4  5  6  7  8  9 10
+```
+
+```r
+dim(vector)
+```
+
+```
+## NULL
+```
+
+```r
+NROW(vector)
+```
+
+```
+## [1] 10
+```
+
+```r
+NCOL(vector)
+```
+
+```
+## [1] 1
+```
+
+```r
+nrow(vector)
+```
+
+```
+## NULL
+```
+
+```r
+ncol(vector)
+```
+
+```
+## NULL
+```
+
+```r
+#?NROW()
+```
+
+> dim() returns NULL when applied to a 1-dimensional vector.
+
+> nrow and ncol return the number of rows or columns present in x. NCOL and NROW do the same treating a vector as 1-column matrix, even a 0-length vector.
 
 1.  How would you describe the following three objects? What makes them
     different from `1:5`?
@@ -706,7 +876,76 @@ str(array(1:3, 3))         # "array" vector
     x1 <- array(1:5, c(1, 1, 5))
     x2 <- array(1:5, c(1, 5, 1))
     x3 <- array(1:5, c(5, 1, 1))
+    
+    str(x1)
     ```
+    
+    ```
+    ##  int [1, 1, 1:5] 1 2 3 4 5
+    ```
+    
+    ```r
+    str(x2)
+    ```
+    
+    ```
+    ##  int [1, 1:5, 1] 1 2 3 4 5
+    ```
+    
+    ```r
+    str(x3)
+    ```
+    
+    ```
+    ##  int [1:5, 1, 1] 1 2 3 4 5
+    ```
+    
+    ```r
+    str(1:5)
+    ```
+    
+    ```
+    ##  int [1:5] 1 2 3 4 5
+    ```
+
+
+```r
+attributes(x1)
+```
+
+```
+## $dim
+## [1] 1 1 5
+```
+
+```r
+attributes(x2)
+```
+
+```
+## $dim
+## [1] 1 5 1
+```
+
+```r
+attributes(x3)
+```
+
+```
+## $dim
+## [1] 5 1 1
+```
+
+```r
+attributes(1:5)
+```
+
+```
+## NULL
+```
+
+> All of them are 3d array. x1 has five elements in the x-dimension, x2 has five elements in the y-dimension, and x3 has five elements in the z-dimension.
+> `1:5` doen't have dim attributes.
 
 1.  An early draft used this code to illustrate `structure()`:
 
@@ -722,6 +961,29 @@ str(array(1:3, 3))         # "array" vector
     But when you print that object you don't see the comment attribute.
     Why? Is the attribute missing, or is there something else special about
     it? (Hint: try using help.)
+    
+
+```r
+#?comment
+#?attributes() # These functions access an object's attributes. 
+#?attr() # Get or set specific attributes of an object.
+#?structure() # structure returns the given object with further attributes set.
+```
+
+> Contrary to other attributes, the comment is not printed (by print or print.default).
+
+> Note that some attributes (namely class, comment, dim, dimnames, names, row.names and tsp) are treated specially and have restrictions on the values which can be set. (Note that this is not true of levels which should be set for factors via the levels replacement function.)
+
+
+```r
+attributes(structure(1:5, comment = "my attribute"))
+```
+
+```
+## $comment
+## [1] "my attribute"
+```
+
 
 ## S3 atomic vectors
 \index{attributes!S3}
@@ -1010,24 +1272,138 @@ attributes(one_week_2)
 1.  What sort of object does `table()` return? What is its type? What 
     attributes does it have? How does the dimensionality change as you
     tabulate more variables?
+    
+
+```r
+# ?table()
+```
+
+> table uses cross-classifying factors to build a contingency table of the counts at each combination of factor levels.
+
+
+```r
+## Check the design:
+with(warpbreaks, table(wool, tension))
+```
+
+```
+##     tension
+## wool L M H
+##    A 9 9 9
+##    B 9 9 9
+```
+
+```r
+table(state.division, state.region)
+```
+
+```
+##                     state.region
+## state.division       Northeast South North Central West
+##   New England                6     0             0    0
+##   Middle Atlantic            3     0             0    0
+##   South Atlantic             0     8             0    0
+##   East South Central         0     4             0    0
+##   West South Central         0     4             0    0
+##   East North Central         0     0             5    0
+##   West North Central         0     0             7    0
+##   Mountain                   0     0             0    8
+##   Pacific                    0     0             0    5
+```
+
+```r
+t <- table(state.division, state.region)
+
+typeof(t)
+```
+
+```
+## [1] "integer"
+```
+
+```r
+attributes(t)
+```
+
+```
+## $dim
+## [1] 9 4
+## 
+## $dimnames
+## $dimnames$state.division
+## [1] "New England"        "Middle Atlantic"    "South Atlantic"    
+## [4] "East South Central" "West South Central" "East North Central"
+## [7] "West North Central" "Mountain"           "Pacific"           
+## 
+## $dimnames$state.region
+## [1] "Northeast"     "South"         "North Central" "West"         
+## 
+## 
+## $class
+## [1] "table"
+```
+
 
 1.  What happens to a factor when you modify its levels? 
     
     
     ```r
     f1 <- factor(letters)
-    levels(f1) <- rev(levels(f1))
+    f1
+    levels(f1)
     ```
+    
+
+```r
+levels(f1) <- rev(levels(f1))
+f1
+```
+
+```
+##  [1] z y x w v u t s r q p o n m l k j i h g f e d c b a
+## Levels: z y x w v u t s r q p o n m l k j i h g f e d c b a
+```
+
+```r
+levels(f1)
+```
+
+```
+##  [1] "z" "y" "x" "w" "v" "u" "t" "s" "r" "q" "p" "o" "n" "m" "l" "k" "j" "i" "h"
+## [20] "g" "f" "e" "d" "c" "b" "a"
+```
+> The same number of level, but the order changed.
 
 1.  What does this code do? How do `f2` and `f3` differ from `f1`?
 
     
     ```r
     f2 <- rev(factor(letters))
-    
-    f3 <- factor(letters, levels = rev(letters))
+    f2
+    levels(f2)
     ```
+> The order of the factor elements is reversed.
 
+
+```r
+f3 <- factor(letters, levels = rev(letters))
+f3
+```
+
+```
+##  [1] a b c d e f g h i j k l m n o p q r s t u v w x y z
+## Levels: z y x w v u t s r q p o n m l k j i h g f e d c b a
+```
+
+```r
+levels(f3)
+```
+
+```
+##  [1] "z" "y" "x" "w" "v" "u" "t" "s" "r" "q" "p" "o" "n" "m" "l" "k" "j" "i" "h"
+## [20] "g" "f" "e" "d" "c" "b" "a"
+```
+> The order of the factor levels is reversed.
 
 ## Lists
 \index{lists} 
@@ -1168,6 +1544,24 @@ as.list(1:3)
 ## [1] 3
 ```
 
+
+```r
+is.list(list(1:3))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.list(as.list(1:3))
+```
+
+```
+## [1] TRUE
+```
+
+
 You can turn a list into an atomic vector with `unlist()`. The rules for the resulting type are complex, not well documented, and not always equivalent to what you'd get with `c()`. 
 
 ### Matrices and arrays {#list-array}
@@ -1203,11 +1597,213 @@ These data structures are relatively esoteric but they can be useful if you want
 
 1.  List all the ways that a list differs from an atomic vector.
 
+> In an atomic vector, all elements must be of the same type. In a list, the elements can be of different types.
+
+> Because the elements of a list are references, creating a list does not involve copying the components into the list.
+
 1.  Why do you need to use `unlist()` to convert a list to an 
-    atomic vector? Why doesn't `as.vector()` work? 
+    atomic vector? Why doesn't `as.vector()` work?
+    
+
+```r
+#?unlist()
+#?as.vector()
+```
+
+
+```r
+L<-list(1:3)
+is.list(L)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(L)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+L2<-as.vector(L)
+is.list(L2)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(L2)
+```
+
+```
+## [1] TRUE
+```
+
+> L2 is still a list and a vector.
+
+
+```r
+L<-list(1:3)
+is.list(L)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(L)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+L2<-unlist(L)
+is.list(L2)
+```
+
+```
+## [1] FALSE
+```
+
+```r
+is.vector(L2)
+```
+
+```
+## [1] TRUE
+```
+> L2 is a vector, but not a list.
+
+> as.vector, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
 
 1.  Compare and contrast `c()` and `unlist()` when combining a 
     date and date-time into a single vector.
+
+
+```r
+today <- Sys.Date()
+today
+```
+
+```
+## [1] "2022-09-12"
+```
+
+```r
+typeof(today)
+```
+
+```
+## [1] "double"
+```
+
+```r
+attributes(today)
+```
+
+```
+## $class
+## [1] "Date"
+```
+
+
+```r
+now_ct <- Sys.time()
+now_ct
+```
+
+```
+## [1] "2022-09-12 17:52:55 BST"
+```
+
+```r
+typeof(now_ct)
+```
+
+```
+## [1] "double"
+```
+
+```r
+attributes(now_ct)
+```
+
+```
+## $class
+## [1] "POSIXct" "POSIXt"
+```
+
+
+```r
+c(today,now_ct)
+```
+
+```
+## [1] "2022-09-12" "2022-09-12"
+```
+
+```r
+c(now_ct,today)
+```
+
+```
+## [1] "2022-09-12 17:52:55 BST" "2022-09-12 00:00:00 BST"
+```
+
+> c() coerces all element types to the type of first element in the vector.
+
+
+```r
+list(today,now_ct)
+```
+
+```
+## [[1]]
+## [1] "2022-09-12"
+## 
+## [[2]]
+## [1] "2022-09-12 17:52:55 BST"
+```
+
+```r
+list(now_ct,today)
+```
+
+```
+## [[1]]
+## [1] "2022-09-12 17:52:55 BST"
+## 
+## [[2]]
+## [1] "2022-09-12"
+```
+
+
+```r
+unlist(list(today,now_ct))
+```
+
+```
+## [1]      19247 1663001576
+```
+
+```r
+unlist(list(now_ct,today))
+```
+
+```
+## [1] 1663001576      19247
+```
+
+> unlist removes the attributes of the list.
 
 ## Data frames and tibbles {#tibble}
 \index{data frames}
@@ -1750,17 +2346,211 @@ dfm[1, ]
 ## 1 10   1   4   7   3   a
 ```
 
+> no output?
+
 ### Exercises
 
 1.  Can you have a data frame with zero rows? What about zero columns?
 
+> Yes!
+
+
+```r
+df0 <- data.frame()
+str(df0)
+```
+
+```
+## 'data.frame':	0 obs. of  0 variables
+```
+
+```r
+nrow(df0)
+```
+
+```
+## [1] 0
+```
+
+```r
+ncol(df0)
+```
+
+```
+## [1] 0
+```
+
+
 1.  What happens if you attempt to set rownames that are not unique?
+
+
+```r
+#data.frame(row.names = c("a", "b", "b", "c"))
+```
+
+> it will give me an error: Error in data.frame(row.names = c("a", "b", "b", "c")) : duplicate row.names: b
 
 1.  If `df` is a data frame, what can you say about `t(df)`, and `t(t(df))`? 
     Perform some experiments, making sure to try different column types.
+    
+
+```r
+df <- data.frame(
+  age = c(35, 27, 18),
+  hair = c("blond", "brown", "black"))
+df
+```
+
+```
+##   age  hair
+## 1  35 blond
+## 2  27 brown
+## 3  18 black
+```
+
+```r
+str(df)
+```
+
+```
+## 'data.frame':	3 obs. of  2 variables:
+##  $ age : num  35 27 18
+##  $ hair: chr  "blond" "brown" "black"
+```
+
+```r
+is.matrix(df)
+```
+
+```
+## [1] FALSE
+```
+
+
+```r
+t(df)
+```
+
+```
+##      [,1]    [,2]    [,3]   
+## age  "35"    "27"    "18"   
+## hair "blond" "brown" "black"
+```
+
+```r
+str(t(df))
+```
+
+```
+##  chr [1:2, 1:3] "35" "blond" "27" "brown" "18" "black"
+##  - attr(*, "dimnames")=List of 2
+##   ..$ : chr [1:2] "age" "hair"
+##   ..$ : NULL
+```
+
+```r
+is.matrix(t(df))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.list(t(df))
+```
+
+```
+## [1] FALSE
+```
+
+
+```r
+t(t(df))
+```
+
+```
+##      age  hair   
+## [1,] "35" "blond"
+## [2,] "27" "brown"
+## [3,] "18" "black"
+```
+
+```r
+str(t(t(df)))
+```
+
+```
+##  chr [1:3, 1:2] "35" "27" "18" "blond" "brown" "black"
+##  - attr(*, "dimnames")=List of 2
+##   ..$ : NULL
+##   ..$ : chr [1:2] "age" "hair"
+```
+
+```r
+is.matrix(t(t(df)))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.list(t(t(df)))
+```
+
+```
+## [1] FALSE
+```
+
+> the output is a matrix
 
 1.  What does `as.matrix()` do when applied to a data frame with 
     columns of different types? How does it differ from `data.matrix()`?
+
+
+```r
+#?as.matrix
+#?data.matrix()
+```
+
+> as.matrix attempts to turn its argument into a matrix.
+> data.matrix() Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes.
+
+
+```r
+df
+```
+
+```
+##   age  hair
+## 1  35 blond
+## 2  27 brown
+## 3  18 black
+```
+
+```r
+as.matrix(df)
+```
+
+```
+##      age  hair   
+## [1,] "35" "blond"
+## [2,] "27" "brown"
+## [3,] "18" "black"
+```
+
+```r
+data.matrix(df)
+```
+
+```
+##      age hair
+## [1,]  35    2
+## [2,]  27    3
+## [3,]  18    1
+```
+
 
 ## `NULL`
 \indexc{NULL}
