@@ -311,6 +311,36 @@ str(z)
 
 > is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise.
 
+> The is.atomic() function in R is used to check if an R object is atomic or not. When an R object is atomic it can be used to create atomic vectors. 
+Note: R has six basic atomic vector types: logical, integer, real, complex, string (or character), and raw.
+
+```{r}
+# creating R objects
+myname <- "Theophilus"
+addition <- 5 + 3
+numbers <- c(0:10)
+a <- (quote(exp)) 
+b <- expression(x+1)
+
+
+# implementing the is.atomic() function 
+
+is.atomic(myname)
+is.atomic(addition)
+is.atomic(numbers)
+is.atomic(a)
+is.atomic(b)
+
+
+
+is.vector(myname)
+is.vector(addition)
+is.vector(numbers)
+is.vector(a)
+is.vector(b)
+```
+
+
 ```{r}
 #?is.numeric()
 ```
@@ -914,6 +944,9 @@ unlist(list(now_ct,today))
 
 > unlist removes the attributes of the list.
 
+> *notes: if you ever need to work with dates and times in R, use the lubridate package.
+
+
 ## Data frames and tibbles {#tibble}
 \index{data frames}
 \index{tibbles|see {data frames}}
@@ -1221,7 +1254,6 @@ Matrix and data frame columns require a little caution. Many functions that work
 dfm[1, ]
 ```
 
-> no output?
 
 ### Exercises
 

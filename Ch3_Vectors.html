@@ -706,6 +706,42 @@ change the types of other values in the same vector.</p>
 <p>is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE
 otherwise.</p>
 </blockquote>
+<blockquote>
+<p>The is.atomic() function in R is used to check if an R object is
+atomic or not. When an R object is atomic it can be used to create
+atomic vectors. Note: R has six basic atomic vector types: logical,
+integer, real, complex, string (or character), and raw.</p>
+</blockquote>
+<pre class="r"><code># creating R objects
+myname &lt;- &quot;Theophilus&quot;
+addition &lt;- 5 + 3
+numbers &lt;- c(0:10)
+a &lt;- (quote(exp)) 
+b &lt;- expression(x+1)
+
+
+# implementing the is.atomic() function 
+
+is.atomic(myname)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.atomic(addition)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.atomic(numbers)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.atomic(a)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>is.atomic(b)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>is.vector(myname)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(addition)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(numbers)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.vector(a)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>is.vector(b)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>#?is.numeric()</code></pre>
 <blockquote>
 <p>is.numeric only return true if the base type of the class is double
@@ -925,7 +961,7 @@ know they exist in case you get strange output from a function
 ##     names(object) &lt;- nm
 ##     object
 ## }
-## &lt;bytecode: 0x000001d5b09d9f08&gt;
+## &lt;bytecode: 0x000001c99153d8f8&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>x &lt;- setNames(1:3, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 str(x)</code></pre>
@@ -952,7 +988,7 @@ str(x)</code></pre>
 ##         dimnames(obj) &lt;- NULL
 ##     obj
 ## }
-## &lt;bytecode: 0x000001d5b0d7e5a0&gt;
+## &lt;bytecode: 0x000001c9918ef590&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>unname(x) %&gt;% str()</code></pre>
 <pre><code>##  int [1:3] 1 2 3</code></pre>
@@ -1483,7 +1519,7 @@ today</code></pre>
 ## [1] &quot;Date&quot;</code></pre>
 <pre class="r"><code>now_ct &lt;- Sys.time()
 now_ct</code></pre>
-<pre><code>## [1] &quot;2022-09-12 17:52:55 BST&quot;</code></pre>
+<pre><code>## [1] &quot;2022-09-12 19:41:01 BST&quot;</code></pre>
 <pre class="r"><code>typeof(now_ct)</code></pre>
 <pre><code>## [1] &quot;double&quot;</code></pre>
 <pre class="r"><code>attributes(now_ct)</code></pre>
@@ -1492,7 +1528,7 @@ now_ct</code></pre>
 <pre class="r"><code>c(today,now_ct)</code></pre>
 <pre><code>## [1] &quot;2022-09-12&quot; &quot;2022-09-12&quot;</code></pre>
 <pre class="r"><code>c(now_ct,today)</code></pre>
-<pre><code>## [1] &quot;2022-09-12 17:52:55 BST&quot; &quot;2022-09-12 00:00:00 BST&quot;</code></pre>
+<pre><code>## [1] &quot;2022-09-12 19:41:01 BST&quot; &quot;2022-09-12 00:00:00 BST&quot;</code></pre>
 <blockquote>
 <p>c() coerces all element types to the type of first element in the
 vector.</p>
@@ -1502,19 +1538,23 @@ vector.</p>
 ## [1] &quot;2022-09-12&quot;
 ## 
 ## [[2]]
-## [1] &quot;2022-09-12 17:52:55 BST&quot;</code></pre>
+## [1] &quot;2022-09-12 19:41:01 BST&quot;</code></pre>
 <pre class="r"><code>list(now_ct,today)</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2022-09-12 17:52:55 BST&quot;
+## [1] &quot;2022-09-12 19:41:01 BST&quot;
 ## 
 ## [[2]]
 ## [1] &quot;2022-09-12&quot;</code></pre>
 <pre class="r"><code>unlist(list(today,now_ct))</code></pre>
-<pre><code>## [1]      19247 1663001576</code></pre>
+<pre><code>## [1]      19247 1663008062</code></pre>
 <pre class="r"><code>unlist(list(now_ct,today))</code></pre>
-<pre><code>## [1] 1663001576      19247</code></pre>
+<pre><code>## [1] 1663008062      19247</code></pre>
 <blockquote>
 <p>unlist removes the attributes of the list.</p>
+</blockquote>
+<blockquote>
+<p>*notes: if you ever need to work with dates and times in R, use the
+lubridate package.</p>
 </blockquote>
 </div>
 </div>
@@ -1899,9 +1939,6 @@ vectors. Also, the printed display can be confusing.</p>
 <pre class="r"><code>dfm[1, ]</code></pre>
 <pre><code>##    x y.1 y.2 y.3 z.a z.b
 ## 1 10   1   4   7   3   a</code></pre>
-<blockquote>
-<p>no output?</p>
-</blockquote>
 </div>
 <div id="exercises-4" class="section level3">
 <h3>Exercises</h3>

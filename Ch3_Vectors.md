@@ -495,6 +495,101 @@ str(z)
 
 > is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise.
 
+> The is.atomic() function in R is used to check if an R object is atomic or not. When an R object is atomic it can be used to create atomic vectors. 
+Note: R has six basic atomic vector types: logical, integer, real, complex, string (or character), and raw.
+
+
+```r
+# creating R objects
+myname <- "Theophilus"
+addition <- 5 + 3
+numbers <- c(0:10)
+a <- (quote(exp)) 
+b <- expression(x+1)
+
+
+# implementing the is.atomic() function 
+
+is.atomic(myname)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.atomic(addition)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.atomic(numbers)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.atomic(a)
+```
+
+```
+## [1] FALSE
+```
+
+```r
+is.atomic(b)
+```
+
+```
+## [1] FALSE
+```
+
+```r
+is.vector(myname)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(addition)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(numbers)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+is.vector(a)
+```
+
+```
+## [1] FALSE
+```
+
+```r
+is.vector(b)
+```
+
+```
+## [1] TRUE
+```
+
+
 
 ```r
 #?is.numeric()
@@ -754,7 +849,7 @@ getAnywhere(setNames)
 ##     names(object) <- nm
 ##     object
 ## }
-## <bytecode: 0x000001d5b09d9f08>
+## <bytecode: 0x000001c99153d8f8>
 ## <environment: namespace:stats>
 ```
 
@@ -793,7 +888,7 @@ getAnywhere(unname)
 ##         dimnames(obj) <- NULL
 ##     obj
 ## }
-## <bytecode: 0x000001d5b0d7e5a0>
+## <bytecode: 0x000001c9918ef590>
 ## <environment: namespace:base>
 ```
 
@@ -1722,7 +1817,7 @@ now_ct
 ```
 
 ```
-## [1] "2022-09-12 17:52:55 BST"
+## [1] "2022-09-12 19:41:01 BST"
 ```
 
 ```r
@@ -1756,7 +1851,7 @@ c(now_ct,today)
 ```
 
 ```
-## [1] "2022-09-12 17:52:55 BST" "2022-09-12 00:00:00 BST"
+## [1] "2022-09-12 19:41:01 BST" "2022-09-12 00:00:00 BST"
 ```
 
 > c() coerces all element types to the type of first element in the vector.
@@ -1771,7 +1866,7 @@ list(today,now_ct)
 ## [1] "2022-09-12"
 ## 
 ## [[2]]
-## [1] "2022-09-12 17:52:55 BST"
+## [1] "2022-09-12 19:41:01 BST"
 ```
 
 ```r
@@ -1780,7 +1875,7 @@ list(now_ct,today)
 
 ```
 ## [[1]]
-## [1] "2022-09-12 17:52:55 BST"
+## [1] "2022-09-12 19:41:01 BST"
 ## 
 ## [[2]]
 ## [1] "2022-09-12"
@@ -1792,7 +1887,7 @@ unlist(list(today,now_ct))
 ```
 
 ```
-## [1]      19247 1663001576
+## [1]      19247 1663008062
 ```
 
 ```r
@@ -1800,10 +1895,13 @@ unlist(list(now_ct,today))
 ```
 
 ```
-## [1] 1663001576      19247
+## [1] 1663008062      19247
 ```
 
 > unlist removes the attributes of the list.
+
+> *notes: if you ever need to work with dates and times in R, use the lubridate package.
+
 
 ## Data frames and tibbles {#tibble}
 \index{data frames}
@@ -2346,7 +2444,6 @@ dfm[1, ]
 ## 1 10   1   4   7   3   a
 ```
 
-> no output?
 
 ### Exercises
 
