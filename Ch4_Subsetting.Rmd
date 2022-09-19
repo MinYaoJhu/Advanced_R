@@ -34,15 +34,25 @@ Take this short quiz to determine if you need to read this chapter. If the answe
 
 1.  What is the result of subsetting a vector with positive integers, 
     negative integers, a logical vector, or a character vector?
+    
+> Before reading: Positive integers indicate selecting elements at a specific position in the vector. Negative integers indicate excluding elements at a specific position in the vector. A character vector indicates selecting elements that match the same name. I am not sure about a logical vector. I guess it means to use Ture or False to choose elements in the vector.
 
 1.  What's the difference between `[`, `[[`, and `$` when applied to a list?
 
+> Before reading: `$` means to select a specific element in a list. `[` subset a list and return a new list. I am not sure about `[[`.  I guess it means similar to `$`.
+
 1.  When should you use `drop = FALSE`?
+
+> Before reading: I don't know. :)
 
 1.  If `x` is a matrix, what does `x[] <- 0` do? How is it different from
     `x <- 0`?
+    
+> Before reading: If `x` is a matrix, `x <- 0` assign number 0 to be `x`. On the other hand, `x[] <- 0` assign the number 0 to each individual element inside the matrix. Therefore, the output is a matrix with the same dimensions but all elements in the matrix are 0s.
 
 1.  How can you use a named vector to relabel categorical variables?
+
+> Before reading: I don't know. :)
 
 ### Outline {-}
 
@@ -104,7 +114,7 @@ There are six things that you can use to subset a vector:
     Note that you can't mix positive and negative integers in a single subset:
 
     ```{r, error = TRUE}
-    x[c(-1, 2)]
+#    x[c(-1, 2)]
     ```
 
 *   __Logical vectors__ select elements where the corresponding logical 
@@ -169,6 +179,7 @@ There are six things that you can use to subset a vector:
 NB: Factors are not treated specially when subsetting. This means that subsetting will use the underlying integer vector, not the character levels. This is typically unexpected, so you should avoid subsetting with factors:
 
 ```{r}
+y
 y[factor("b")]
 ```
 

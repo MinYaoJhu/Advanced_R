@@ -400,16 +400,51 @@ interactive RStudio Viewer, which you can activate with
 If the answers quickly come to mind, you can comfortably skip this
 chapter. Check your answers in Section @ref(subsetting-answers).</p>
 <ol style="list-style-type: decimal">
-<li><p>What is the result of subsetting a vector with positive integers,
-negative integers, a logical vector, or a character vector?</p></li>
-<li><p>What’s the difference between <code>[</code>, <code>[[</code>,
-and <code>$</code> when applied to a list?</p></li>
-<li><p>When should you use <code>drop = FALSE</code>?</p></li>
-<li><p>If <code>x</code> is a matrix, what does <code>x[] &lt;- 0</code>
-do? How is it different from <code>x &lt;- 0</code>?</p></li>
-<li><p>How can you use a named vector to relabel categorical
-variables?</p></li>
+<li>What is the result of subsetting a vector with positive integers,
+negative integers, a logical vector, or a character vector?</li>
 </ol>
+<blockquote>
+<p>Before reading: Positive integers indicate selecting elements at a
+specific position in the vector. Negative integers indicate excluding
+elements at a specific position in the vector. A character vector
+indicates selecting elements that match the same name. I am not sure
+about a logical vector. I guess it means to use Ture or False to choose
+elements in the vector.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>What’s the difference between <code>[</code>, <code>[[</code>, and
+<code>$</code> when applied to a list?</li>
+</ol>
+<blockquote>
+<p>Before reading: <code>$</code> means to select a specific element in
+a list. <code>[</code> subset a list and return a new list. I am not
+sure about <code>[[</code>. I guess it means similar to
+<code>$</code>.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>When should you use <code>drop = FALSE</code>?</li>
+</ol>
+<blockquote>
+<p>Before reading: I don’t know. :)</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>If <code>x</code> is a matrix, what does <code>x[] &lt;- 0</code>
+do? How is it different from <code>x &lt;- 0</code>?</li>
+</ol>
+<blockquote>
+<p>Before reading: If <code>x</code> is a matrix, <code>x &lt;- 0</code>
+assign number 0 to be <code>x</code>. On the other hand,
+<code>x[] &lt;- 0</code> assign the number 0 to each individual element
+inside the matrix. Therefore, the output is a matrix with the same
+dimensions but all elements in the matrix are 0s.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>How can you use a named vector to relabel categorical
+variables?</li>
+</ol>
+<blockquote>
+<p>Before reading: I don’t know. :)</p>
+</blockquote>
 </div>
 <div id="outline" class="section level3 unnumbered">
 <h3 class="unnumbered">Outline</h3>
@@ -464,8 +499,7 @@ specified positions:</p>
 <pre><code>## [1] 4.2 5.4</code></pre>
 <p>Note that you can’t mix positive and negative integers in a single
 subset:</p>
-<pre class="r"><code>x[c(-1, 2)]</code></pre>
-<pre><code>## Error in x[c(-1, 2)]: only 0&#39;s may be mixed with negative subscripts</code></pre></li>
+<pre class="r"><code>#    x[c(-1, 2)]</code></pre></li>
 <li><p><strong>Logical vectors</strong> select elements where the
 corresponding logical value is <code>TRUE</code>. This is probably the
 most useful type of subsetting because you can write an expression that
@@ -523,6 +557,9 @@ z[c(&quot;a&quot;, &quot;d&quot;)]</code></pre>
 that subsetting will use the underlying integer vector, not the
 character levels. This is typically unexpected, so you should avoid
 subsetting with factors:</p>
+<pre class="r"><code>y</code></pre>
+<pre><code>##   a   b   c   d 
+## 2.1 4.2 3.3 5.4</code></pre>
 <pre class="r"><code>y[factor(&quot;b&quot;)]</code></pre>
 <pre><code>##   a 
 ## 2.1</code></pre>
@@ -1011,11 +1048,11 @@ values:</p>
 # Randomly reorder
 df[sample(nrow(df)), ]</code></pre>
 <pre><code>##   x y z
-## 5 2 1 e
-## 4 1 2 d
-## 1 1 5 a
 ## 3 3 3 c
-## 2 2 4 b</code></pre>
+## 2 2 4 b
+## 5 2 1 e
+## 1 1 5 a
+## 4 1 2 d</code></pre>
 <pre class="r"><code># Select 3 random rows
 df[sample(nrow(df), 3), ]</code></pre>
 <pre><code>##   x y z
@@ -1025,12 +1062,12 @@ df[sample(nrow(df), 3), ]</code></pre>
 <pre class="r"><code># Select 6 bootstrap replicates
 df[sample(nrow(df), 6, replace = TRUE), ]</code></pre>
 <pre><code>##     x y z
-## 4   1 2 d
 ## 5   2 1 e
-## 5.1 2 1 e
 ## 2   2 4 b
-## 3   3 3 c
-## 3.1 3 3 c</code></pre>
+## 1   1 5 a
+## 5.1 2 1 e
+## 4   1 2 d
+## 4.1 1 2 d</code></pre>
 <p>The arguments of <code>sample()</code> control the number of samples
 to extract, and also whether sampling is done with or without
 replacement.</p>
@@ -1060,9 +1097,9 @@ df2</code></pre>
 <pre><code>##   z y x
 ## 2 b 4 2
 ## 3 c 3 3
-## 5 e 1 2
 ## 4 d 2 1
-## 1 a 5 1</code></pre>
+## 1 a 5 1
+## 5 e 1 2</code></pre>
 <pre class="r"><code>df2[order(df2$x), ]</code></pre>
 <pre><code>##   z y x
 ## 4 d 2 1
@@ -1074,9 +1111,9 @@ df2</code></pre>
 <pre><code>##   x y z
 ## 2 2 4 b
 ## 3 3 3 c
-## 5 2 1 e
 ## 4 1 2 d
-## 1 1 5 a</code></pre>
+## 1 1 5 a
+## 5 2 1 e</code></pre>
 <p>You can sort vectors directly with <code>sort()</code>, or similarly
 <code>dplyr::arrange()</code>, to sort a data frame.</p>
 </div>
@@ -1169,14 +1206,14 @@ to an integer representation. There’s no reverse operation in base R but
 we can easily create one:</p>
 <pre class="r"><code>x &lt;- sample(10) &lt; 4
 which(x)</code></pre>
-<pre><code>## [1] 5 6 8</code></pre>
+<pre><code>## [1] 2 5 9</code></pre>
 <pre class="r"><code>unwhich &lt;- function(x, n) {
   out &lt;- rep_len(FALSE, n)
   out[x] &lt;- TRUE
   out
 }
 unwhich(which(x), 10)</code></pre>
-<pre><code>##  [1] FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE FALSE FALSE</code></pre>
+<pre><code>##  [1] FALSE  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE  TRUE FALSE</code></pre>
 <p>Let’s create two logical vectors and their integer equivalents, and
 then explore the relationship between Boolean and set operations.</p>
 <pre class="r"><code>(x1 &lt;- 1:10 %% 2 == 0)</code></pre>
