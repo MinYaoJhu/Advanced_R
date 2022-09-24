@@ -105,6 +105,12 @@ There are six things that you can use to subset a vector:
     x[c(2.1, 2.9)]
     ```
 
+```{r}
+order(x)
+x[order(x)]
+```
+
+
 *   __Negative integers__ exclude elements at the specified positions:
 
     ```{r}
@@ -181,15 +187,17 @@ NB: Factors are not treated specially when subsetting. This means that subsettin
 ```{r}
 y
 y[factor("b")]
+as.integer(factor("b"))
+as.integer(factor("b","a"))
 ```
 
-### Lists
+### 4.2.2 Lists
 \index{lists!subsetting} 
 \index{subsetting!lists}
 
 Subsetting a list works in the same way as subsetting an atomic vector. Using `[` always returns a list; `[[` and `$`, as described in Section \@ref(subset-single), let you pull out elements of a list.  
 
-### Matrices and arrays {#matrix-subsetting}
+### 4.2.3 Matrices and arrays {#matrix-subsetting}
 \index{subsetting!arrays} 
 \index{arrays!subsetting}
 
@@ -236,7 +244,7 @@ select <- matrix(ncol = 2, byrow = TRUE, c(
 vals[select]
 ```
 
-### Data frames and tibbles {#df-subsetting}
+### 4.2.4 Data frames and tibbles {#df-subsetting}
 \index{subsetting!data frames} 
 \index{data frames!subsetting}
 
@@ -278,7 +286,7 @@ str(df["x"])
 str(df[, "x"])
 ```
 
-### Preserving dimensionality {#simplify-preserve}
+### 4.2.5 Preserving dimensionality {#simplify-preserve}
 \indexc{drop = FALSE} 
 \index{subsetting!simplifying} 
 \index{subsetting!preserving}
