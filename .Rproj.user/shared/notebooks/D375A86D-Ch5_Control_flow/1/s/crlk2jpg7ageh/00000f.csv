@@ -1,0 +1,4 @@
+"0","Sys.setenv(""_R_CHECK_LENGTH_1_CONDITION_"" = ""true"")"
+"0","if (c(TRUE, FALSE)) 1"
+"2","Error in if (c(TRUE, FALSE)) 1 : the condition has length > 1
+"

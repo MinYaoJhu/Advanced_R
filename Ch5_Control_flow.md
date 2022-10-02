@@ -26,7 +26,8 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 *   In the following code, what will the value of `y` be if `x` is `TRUE`?
     What if `x` is `FALSE`? What if `x` is `NA`?
   
-    ```{r, eval = FALSE}
+    
+    ```r
     y <- if (x) 3
     ```
 
@@ -50,7 +51,8 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 
 The basic form of an if statement in R is as follows:
 
-```{r, eval = FALSE}
+
+```r
 # if (condition) true_action
 # if (condition) true_action else false_action
 ```
@@ -59,7 +61,8 @@ If `condition` is `TRUE`, `true_action` is evaluated; if `condition` is `FALSE`,
 
 Typically the actions are compound statements contained within `{`:
 
-```{r}
+
+```r
 grade <- function(x) {
   if (x > 90) {
     "A"
@@ -75,18 +78,24 @@ grade <- function(x) {
 
 `if` returns a value so that you can assign the results:
 
-```{r}
+
+```r
 x1 <- if (TRUE) 1 else 2
 x2 <- if (FALSE) 1 else 2
 
 c(x1, x2)
 ```
 
+```
+## [1] 1 2
+```
+
 (I recommend assigning the results of an `if` statement only when the entire expression fits on one line; otherwise it tends to be hard to read.)
 
 When you use the single argument form without an else statement, `if` invisibly (Section \@ref(invisible)) returns `NULL` if the condition is `FALSE`. Since functions like `c()` and `paste()` drop `NULL` inputs, this allows for a compact expression of certain idioms:
 
-```{r}
+
+```r
 greet <- function(name, birthday = FALSE) {
   paste0(
     "Hi ", name,
@@ -94,14 +103,26 @@ greet <- function(name, birthday = FALSE) {
   )
 }
 greet("Maria", FALSE)
+```
+
+```
+## [1] "Hi Maria"
+```
+
+```r
 greet("Jaime", TRUE)
+```
+
+```
+## [1] "Hi Jaime and HAPPY BIRTHDAY"
 ```
 
 ### Invalid inputs
 
 The `condition` should evaluate to a single `TRUE` or `FALSE`. Most other inputs will generate an error:
 
-```{r, error = TRUE}
+
+```r
 # if ("x") 1 # Error in if ("x") 1 : argument is not interpretable as logical
 # if (logical()) 1 # Error in if (logical()) 1 : argument is of length zero
 # if (NA) 1 # Error in if (NA) 1 : missing value where TRUE/FALSE needed
@@ -109,11 +130,10 @@ The `condition` should evaluate to a single `TRUE` or `FALSE`. Most other inputs
 
 The exception is a logical vector of length greater than 1, which generates a warning:
 
-```{r, include = FALSE}
-Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "false")
-```
 
-```{r}
+
+
+```r
 # if (c(TRUE, FALSE)) 1
 ```
 > Error in if (c(TRUE, FALSE)) 1 : the condition has length > 1
@@ -121,7 +141,8 @@ Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "false")
 
 In R 3.5.0 and greater, thanks to [Henrik Bengtsson](https://github.com/HenrikBengtsson/Wishlist-for-R/issues/38), you can turn this into an error by setting an environment variable:
 
-```{r, error = TRUE}
+
+```r
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 # if (c(TRUE, FALSE)) 1 # Error in if (c(TRUE, FALSE)) 1 : the condition has length > 1
 ```
@@ -133,11 +154,22 @@ I think this is good practice as it reveals a clear mistake that you might other
 
 Given that `if` only works with a single `TRUE` or `FALSE`, you might wonder what to do if you have a vector of logical values. Handling vectors of values is the job of `ifelse()`: a vectorised function with `test`, `yes`, and `no` vectors (that will be recycled to the same length):
 
-```{r}
+
+```r
 x <- 1:10
 ifelse(x %% 5 == 0, "XXX", as.character(x))
+```
 
+```
+##  [1] "1"   "2"   "3"   "4"   "XXX" "6"   "7"   "8"   "9"   "XXX"
+```
+
+```r
 ifelse(x %% 2 == 0, "even", "odd")
+```
+
+```
+##  [1] "odd"  "even" "odd"  "even" "odd"  "even" "odd"  "even" "odd"  "even"
 ```
 
 Note that missing values will be propagated into the output.
@@ -146,7 +178,8 @@ I recommend using `ifelse()` only when the `yes` and `no` vectors are the same t
 
 Another vectorised equivalent is the more general `dplyr::case_when()`. It uses a special syntax to allow any number of condition-vector pairs:
 
-```{r}
+
+```r
 dplyr::case_when(
   x %% 35 == 0 ~ "fizz buzz",
   x %% 5 == 0 ~ "fizz",
@@ -156,12 +189,17 @@ dplyr::case_when(
 )
 ```
 
+```
+##  [1] "1"    "2"    "3"    "4"    "fizz" "6"    "buzz" "8"    "9"    "fizz"
+```
+
 ### `switch()` statement {#switch}
 \indexc{switch()}
 
 Closely related to `if` is the `switch()`-statement. It's a compact, special purpose equivalent that lets you replace code like:
 
-```{r}
+
+```r
 x_option <- function(x) {
   if (x == "a") {
     "option 1"
@@ -177,7 +215,8 @@ x_option <- function(x) {
 
 with the more succinct:
 
-```{r}
+
+```r
 x_option <- function(x) {
   switch(x,
     a = "option 1",
@@ -190,13 +229,19 @@ x_option <- function(x) {
 
 The last component of a `switch()` should always throw an error, otherwise unmatched inputs will invisibly return `NULL`:
 
-```{r}
+
+```r
 (switch("c", a = 1, b = 2))
+```
+
+```
+## NULL
 ```
 
 If multiple inputs have the same output, you can leave the right hand side of `=` empty and the input will "fall through" to the next value. This mimics the behaviour of C's `switch` statement:
 
-```{r}
+
+```r
 legs <- function(x) {
   switch(x,
     cow = ,
@@ -209,7 +254,18 @@ legs <- function(x) {
   )
 }
 legs("cow")
+```
+
+```
+## [1] 4
+```
+
+```r
 legs("dog")
+```
+
+```
+## [1] 4
 ```
 
 It is also possible to use `switch()` with a numeric `x`, but is harder to read, and has undesirable failure modes if `x` is a not a whole number. I recommend using `switch()` only with character inputs.
@@ -219,7 +275,8 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
 1.  What type of vector does each of the following calls to `ifelse()`
     return?
 
-    ```{r, eval = FALSE}
+    
+    ```r
     ifelse(TRUE, 1, "no")
     ifelse(FALSE, 1, "no")
     ifelse(NA, 1, "no")
@@ -229,12 +286,23 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
 
 1.  Why does the following code work?
 
-    ```{r}
+    
+    ```r
     x <- 1:10
     if (length(x)) "not empty" else "empty"
-      
+    ```
+    
+    ```
+    ## [1] "not empty"
+    ```
+    
+    ```r
     x <- numeric()
     if (length(x)) "not empty" else "empty"
+    ```
+    
+    ```
+    ## [1] "empty"
     ```
 
 ## Loops
@@ -244,26 +312,39 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
 
 `for` loops are used to iterate over items in a vector. They have the following basic form:
 
-```{r, eval = FALSE}
+
+```r
 for (item in vector) perform_action
 ```
 
 For each item in `vector`, `perform_action` is called once; updating the value of `item` each time.
 
-```{r}
+
+```r
 for (i in 1:3) {
   print(i)
 }
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
 ```
 
 (When iterating over a vector of indices, it's conventional to use very short variable names like `i`, `j`, or `k`.)
 
 N.B.: `for` assigns the `item` to the current environment, overwriting any existing variable with the same name:
 
-```{r}
+
+```r
 i <- 100
 for (i in 1:3) {}
 i
+```
+
+```
+## [1] 3
 ```
 
 \indexc{next}
@@ -273,7 +354,8 @@ There are two ways to terminate a `for` loop early:
 * `next` exits the current iteration.
 * `break` exits the entire `for` loop.
 
-```{r}
+
+```r
 for (i in 1:10) {
   if (i < 3) 
     next
@@ -285,12 +367,19 @@ for (i in 1:10) {
 }
 ```
 
+```
+## [1] 3
+## [1] 4
+## [1] 5
+```
+
 ### Common pitfalls
 \index{loops!common pitfalls}
 
 There are three common pitfalls to watch out for when using `for`. First, if you're generating data, make sure to preallocate the output container. Otherwise the loop will be very slow; see Sections \@ref(memory-profiling) and \@ref(avoid-copies) for more details. The `vector()` function is helpful here.
 
-```{r}
+
+```r
 means <- c(1, 50, 20)
 out <- vector("list", length(means))
 for (i in 1:length(means)) {
@@ -300,7 +389,8 @@ for (i in 1:length(means)) {
 
 Next, beware of iterating over `1:length(x)`, which will fail in unhelpful ways if `x` has length 0:
 
-```{r, error = TRUE}
+
+```r
 means <- c()
 out <- vector("list", length(means))
 for (i in 1:length(means)) {
@@ -308,17 +398,33 @@ for (i in 1:length(means)) {
 }
 ```
 
+```
+## Error in rnorm(10, means[[i]]): invalid arguments
+```
+
 This occurs because `:` works with both increasing and decreasing sequences:
 
-```{r}
+
+```r
 1:length(means)
+```
+
+```
+## [1] 1 0
 ```
 
 Use `seq_along(x)` instead. It always returns a value the same length as `x`:
 
-```{r}
-seq_along(means)
 
+```r
+seq_along(means)
+```
+
+```
+## integer(0)
+```
+
+```r
 out <- vector("list", length(means))
 for (i in seq_along(means)) {
   out[[i]] <- rnorm(10, means[[i]])
@@ -327,19 +433,31 @@ for (i in seq_along(means)) {
 
 Finally, you might encounter problems when iterating over S3 vectors, as loops typically strip the attributes:
 
-```{r}
+
+```r
 xs <- as.Date(c("2020-01-01", "2010-01-01"))
 for (x in xs) {
   print(x)
 }
 ```
 
+```
+## [1] 18262
+## [1] 14610
+```
+
 Work around this by calling `[[` yourself:
 
-```{r}
+
+```r
 for (i in seq_along(xs)) {
   print(xs[[i]])
 }
+```
+
+```
+## [1] "2020-01-01"
+## [1] "2010-01-01"
 ```
 
 ### Related tools {#for-family}
@@ -362,7 +480,8 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
 
 1.  Why does this code succeed without errors or warnings? 
     
-    ```{r, results = FALSE}
+    
+    ```r
     x <- numeric()
     out <- vector("list", length(x))
     for (i in 1:length(x)) {
@@ -374,21 +493,33 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
 1.  When the following code is evaluated, what can you say about the 
     vector being iterated?
 
-    ```{r}
+    
+    ```r
     xs <- c(1, 2, 3)
     for (x in xs) {
       xs <- c(xs, x * 2)
     }
     xs
     ```
+    
+    ```
+    ## [1] 1 2 3 2 4 6
+    ```
 
 1.  What does the following code tell you about when the index is updated?
 
-    ```{r}
+    
+    ```r
     for (i in 1:3) {
       i <- i * 2
       print(i) 
     }
+    ```
+    
+    ```
+    ## [1] 2
+    ## [1] 4
+    ## [1] 6
     ```
 
 ## Quiz answers {#control-flow-answers}

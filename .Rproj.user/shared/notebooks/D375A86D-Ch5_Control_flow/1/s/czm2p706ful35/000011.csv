@@ -1,0 +1,3 @@
+"0","if (logical()) 1"
+"2","Error in if (logical()) 1 : argument is of length zero
+"
