@@ -226,16 +226,34 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
     ```
 
     Read the documentation and write down the rules in your own words.
+    
+```{r}
+# ?ifelse()
+
+utils::str(ifelse(TRUE, 1, "no"))
+utils::str(ifelse(FALSE, 1, "no"))
+utils::str(ifelse(NA, 1, "no"))
+```
+
+> `ifelse(TRUE, 1, "no")` number, double vector
+
+> `ifelse(FALSE, 1, "no")` character vector
+
+> `ifelse(NA, 1, "no")` logical vector
 
 1.  Why does the following code work?
 
     ```{r}
     x <- 1:10
+    length(x)
     if (length(x)) "not empty" else "empty"
       
     x <- numeric()
+    length(x)
     if (length(x)) "not empty" else "empty"
     ```
+
+> 0 is treated as FALSE and all other numbers are treated as TRUE.
 
 ## Loops
 \index{loops}
@@ -245,7 +263,7 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
 `for` loops are used to iterate over items in a vector. They have the following basic form:
 
 ```{r, eval = FALSE}
-for (item in vector) perform_action
+# for (item in vector) perform_action
 ```
 
 For each item in `vector`, `perform_action` is called once; updating the value of `item` each time.
@@ -298,15 +316,23 @@ for (i in 1:length(means)) {
 }
 ```
 
+```{r}
+out
+str(out)
+```
+
+
 Next, beware of iterating over `1:length(x)`, which will fail in unhelpful ways if `x` has length 0:
 
 ```{r, error = TRUE}
 means <- c()
 out <- vector("list", length(means))
 for (i in 1:length(means)) {
-  out[[i]] <- rnorm(10, means[[i]])
+ out[[i]] <- rnorm(10, means[[i]])
 }
 ```
+
+> Error in rnorm(10, means[[i]]) : invalid arguments
 
 This occurs because `:` works with both increasing and decreasing sequences:
 
@@ -317,13 +343,16 @@ This occurs because `:` works with both increasing and decreasing sequences:
 Use `seq_along(x)` instead. It always returns a value the same length as `x`:
 
 ```{r}
-seq_along(means)
-
 out <- vector("list", length(means))
 for (i in seq_along(means)) {
   out[[i]] <- rnorm(10, means[[i]])
 }
 ```
+
+```{r}
+seq_along(means)
+```
+
 
 Finally, you might encounter problems when iterating over S3 vectors, as loops typically strip the attributes:
 
@@ -365,11 +394,18 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ```{r, results = FALSE}
     x <- numeric()
     out <- vector("list", length(x))
+    out
+    str(out)
+    length(x)
+    
     for (i in 1:length(x)) {
       out[i] <- x[i] ^ 2
     }
     out
     ```
+
+> 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
+
 
 1.  When the following code is evaluated, what can you say about the 
     vector being iterated?
@@ -382,6 +418,8 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     xs
     ```
 
+> the inputs are evaluated just once in the beginning of the loop
+
 1.  What does the following code tell you about when the index is updated?
 
     ```{r}
@@ -390,6 +428,8 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
       print(i) 
     }
     ```
+
+> the index is updated in the beginning of each iteration
 
 ## Quiz answers {#control-flow-answers}
 

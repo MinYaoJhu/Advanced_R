@@ -1,0 +1,7 @@
+"0","means <- c()"
+"0","out <- vector(""list"", length(means))"
+"0","for (i in 1:length(means)) {"
+"0"," out[[i]] <- rnorm(10, means[[i]])"
+"0","}"
+"2","Error in rnorm(10, means[[i]]) : invalid arguments
+"

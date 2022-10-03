@@ -283,12 +283,53 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
     ```
 
     Read the documentation and write down the rules in your own words.
+    
+
+```r
+# ?ifelse()
+
+utils::str(ifelse(TRUE, 1, "no"))
+```
+
+```
+##  num 1
+```
+
+```r
+utils::str(ifelse(FALSE, 1, "no"))
+```
+
+```
+##  chr "no"
+```
+
+```r
+utils::str(ifelse(NA, 1, "no"))
+```
+
+```
+##  logi NA
+```
+
+> `ifelse(TRUE, 1, "no")` number, double vector
+
+> `ifelse(FALSE, 1, "no")` character vector
+
+> `ifelse(NA, 1, "no")` logical vector
 
 1.  Why does the following code work?
 
     
     ```r
     x <- 1:10
+    length(x)
+    ```
+    
+    ```
+    ## [1] 10
+    ```
+    
+    ```r
     if (length(x)) "not empty" else "empty"
     ```
     
@@ -298,12 +339,22 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
     
     ```r
     x <- numeric()
+    length(x)
+    ```
+    
+    ```
+    ## [1] 0
+    ```
+    
+    ```r
     if (length(x)) "not empty" else "empty"
     ```
     
     ```
     ## [1] "empty"
     ```
+
+> 0 is treated as FALSE and all other numbers are treated as TRUE.
 
 ## Loops
 \index{loops}
@@ -314,7 +365,7 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
 
 
 ```r
-for (item in vector) perform_action
+# for (item in vector) perform_action
 ```
 
 For each item in `vector`, `perform_action` is called once; updating the value of `item` each time.
@@ -387,6 +438,37 @@ for (i in 1:length(means)) {
 }
 ```
 
+
+```r
+out
+```
+
+```
+## [[1]]
+##  [1]  2.4284845  1.9128725  1.3129844  2.9573309  1.4514717 -0.2908716
+##  [7]  2.2004391  0.9520764  1.0200341 -0.1485138
+## 
+## [[2]]
+##  [1] 50.73985 50.34476 50.38466 51.00398 51.02892 47.45632 50.87889 50.22018
+##  [9] 49.81989 48.69516
+## 
+## [[3]]
+##  [1] 19.85118 20.96091 20.33881 20.78995 18.45145 18.86207 19.63382 20.83893
+##  [9] 19.94425 19.89340
+```
+
+```r
+str(out)
+```
+
+```
+## List of 3
+##  $ : num [1:10] 2.43 1.91 1.31 2.96 1.45 ...
+##  $ : num [1:10] 50.7 50.3 50.4 51 51 ...
+##  $ : num [1:10] 19.9 21 20.3 20.8 18.5 ...
+```
+
+
 Next, beware of iterating over `1:length(x)`, which will fail in unhelpful ways if `x` has length 0:
 
 
@@ -394,13 +476,15 @@ Next, beware of iterating over `1:length(x)`, which will fail in unhelpful ways 
 means <- c()
 out <- vector("list", length(means))
 for (i in 1:length(means)) {
-  out[[i]] <- rnorm(10, means[[i]])
+ out[[i]] <- rnorm(10, means[[i]])
 }
 ```
 
 ```
 ## Error in rnorm(10, means[[i]]): invalid arguments
 ```
+
+> Error in rnorm(10, means[[i]]) : invalid arguments
 
 This occurs because `:` works with both increasing and decreasing sequences:
 
@@ -417,6 +501,14 @@ Use `seq_along(x)` instead. It always returns a value the same length as `x`:
 
 
 ```r
+out <- vector("list", length(means))
+for (i in seq_along(means)) {
+  out[[i]] <- rnorm(10, means[[i]])
+}
+```
+
+
+```r
 seq_along(means)
 ```
 
@@ -424,12 +516,6 @@ seq_along(means)
 ## integer(0)
 ```
 
-```r
-out <- vector("list", length(means))
-for (i in seq_along(means)) {
-  out[[i]] <- rnorm(10, means[[i]])
-}
-```
 
 Finally, you might encounter problems when iterating over S3 vectors, as loops typically strip the attributes:
 
@@ -484,11 +570,18 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ```r
     x <- numeric()
     out <- vector("list", length(x))
+    out
+    str(out)
+    length(x)
+    
     for (i in 1:length(x)) {
       out[i] <- x[i] ^ 2
     }
     out
     ```
+
+> 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
+
 
 1.  When the following code is evaluated, what can you say about the 
     vector being iterated?
@@ -506,6 +599,8 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ## [1] 1 2 3 2 4 6
     ```
 
+> the inputs are evaluated just once in the beginning of the loop
+
 1.  What does the following code tell you about when the index is updated?
 
     
@@ -521,6 +616,8 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ## [1] 4
     ## [1] 6
     ```
+
+> the index is updated in the beginning of each iteration
 
 ## Quiz answers {#control-flow-answers}
 

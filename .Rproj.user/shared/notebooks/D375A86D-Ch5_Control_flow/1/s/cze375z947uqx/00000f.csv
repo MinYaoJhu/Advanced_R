@@ -1,0 +1,4 @@
+"0","for (item in vector) perform_action"
+"2","Error in for (item in vector) perform_action : 
+  invalid for() loop sequence
+"

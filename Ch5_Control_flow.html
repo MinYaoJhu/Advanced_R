@@ -594,14 +594,40 @@ ifelse(FALSE, 1, &quot;no&quot;)
 ifelse(NA, 1, &quot;no&quot;)</code></pre>
 <p>Read the documentation and write down the rules in your own
 words.</p></li>
+</ol>
+<pre class="r"><code># ?ifelse()
+
+utils::str(ifelse(TRUE, 1, &quot;no&quot;))</code></pre>
+<pre><code>##  num 1</code></pre>
+<pre class="r"><code>utils::str(ifelse(FALSE, 1, &quot;no&quot;))</code></pre>
+<pre><code>##  chr &quot;no&quot;</code></pre>
+<pre class="r"><code>utils::str(ifelse(NA, 1, &quot;no&quot;))</code></pre>
+<pre><code>##  logi NA</code></pre>
+<blockquote>
+<p><code>ifelse(TRUE, 1, &quot;no&quot;)</code> number, double vector</p>
+</blockquote>
+<blockquote>
+<p><code>ifelse(FALSE, 1, &quot;no&quot;)</code> character vector</p>
+</blockquote>
+<blockquote>
+<p><code>ifelse(NA, 1, &quot;no&quot;)</code> logical vector</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>Why does the following code work?</p>
 <pre class="r"><code>x &lt;- 1:10
-if (length(x)) &quot;not empty&quot; else &quot;empty&quot;</code></pre>
+length(x)</code></pre>
+<pre><code>## [1] 10</code></pre>
+<pre class="r"><code>if (length(x)) &quot;not empty&quot; else &quot;empty&quot;</code></pre>
 <pre><code>## [1] &quot;not empty&quot;</code></pre>
 <pre class="r"><code>x &lt;- numeric()
-if (length(x)) &quot;not empty&quot; else &quot;empty&quot;</code></pre>
+length(x)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>if (length(x)) &quot;not empty&quot; else &quot;empty&quot;</code></pre>
 <pre><code>## [1] &quot;empty&quot;</code></pre></li>
 </ol>
+<blockquote>
+<p>0 is treated as FALSE and all other numbers are treated as TRUE.</p>
+</blockquote>
 </div>
 </div>
 <div id="loops" class="section level2">
@@ -609,7 +635,7 @@ if (length(x)) &quot;not empty&quot; else &quot;empty&quot;</code></pre>
 <p> </p>
 <p><code>for</code> loops are used to iterate over items in a vector.
 They have the following basic form:</p>
-<pre class="r"><code>for (item in vector) perform_action</code></pre>
+<pre class="r"><code># for (item in vector) perform_action</code></pre>
 <p>For each item in <code>vector</code>, <code>perform_action</code> is
 called once; updating the value of <code>item</code> each time.</p>
 <pre class="r"><code>for (i in 1:3) {
@@ -657,26 +683,46 @@ out &lt;- vector(&quot;list&quot;, length(means))
 for (i in 1:length(means)) {
   out[[i]] &lt;- rnorm(10, means[[i]])
 }</code></pre>
+<pre class="r"><code>out</code></pre>
+<pre><code>## [[1]]
+##  [1]  2.4284845  1.9128725  1.3129844  2.9573309  1.4514717 -0.2908716
+##  [7]  2.2004391  0.9520764  1.0200341 -0.1485138
+## 
+## [[2]]
+##  [1] 50.73985 50.34476 50.38466 51.00398 51.02892 47.45632 50.87889 50.22018
+##  [9] 49.81989 48.69516
+## 
+## [[3]]
+##  [1] 19.85118 20.96091 20.33881 20.78995 18.45145 18.86207 19.63382 20.83893
+##  [9] 19.94425 19.89340</code></pre>
+<pre class="r"><code>str(out)</code></pre>
+<pre><code>## List of 3
+##  $ : num [1:10] 2.43 1.91 1.31 2.96 1.45 ...
+##  $ : num [1:10] 50.7 50.3 50.4 51 51 ...
+##  $ : num [1:10] 19.9 21 20.3 20.8 18.5 ...</code></pre>
 <p>Next, beware of iterating over <code>1:length(x)</code>, which will
 fail in unhelpful ways if <code>x</code> has length 0:</p>
 <pre class="r"><code>means &lt;- c()
 out &lt;- vector(&quot;list&quot;, length(means))
 for (i in 1:length(means)) {
-  out[[i]] &lt;- rnorm(10, means[[i]])
+ out[[i]] &lt;- rnorm(10, means[[i]])
 }</code></pre>
 <pre><code>## Error in rnorm(10, means[[i]]): invalid arguments</code></pre>
+<blockquote>
+<p>Error in rnorm(10, means[[i]]) : invalid arguments</p>
+</blockquote>
 <p>This occurs because <code>:</code> works with both increasing and
 decreasing sequences:</p>
 <pre class="r"><code>1:length(means)</code></pre>
 <pre><code>## [1] 1 0</code></pre>
 <p>Use <code>seq_along(x)</code> instead. It always returns a value the
 same length as <code>x</code>:</p>
-<pre class="r"><code>seq_along(means)</code></pre>
-<pre><code>## integer(0)</code></pre>
 <pre class="r"><code>out &lt;- vector(&quot;list&quot;, length(means))
 for (i in seq_along(means)) {
   out[[i]] &lt;- rnorm(10, means[[i]])
 }</code></pre>
+<pre class="r"><code>seq_along(means)</code></pre>
+<pre><code>## integer(0)</code></pre>
 <p>Finally, you might encounter problems when iterating over S3 vectors,
 as loops typically strip the attributes:</p>
 <pre class="r"><code>xs &lt;- as.Date(c(&quot;2020-01-01&quot;, &quot;2010-01-01&quot;))
@@ -725,10 +771,22 @@ more in Chapter @ref(functionals).</p>
 <li><p>Why does this code succeed without errors or warnings?</p>
 <pre class="r"><code>x &lt;- numeric()
 out &lt;- vector(&quot;list&quot;, length(x))
+out
+str(out)
+length(x)
+
 for (i in 1:length(x)) {
   out[i] &lt;- x[i] ^ 2
 }
 out</code></pre></li>
+</ol>
+<blockquote>
+<p>1:length(x) counts down from 1 to 0. The first iteration x[1] will
+generate an NA. The second iteration x[0] will return numeric(0), which
+will assign a 0-length vector to a 0-length subset. It works but doesn’t
+change the object.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>When the following code is evaluated, what can you say about the
 vector being iterated?</p>
 <pre class="r"><code>xs &lt;- c(1, 2, 3)
@@ -737,6 +795,11 @@ for (x in xs) {
 }
 xs</code></pre>
 <pre><code>## [1] 1 2 3 2 4 6</code></pre></li>
+</ol>
+<blockquote>
+<p>the inputs are evaluated just once in the beginning of the loop</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>What does the following code tell you about when the index is
 updated?</p>
 <pre class="r"><code>for (i in 1:3) {
@@ -747,6 +810,9 @@ updated?</p>
 ## [1] 4
 ## [1] 6</code></pre></li>
 </ol>
+<blockquote>
+<p>the index is updated in the beginning of each iteration</p>
+</blockquote>
 </div>
 </div>
 <div id="control-flow-answers" class="section level2">

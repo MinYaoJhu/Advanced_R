@@ -1,0 +1,4 @@
+"0","out <- vector(""list"", length(means))"
+"0","for (i in seq_along(means)) {"
+"0","  out[[i]] <- rnorm(10, means[[i]])"
+"0","}"
