@@ -1,0 +1,5 @@
+"0","library(purrr)"
+"0",""
+"0","n_args <- funs %>% "
+"0","  map(formals) %>%"
+"0","  map_int(length)"

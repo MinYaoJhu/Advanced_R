@@ -1,0 +1,2 @@
+"0","    objs <- mget(ls(""package:base"", all = TRUE), inherits = TRUE)"
+"0","    funs <- Filter(is.function, objs)"

@@ -37,22 +37,32 @@ Take this short quiz to determine if you need to read this chapter. If the answe
     
 > Before reading: Positive integers indicate selecting elements at a specific position in the vector. Negative integers indicate excluding elements at a specific position in the vector. A character vector indicates selecting elements that match the same name. I am not sure about a logical vector. I guess it means to use Ture or False to choose elements in the vector.
 
+> After reading: Positive integers select elements at specific positions, negative integers drop elements; logical vectors keep elements at positions corresponding to `TRUE`; character vectors select elements with matching names.
+
 1.  What's the difference between `[`, `[[`, and `$` when applied to a list?
 
 > Before reading: `$` means to select a specific element in a list. `[` subset a list and return a new list. I am not sure about `[[`.  I guess it means similar to `$`.
 
+> After reading: `[` selects sub-lists: it always returns a list. If you use it with a single positive integer, it returns a list of length one. `[[` selects an element within a list. `$` is a convenient shorthand: `x$y` is equivalent to `x[["y"]]`.
+
 1.  When should you use `drop = FALSE`?
 
 > Before reading: I don't know. :)
+
+> After reading: Use `drop = FALSE` if you are subsetting a matrix, array, or data frame and you want to preserve the original dimensions. You should almost always use it when subsetting inside a function.
 
 1.  If `x` is a matrix, what does `x[] <- 0` do? How is it different from
     `x <- 0`?
     
 > Before reading: If `x` is a matrix, `x <- 0` assign number 0 to be `x`. On the other hand, `x[] <- 0` assign the number 0 to each individual element inside the matrix. Therefore, the output is a matrix with the same dimensions but all elements in the matrix are 0s.
 
+> After reading: If `x` is a matrix, `x[] <- 0` will replace every element with 0, keeping the same number of rows and columns. In contrast, `x <- 0` completely replaces the matrix with the value 0.
+
 1.  How can you use a named vector to relabel categorical variables?
 
 > Before reading: I don't know. :)
+
+> After reading: A named character vector can act as a simple lookup table: `c(x = 1, y = 2, z = 3)[c("y", "z", "x")]`
 
 ### Outline {-}
 
@@ -778,27 +788,5 @@ In general, avoid switching from logical to integer subsetting unless you want, 
     final row, and every row in between)?
     
 1.  How could you put the columns in a data frame in alphabetical order?
-
-## Quiz answers {#subsetting-answers}
-
-1.  Positive integers select elements at specific positions, negative integers
-    drop elements; logical vectors keep elements at positions corresponding to
-    `TRUE`; character vectors select elements with matching names.
-   
-1.  `[` selects sub-lists: it always returns a list. If you use it with a
-    single positive integer, it returns a list of length one. `[[` selects 
-    an element within a list. `$` is a convenient shorthand: `x$y` is
-    equivalent to `x[["y"]]`.
-
-1.  Use `drop = FALSE` if you are subsetting a matrix, array, or data frame 
-    and you want to preserve the original dimensions. You should almost 
-    always use it when subsetting inside a function.
-   
-1.  If `x` is a matrix, `x[] <- 0` will replace every element with 0, 
-    keeping the same number of rows and columns. In contrast, `x <- 0` 
-    completely replaces the matrix with the value 0.
-    
-1.  A named character vector can act as a simple lookup table: 
-    `c(x = 1, y = 2, z = 3)[c("y", "z", "x")]`
 
 [demorgans]: http://en.wikipedia.org/wiki/De_Morgan's_laws
