@@ -1,12 +1,25 @@
-"0","onePlusTen
-"
+"0","onePlusTen <- f1(1)"
+"0","tenPlusTen <- f1(10)"
+"0",""
+"0","onePlusTen"
 "1","function() {
 "
 "1","        x + 10
 "
 "1","      }
 "
-"1","<bytecode: 0x000001956aa65fb8>
+"1","<bytecode: 0x000002a19d5893a0>
 "
-"1","<environment: 0x000001956ce7d188>
+"1","<environment: 0x000002a19d706858>
+"
+"0","tenPlusTen"
+"1","function() {
+"
+"1","        x + 10
+"
+"1","      }
+"
+"1","<bytecode: 0x000002a19d5893a0>
+"
+"1","<environment: 0x000002a19d560218>
 "

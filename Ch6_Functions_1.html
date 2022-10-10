@@ -370,10 +370,19 @@ pre code {
 </div>
 
 
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <div id="functions" class="section level1">
-<h1>Functions</h1>
+<h1>6 Functions</h1>
 <div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<h2>6.1 Introduction</h2>
 <p> </p>
 <p>If you’re reading this book, you’ve probably already created many R
 functions and know how to use them to reduce duplication in your code.
@@ -510,7 +519,7 @@ prefix form to better understand what’s going on.</p></li>
 </div>
 </div>
 <div id="function-fundamentals" class="section level2">
-<h2>Function fundamentals</h2>
+<h2>6.2 Function fundamentals</h2>
 <p>To understand functions in R you need to internalise two important
 ideas:</p>
 <ul>
@@ -524,7 +533,7 @@ purely in C.</p>
 <li>Functions are objects, just as vectors are objects.</li>
 </ul>
 <div id="fun-components" class="section level3">
-<h3>Function components</h3>
+<h3>6.2.1 Function components</h3>
 <p> </p>
 <p>A function has three parts:</p>
 <ul>
@@ -556,6 +565,29 @@ formals(f02)</code></pre>
 ## }</code></pre>
 <pre class="r"><code>environment(f02)</code></pre>
 <pre><code>## &lt;environment: R_GlobalEnv&gt;</code></pre>
+<pre class="r"><code>    x &lt;- 10
+    f1 &lt;- function(x) {
+      function() {
+        x + 10
+      }
+    }
+    f1(1)()</code></pre>
+<pre><code>## [1] 11</code></pre>
+<pre class="r"><code>onePlusTen &lt;- f1(1)
+tenPlusTen &lt;- f1(10)
+
+onePlusTen</code></pre>
+<pre><code>## function() {
+##         x + 10
+##       }
+## &lt;bytecode: 0x000001e38dd8bcf0&gt;
+## &lt;environment: 0x000001e38e032a60&gt;</code></pre>
+<pre class="r"><code>tenPlusTen</code></pre>
+<pre><code>## function() {
+##         x + 10
+##       }
+## &lt;bytecode: 0x000001e38dd8bcf0&gt;
+## &lt;environment: 0x000001e38dd1e540&gt;</code></pre>
 <p>I’ll draw functions as in the following diagram. The black dot on the
 left is the environment. The two blocks to the right are the function
 arguments. I won’t draw the body, because it’s usually large, and
@@ -574,7 +606,7 @@ and other formatting.</p>
 ## }</code></pre>
 </div>
 <div id="primitive-functions" class="section level3">
-<h3>Primitive functions</h3>
+<h3>6.2.2 Primitive functions</h3>
 <p> </p>
 <p>There is one exception to the rule that a function has three
 components. Primitive functions, like <code>sum()</code> and
@@ -605,7 +637,7 @@ them unless there is no other option.</p>
 <!-- HW: mention internal functions here too? Cross-reference to perf example -->
 </div>
 <div id="first-class-functions" class="section level3">
-<h3>First-class functions</h3>
+<h3>6.2.3 First-class functions</h3>
 <p> </p>
 <p>It’s very important to understand that R functions are objects in
 their own right, a language property often called “first-class
@@ -638,7 +670,7 @@ environments, which you’ll learn more about in Section
 @ref(function-environments).</p>
 </div>
 <div id="invoking-a-function" class="section level3">
-<h3>Invoking a function</h3>
+<h3>6.2.4 Invoking a function</h3>
 <p>You normally call a function by placing its arguments, wrapped in
 parentheses, after its name: <code>mean(1:10, na.rm = TRUE)</code>. But
 what happens if you have the arguments already in a data structure?</p>
@@ -650,11 +682,28 @@ function to call, and a list containing the function arguments:</p>
 <p>We’ll come back to this idea in Section @ref(tidy-dots).</p>
 </div>
 <div id="exercises" class="section level3">
-<h3>Exercises</h3>
+<h3>6.2.5 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Given a name, like <code>&quot;mean&quot;</code>, <code>match.fun()</code>
+<li>Given a name, like <code>&quot;mean&quot;</code>, <code>match.fun()</code>
 lets you find a function. Given a function, can you find its name? Why
-doesn’t that make sense in R?</p></li>
+doesn’t that make sense in R?</li>
+</ol>
+<pre class="r"><code>?match.fun()</code></pre>
+<pre><code>## starting httpd help server ... done</code></pre>
+<blockquote>
+<p>Extract a Function Specified by Name Description: When called inside
+functions that take a function as argument, extract the desired function
+object while avoiding undesired matching to objects of other types.</p>
+</blockquote>
+<pre class="r"><code>match.fun(mean)</code></pre>
+<pre><code>## function (x, ...) 
+## UseMethod(&quot;mean&quot;)
+## &lt;bytecode: 0x000001e38a7c6700&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<blockquote>
+<p>A function can have more than one name.</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
 <li><p>It’s possible (although typically not useful) to call an
 anonymous function. Which of the two approaches below is correct?
 Why?</p>
@@ -662,33 +711,317 @@ Why?</p>
 <pre><code>## function(x) 3()</code></pre>
 <pre class="r"><code>(function(x) 3)()</code></pre>
 <pre><code>## [1] 3</code></pre></li>
-<li><p>A good rule of thumb is that an anonymous function should fit on
-one line and shouldn’t need to use <code>{}</code>. Review your code.
-Where could you have used an anonymous function instead of a named
-function? Where should you have used a named function instead of an
-anonymous function?</p></li>
-<li><p>What function allows you to tell if an object is a function? What
-function allows you to tell if a function is a primitive
-function?</p></li>
+</ol>
+<pre class="r"><code>function1 &lt;- function(x) 3()
+#function1()
+#Error in function1() : attempt to apply non-function</code></pre>
+<blockquote>
+<p><code>(function(x) 3)()</code> is correct.</p>
+</blockquote>
+<ol start="3" style="list-style-type: decimal">
+<li>A good rule of thumb is that an anonymous function should fit on one
+line and shouldn’t need to use <code>{}</code>. Review your code. Where
+could you have used an anonymous function instead of a named function?
+Where should you have used a named function instead of an anonymous
+function?</li>
+</ol>
+<pre class="r"><code>sapply(1:2, function(x) x + 1L)</code></pre>
+<pre><code>## [1] 2 3</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>What function allows you to tell if an object is a function? What
+function allows you to tell if a function is a primitive function?</li>
+</ol>
+<pre class="r"><code>?is.function() 
+?is.primitive()</code></pre>
+<blockquote>
+<p>Use is.function(x): Checks whether its argument is a function.</p>
+</blockquote>
+<blockquote>
+<p>Use is.primitive(x): Checks whether its argument is a primitive
+function.</p>
+</blockquote>
+<ol start="5" style="list-style-type: decimal">
 <li><p>This code makes a list of all functions in the base package.</p>
 <pre class="r"><code>objs &lt;- mget(ls(&quot;package:base&quot;, all = TRUE), inherits = TRUE)
-funs &lt;- Filter(is.function, objs)</code></pre>
-<p>Use it to answer the following questions:</p>
-<ol style="list-style-type: lower-alpha">
-<li><p>Which base function has the most arguments?</p></li>
-<li><p>How many base functions have no arguments? What’s special about
-those functions?</p></li>
-<li><p>How could you adapt the code to find all primitive
-functions?</p></li>
-</ol></li>
-<li><p>What are the three important components of a function?</p></li>
-<li><p>When does printing a function not show the environment it was
-created in?</p></li>
+funs &lt;- Filter(is.function, objs)
+
+?mget</code></pre></li>
 </ol>
+<blockquote>
+<p>Search by name for an object (get) or zero or more objects
+(mget).</p>
+</blockquote>
+<pre class="r"><code>str(funs)</code></pre>
+<pre><code>## List of 1333
+##  $ -                                 :function (e1, e2)  
+##  $ -.Date                            :function (e1, e2)  
+##  $ -.POSIXt                          :function (e1, e2)  
+##  $ !                                 :function (x)  
+##  $ !.hexmode                         :function (a)  
+##  $ !.octmode                         :function (a)  
+##  $ !=                                :function (e1, e2)  
+##  $ $                                 :.Primitive(&quot;$&quot;) 
+##  $ $.DLLInfo                         :function (x, name)  
+##  $ $.package_version                 :function (x, name)  
+##  $ $&lt;-                               :.Primitive(&quot;$&lt;-&quot;) 
+##  $ $&lt;-.data.frame                    :function (x, name, value)  
+##  $ %%                                :function (e1, e2)  
+##  $ %*%                               :function (x, y)  
+##  $ %/%                               :function (e1, e2)  
+##  $ %in%                              :function (x, table)  
+##  $ %o%                               :function (X, Y)  
+##  $ %x%                               :function (X, Y)  
+##  $ &amp;                                 :function (e1, e2)  
+##  $ &amp;&amp;                                :.Primitive(&quot;&amp;&amp;&quot;) 
+##  $ &amp;.hexmode                         :function (a, b)  
+##  $ &amp;.octmode                         :function (a, b)  
+##  $ (                                 :.Primitive(&quot;(&quot;) 
+##  $ *                                 :function (e1, e2)  
+##  $ *.difftime                        :function (e1, e2)  
+##  $ ...elt                            :function (n)  
+##  $ ...length                         :function ()  
+##  $ ...names                          :function ()  
+##  $ ..getNamespace                    :function (name, where)  
+##  $ .__H__.cbind                      :function (..., deparse.level = 1)  
+##  $ .__H__.rbind                      :function (..., deparse.level = 1)  
+##  $ .amatch_bounds                    :function (x = 0.1)  
+##  $ .amatch_costs                     :function (x = NULL)  
+##  $ .bincode                          :function (x, breaks, right = TRUE, include.lowest = FALSE)  
+##  $ .C                                :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .cache_class                      :function (class, extends)  
+##  $ .Call                             :function (.NAME, ..., PACKAGE)  
+##  $ .Call.graphics                    :function (.NAME, ..., PACKAGE)  
+##  $ .class2                           :function (x)  
+##  $ .col                              :function (dim)  
+##  $ .colMeans                         :function (x, m, n, na.rm = FALSE)  
+##  $ .colSums                          :function (x, m, n, na.rm = FALSE)  
+##  $ .Date                             :function (xx, cl = &quot;Date&quot;)  
+##  $ .decode_numeric_version           :function (x)  
+##  $ .Defunct                          :function (new, package = NULL, msg)  
+##  $ .deparseOpts                      :function (control)  
+##  $ .Deprecated                       :function (new, package = NULL, msg, old = as.character(sys.call(sys.parent()))[1L])  
+##  $ .detach                           :function (pos)  
+##  $ .difftime                         :function (xx, units, cl = &quot;difftime&quot;)  
+##  $ .doSortWrap                       :function (vec, decr, nalast, noNA = NA)  
+##  $ .doTrace                          :function (expr, msg)  
+##  $ .doWrap                           :function (vec, decr, nalast, noNA = NA)  
+##  $ .dynLibs                          :function (new)  
+##  $ .encode_numeric_version           :function (x)  
+##  $ .expand_R_libs_env_var            :function (x)  
+##  $ .External                         :function (.NAME, ..., PACKAGE)  
+##  $ .External.graphics                :function (.NAME, ..., PACKAGE)  
+##  $ .External2                        :function (.NAME, ..., PACKAGE)  
+##  $ .First.sys                        :function ()  
+##  $ .fixupGFortranStderr              :function ()  
+##  $ .fixupGFortranStdout              :function ()  
+##  $ .format.zeros                     :function (x, zero.print, nx = suppressWarnings(as.numeric(x)), replace = FALSE, 
+##     warn.non.fitting = TRUE)  
+##  $ .Fortran                          :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .getNamespace                     :function (name)  
+##  $ .getNamespaceInfo                 :function (ns, which)  
+##  $ .getRequiredPackages              :function (file = &quot;DESCRIPTION&quot;, lib.loc = NULL, quietly = FALSE, useImports = FALSE)  
+##  $ .getRequiredPackages2             :function (pkgInfo, quietly = FALSE, lib.loc = NULL, useImports = FALSE)  
+##  $ .gt                               :function (x, i, j)  
+##  $ .gtn                              :function (x, strictly)  
+##  $ .handleSimpleError                :function (h, msg, call)  
+##  $ .Internal                         :function (call)  
+##  $ .isMethodsDispatchOn              :function (onOff = NULL)  
+##  $ .isOpen                           :function (srcfile)  
+##  $ .kappa_tri                        :function (z, exact = FALSE, LINPACK = TRUE, norm = NULL, ...)  
+##  $ .kronecker                        :function (X, Y, FUN = &quot;*&quot;, make.dimnames = FALSE, ...)  
+##  $ .libPaths                         :function (new, include.site = TRUE)  
+##  $ .make_numeric_version             :function (x, strict = TRUE, regexp, classes = NULL)  
+##  $ .makeMessage                      :function (..., domain = NULL, appendLF = FALSE)  
+##  $ .mapply                           :function (FUN, dots, MoreArgs)  
+##  $ .maskedMsg                        :function (same, pkg, by)  
+##  $ .mergeExportMethods               :function (new, ns)  
+##  $ .mergeImportMethods               :function (impenv, expenv, metaname)  
+##  $ .NotYetImplemented                :function ()  
+##  $ .NotYetUsed                       :function (arg, error = TRUE)  
+##  $ .OptRequireMethods                :function ()  
+##  $ .packages                         :function (all.available = FALSE, lib.loc = NULL)  
+##  $ .packageStartupMessage            :function (message, call = NULL)  
+##  $ .POSIXct                          :function (xx, tz = NULL, cl = c(&quot;POSIXct&quot;, &quot;POSIXt&quot;))  
+##  $ .POSIXlt                          :function (xx, tz = NULL, cl = c(&quot;POSIXlt&quot;, &quot;POSIXt&quot;))  
+##  $ .pretty                           :function (x, n = 5L, min.n = n%/%3L, shrink.sml = 0.75, high.u.bias = 1.5, 
+##     u5.bias = 0.5 + 1.5 * high.u.bias, eps.correct = 0L, f.min = 2^-20, 
+##     bounds = TRUE)  
+##  $ .Primitive                        :function (name)  
+##  $ .primTrace                        :function (obj)  
+##  $ .primUntrace                      :function (obj)  
+##  $ .rmpkg                            :function (pkg)  
+##  $ .row                              :function (dim)  
+##  $ .row_names_info                   :function (x, type = 1L)  
+##  $ .rowMeans                         :function (x, m, n, na.rm = FALSE)  
+##  $ .rowNamesDF&lt;-                     :function (x, make.names = FALSE, value)  
+##  $ .rowSums                          :function (x, m, n, na.rm = FALSE)  
+##   [list output truncated]</code></pre>
+<pre><code>Use it to answer the following questions:
+
+a. Which base function has the most arguments?</code></pre>
+<pre class="r"><code>library(purrr)
+
+?map_int
+
+n_args &lt;- funs %&gt;% 
+  map(formals) %&gt;%
+  map_int(length)</code></pre>
+<blockquote>
+<p>map() always returns a list. map_lgl(), map_int(), map_dbl() and
+map_chr() return an atomic vector of the indicated type (or die
+trying).</p>
+</blockquote>
+<pre class="r"><code>str(n_args)</code></pre>
+<pre><code>##  Named int [1:1333] 0 2 2 0 1 1 0 0 2 2 ...
+##  - attr(*, &quot;names&quot;)= chr [1:1333] &quot;-&quot; &quot;-.Date&quot; &quot;-.POSIXt&quot; &quot;!&quot; ...</code></pre>
+<pre class="r"><code>n_args %&gt;% 
+  which.max()</code></pre>
+<pre><code>## scan 
+## 1056</code></pre>
+<pre><code>b. How many base functions have no arguments? What&#39;s special about those
+   functions?
+   </code></pre>
+<pre class="r"><code>sum(n_args == 0)</code></pre>
+<pre><code>## [1] 253</code></pre>
+<pre class="r"><code>n_args2 &lt;- funs %&gt;% 
+  discard(is.primitive) %&gt;% 
+  map(formals) %&gt;%
+  map_int(length)
+
+sum(n_args2 == 0)</code></pre>
+<pre><code>## [1] 49</code></pre>
+<pre><code>a. How could you adapt the code to find all primitive functions?</code></pre>
+<pre class="r"><code>    objs &lt;- mget(ls(&quot;package:base&quot;, all = TRUE), inherits = TRUE)
+    pri &lt;- Filter(is.primitive, objs)
+    str(pri)</code></pre>
+<pre><code>## List of 204
+##  $ -                   :function (e1, e2)  
+##  $ !                   :function (x)  
+##  $ !=                  :function (e1, e2)  
+##  $ $                   :.Primitive(&quot;$&quot;) 
+##  $ $&lt;-                 :.Primitive(&quot;$&lt;-&quot;) 
+##  $ %%                  :function (e1, e2)  
+##  $ %*%                 :function (x, y)  
+##  $ %/%                 :function (e1, e2)  
+##  $ &amp;                   :function (e1, e2)  
+##  $ &amp;&amp;                  :.Primitive(&quot;&amp;&amp;&quot;) 
+##  $ (                   :.Primitive(&quot;(&quot;) 
+##  $ *                   :function (e1, e2)  
+##  $ ...elt              :function (n)  
+##  $ ...length           :function ()  
+##  $ ...names            :function ()  
+##  $ .C                  :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .cache_class        :function (class, extends)  
+##  $ .Call               :function (.NAME, ..., PACKAGE)  
+##  $ .Call.graphics      :function (.NAME, ..., PACKAGE)  
+##  $ .class2             :function (x)  
+##  $ .External           :function (.NAME, ..., PACKAGE)  
+##  $ .External.graphics  :function (.NAME, ..., PACKAGE)  
+##  $ .External2          :function (.NAME, ..., PACKAGE)  
+##  $ .Fortran            :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .Internal           :function (call)  
+##  $ .isMethodsDispatchOn:function (onOff = NULL)  
+##  $ .Primitive          :function (name)  
+##  $ .primTrace          :function (obj)  
+##  $ .primUntrace        :function (obj)  
+##  $ .subset             :function (x, ...)  
+##  $ .subset2            :function (x, ...)  
+##  $ /                   :function (e1, e2)  
+##  $ :                   :.Primitive(&quot;:&quot;) 
+##  $ ::                  :function (pkg, name)  
+##  $ :::                 :function (pkg, name)  
+##  $ @                   :.Primitive(&quot;@&quot;) 
+##  $ @&lt;-                 :.Primitive(&quot;@&lt;-&quot;) 
+##  $ [                   :.Primitive(&quot;[&quot;) 
+##  $ [[                  :.Primitive(&quot;[[&quot;) 
+##  $ [[&lt;-                :.Primitive(&quot;[[&lt;-&quot;) 
+##  $ [&lt;-                 :.Primitive(&quot;[&lt;-&quot;) 
+##  $ ^                   :function (e1, e2)  
+##  $ {                   :.Primitive(&quot;{&quot;) 
+##  $ |                   :function (e1, e2)  
+##  $ ||                  :.Primitive(&quot;||&quot;) 
+##  $ ~                   :.Primitive(&quot;~&quot;) 
+##  $ +                   :function (e1, e2)  
+##  $ &lt;                   :function (e1, e2)  
+##  $ &lt;-                  :.Primitive(&quot;&lt;-&quot;) 
+##  $ &lt;&lt;-                 :.Primitive(&quot;&lt;&lt;-&quot;) 
+##  $ &lt;=                  :function (e1, e2)  
+##  $ =                   :.Primitive(&quot;=&quot;) 
+##  $ ==                  :function (e1, e2)  
+##  $ &gt;                   :function (e1, e2)  
+##  $ &gt;=                  :function (e1, e2)  
+##  $ abs                 :function (x)  
+##  $ acos                :function (x)  
+##  $ acosh               :function (x)  
+##  $ all                 :function (..., na.rm = FALSE)  
+##  $ any                 :function (..., na.rm = FALSE)  
+##  $ anyNA               :function (x, recursive = FALSE)  
+##  $ Arg                 :function (z)  
+##  $ as.call             :function (x)  
+##  $ as.character        :function (x, ...)  
+##  $ as.complex          :function (x, ...)  
+##  $ as.double           :function (x, ...)  
+##  $ as.environment      :function (x)  
+##  $ as.integer          :function (x, ...)  
+##  $ as.logical          :function (x, ...)  
+##  $ as.numeric          :function (x, ...)  
+##  $ as.raw              :function (x)  
+##  $ asin                :function (x)  
+##  $ asinh               :function (x)  
+##  $ atan                :function (x)  
+##  $ atanh               :function (x)  
+##  $ attr                :function (x, which, exact = FALSE)  
+##  $ attr&lt;-              :function (x, which, value)  
+##  $ attributes          :function (x)  
+##  $ attributes&lt;-        :function (x, value)  
+##  $ baseenv             :function ()  
+##  $ break               :.Primitive(&quot;break&quot;) 
+##  $ browser             :function (text = &quot;&quot;, condition = NULL, expr = TRUE, skipCalls = 0L)  
+##  $ c                   :function (...)  
+##  $ call                :function (name, ...)  
+##  $ ceiling             :function (x)  
+##  $ class               :function (x)  
+##  $ class&lt;-             :function (x, value)  
+##  $ Conj                :function (z)  
+##  $ cos                 :function (x)  
+##  $ cosh                :function (x)  
+##  $ cospi               :function (x)  
+##  $ cummax              :function (x)  
+##  $ cummin              :function (x)  
+##  $ cumprod             :function (x)  
+##  $ cumsum              :function (x)  
+##  $ digamma             :function (x)  
+##  $ dim                 :function (x)  
+##  $ dim&lt;-               :function (x, value)  
+##  $ dimnames            :function (x)  
+##   [list output truncated]</code></pre>
+<pre class="r"><code>    length(pri)</code></pre>
+<pre><code>## [1] 204</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>What are the three important components of a function?</li>
+</ol>
+<blockquote>
+<p>The three important components of a function are its body, arguments,
+and environment.</p>
+</blockquote>
+<ol start="7" style="list-style-type: decimal">
+<li>When does printing a function not show the environment it was
+created in?</li>
+</ol>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>When it’s a primitive function.</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>When the function is defined in the global environment.</li>
+</ol>
+</blockquote>
 </div>
 </div>
 <div id="function-composition" class="section level2">
-<h2>Function composition</h2>
+<h2>6.3 Function composition</h2>
 <p> </p>
 <p>Base R provides two ways to compose multiple function calls. For
 example, imagine you want to compute the population standard deviation
@@ -700,25 +1033,32 @@ deviation &lt;- function(x) x - mean(x)</code></pre>
 <pre class="r"><code>x &lt;- runif(100)
 
 sqrt(mean(square(deviation(x))))</code></pre>
-<pre><code>## [1] 0.3009364</code></pre>
+<pre><code>## [1] 0.2895154</code></pre>
 <p>Or you save the intermediate results as variables:</p>
 <pre class="r"><code>out &lt;- deviation(x)
 out &lt;- square(out)
 out &lt;- mean(out)
 out &lt;- sqrt(out)
 out</code></pre>
-<pre><code>## [1] 0.3009364</code></pre>
+<pre><code>## [1] 0.2895154</code></pre>
 <p>The magrittr package <span class="citation">[@magrittr]</span>
 provides a third option: the binary operator <code>%&gt;%</code>, which
 is called the pipe and is pronounced as “and then”.</p>
-<pre class="r"><code>library(magrittr)
-
-x %&gt;%
+<pre class="r"><code>library(magrittr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;magrittr&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     set_names</code></pre>
+<pre><code>## The following object is masked from &#39;package:tidyr&#39;:
+## 
+##     extract</code></pre>
+<pre class="r"><code>x %&gt;%
   deviation() %&gt;%
   square() %&gt;%
   mean() %&gt;%
   sqrt()</code></pre>
-<pre><code>## [1] 0.3009364</code></pre>
+<pre><code>## [1] 0.2895154</code></pre>
 <p><code>x %&gt;% f()</code> is equivalent to <code>f(x)</code>;
 <code>x %&gt;% f(y)</code> is equivalent to <code>f(x, y)</code>. The
 pipe allows you to focus on the high-level composition of functions
@@ -751,7 +1091,7 @@ tend to use piping infrequently in packages; not because it is a bad
 idea, but because it’s often a less natural fit.</p>
 </div>
 <div id="lexical-scoping" class="section level2">
-<h2>Lexical scoping</h2>
+<h2>6.4 Lexical scoping</h2>
 <p></p>
 <p>In Chapter @ref(names-values), we discussed assignment, the act of
 binding a name to a value. Here we’ll discuss <strong>scoping</strong>,
@@ -785,7 +1125,7 @@ structure.</p>
 <li>Dynamic lookup</li>
 </ul>
 <div id="name-masking" class="section level3">
-<h3>Name masking</h3>
+<h3>6.4.1 Name masking</h3>
 <p></p>
 <p>The basic principle of lexical scoping is that names defined inside a
 function mask names defined outside a function. This is illustrated in
@@ -831,7 +1171,7 @@ which I call manufactured functions, the topic of Chapter
 @ref(function-factories).</p>
 </div>
 <div id="functions-versus-variables" class="section level3">
-<h3>Functions versus variables</h3>
+<h3>6.4.2 Functions versus variables</h3>
 <p>In R, functions are ordinary objects. This means the scoping rules
 described above also apply to functions:</p>
 <pre class="r"><code>g07 &lt;- function(x) x + 1
@@ -857,7 +1197,7 @@ g10()</code></pre>
 and best avoided!</p>
 </div>
 <div id="fresh-start" class="section level3">
-<h3>A fresh start</h3>
+<h3>6.4.3 A fresh start</h3>
 <p>What happens to values between invocations of a function? Consider
 the example below. What will happen the first time you run this
 function? What will happen the second time?<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> (If you haven’t seen
@@ -882,7 +1222,7 @@ invocation is completely independent. We’ll see some ways to get around
 this in Section @ref(stateful-funs).</p>
 </div>
 <div id="dynamic-lookup" class="section level3">
-<h3>Dynamic lookup</h3>
+<h3>6.4.4 Dynamic lookup</h3>
 <p>Lexical scoping determines where, but not when to look for values. R
 looks for values when the function is run, not when the function is
 created. Together, these two properties tell us that the output of a
@@ -909,8 +1249,8 @@ within a function:</p>
 environment to the <code>emptyenv()</code>, an environment which
 contains nothing:</p>
 <pre class="r"><code>environment(g12) &lt;- emptyenv()
-g12()</code></pre>
-<pre><code>## Error in x + 1: could not find function &quot;+&quot;</code></pre>
+#g12()
+#Error in x + 1 : could not find function &quot;+&quot;</code></pre>
 <p>The problem and its solution reveal why this seemingly undesirable
 behaviour exists: R relies on lexical scoping to find
 <em>everything</em>, from the obvious, like <code>mean()</code>, to the
@@ -918,14 +1258,34 @@ less obvious, like <code>+</code> or even <code>{</code>. This gives R’s
 scoping rules a rather beautiful simplicity.</p>
 </div>
 <div id="exercises-1" class="section level3">
-<h3>Exercises</h3>
+<h3>6.4.5 Exercises</h3>
 <ol style="list-style-type: decimal">
 <li><p>What does the following code return? Why? Describe how each of
 the three <code>c</code>’s is interpreted.</p>
 <pre class="r"><code>c &lt;- 10
 c(c = c)</code></pre></li>
-<li><p>What are the four principles that govern how R looks for
-values?</p></li>
+</ol>
+<blockquote>
+<p>the <code>c()</code> represents the <em>c: Combine Values into a
+Vector or List</em> function. the <code>c=</code> represents a name. the
+<code>=c</code> represents a value, 10.</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>What are the four principles that govern how R looks for
+values?</li>
+</ol>
+<blockquote>
+<p>R’s lexical scoping follows four primary rules:</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Name masking</li>
+<li>Functions versus variables</li>
+<li>A fresh start</li>
+<li>Dynamic lookup</li>
+</ol>
+</blockquote>
+<ol start="3" style="list-style-type: decimal">
 <li><p>What does the following function return? Make a prediction before
 running the code yourself.</p>
 <pre class="r"><code>f &lt;- function(x) {
@@ -939,10 +1299,15 @@ running the code yourself.</p>
 }
 f(10)</code></pre></li>
 </ol>
+<blockquote>
+<ol start="202" style="list-style-type: decimal">
+<li>Correct!</li>
+</ol>
+</blockquote>
 </div>
 </div>
 <div id="lazy-evaluation" class="section level2">
-<h2>Lazy evaluation</h2>
+<h2>6.5 Lazy evaluation</h2>
 <p> </p>
 <p>In R, function arguments are <strong>lazily evaluated</strong>:
 they’re only evaluated if accessed. For example, this code doesn’t
@@ -956,7 +1321,7 @@ h01(stop(&quot;This is an error!&quot;))</code></pre>
 include potentially expensive computations in function arguments that
 will only be evaluated if needed.</p>
 <div id="promises" class="section level3">
-<h3>Promises</h3>
+<h3>6.5.1 Promises</h3>
 <p> </p>
 <p>Lazy evaluation is powered by a data structure called a
 <strong>promise</strong>, or (less commonly) a thunk. It’s one of the
@@ -1009,7 +1374,7 @@ an R object where you can easily inspect the expression and the
 environment.</p>
 </div>
 <div id="default-arguments" class="section level3">
-<h3>Default arguments</h3>
+<h3>6.5.2 Default arguments</h3>
 <p></p>
 <p>Thanks to lazy evaluation, default values can be defined in terms of
 other arguments, or even in terms of variables defined later in the
@@ -1042,10 +1407,14 @@ h05()
 
 # ls() evaluated in global environment:
 h05(ls())
-#&gt; [1] &quot;h05&quot;</code></pre>
+#&gt; [1] &quot;h05&quot;
+
+env &lt;- ls()
+h05(env)</code></pre>
+<p>???</p>
 </div>
 <div id="missing-arguments" class="section level3">
-<h3>Missing arguments</h3>
+<h3>6.5.3 Missing arguments</h3>
 <p> </p>
 <p>To determine if an argument’s value comes from the user or from a
 default, you can use <code>missing()</code>:</p>
@@ -1098,7 +1467,7 @@ computation: the right side of <code>%||%</code> will only be evaluated
 if the left side is <code>NULL</code>.</p>
 </div>
 <div id="exercises-2" class="section level3">
-<h3>Exercises</h3>
+<h3>6.5.4 Exercises</h3>
 <ol style="list-style-type: decimal">
 <li><p>What important property of <code>&amp;&amp;</code> makes
 <code>x_ok()</code> work?</p>
@@ -1111,19 +1480,47 @@ x_ok(NULL)</code></pre>
 <pre class="r"><code>x_ok(1)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>x_ok(1:3)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre></li>
+</ol>
+<pre class="r"><code>?`&amp;&amp;`</code></pre>
+<blockquote>
+<p>&amp;&amp; does not perform elementwise comparisons; instead it uses
+the first element of each value only.</p>
+</blockquote>
 <p>What is different with this code? Why is this behaviour undesirable
 here?</p>
-<pre class="r"><code>x_ok &lt;- function(x) {
+<pre><code>```r
+x_ok &lt;- function(x) {
   !is.null(x) &amp; length(x) == 1 &amp; x &gt; 0
 }
 
-x_ok(NULL)</code></pre>
+x_ok(NULL)
+```
+
+```
+## logical(0)
+```
+
+```r
+x_ok(1)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+x_ok(1:3)
+```
+
+```
+## [1] FALSE FALSE FALSE
+```</code></pre>
+<pre class="r"><code>length(NULL) == 1</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>NULL &gt; 0</code></pre>
 <pre><code>## logical(0)</code></pre>
-<pre class="r"><code>x_ok(1)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
-<pre class="r"><code>x_ok(1:3)</code></pre>
-<pre><code>## [1] FALSE FALSE FALSE</code></pre></li>
+<ol start="2" style="list-style-type: decimal">
 <li><p>What does this function return? Why? Which principle does it
 illustrate?</p>
 <pre class="r"><code>f2 &lt;- function(x = z) {
@@ -1131,6 +1528,13 @@ illustrate?</p>
   x
 }
 f2()</code></pre></li>
+</ol>
+<blockquote>
+<ol start="100" style="list-style-type: decimal">
+<li>Lazy evaluation, Default arguments.</li>
+</ol>
+</blockquote>
+<ol start="3" style="list-style-type: decimal">
 <li><p>What does this function return? Why? Which principle does it
 illustrate?</p>
 <pre class="r"><code>y &lt;- 10
@@ -1139,6 +1543,18 @@ f1 &lt;- function(x = {y &lt;- 1; 2}, y = 0) {
 }
 f1()
 y</code></pre></li>
+</ol>
+<pre class="r"><code>f1(x = 2)</code></pre>
+<pre><code>## [1] 2 0</code></pre>
+<pre class="r"><code>f1(y = 3)</code></pre>
+<pre><code>## [1] 2 1</code></pre>
+<blockquote>
+<p>f1() returns c(2, 1)</p>
+</blockquote>
+<blockquote>
+<p>lexical scoping, name masking</p>
+</blockquote>
+<ol start="4" style="list-style-type: decimal">
 <li><p>In <code>hist()</code>, the default value of <code>xlim</code> is
 <code>range(breaks)</code>, the default value for <code>breaks</code> is
 <code>&quot;Sturges&quot;</code>, and</p>
@@ -1146,669 +1562,93 @@ y</code></pre></li>
 <pre><code>## [1] &quot;Sturges&quot; &quot;Sturges&quot;</code></pre>
 <p>Explain how <code>hist()</code> works to get a correct
 <code>xlim</code> value.</p></li>
+</ol>
+<pre class="r"><code>?range</code></pre>
+<blockquote>
+<p>range returns a vector containing the minimum and maximum of all the
+given arguments.</p>
+</blockquote>
+<pre class="r"><code>range(1:10)</code></pre>
+<pre><code>## [1]  1 10</code></pre>
+<pre class="r"><code>?hist()</code></pre>
+<blockquote>
+<p>The generic function hist computes a histogram of the given data
+values.</p>
+</blockquote>
+</div>
+</div>
+<div id="default-s3-method" class="section level2">
+<h2>Default S3 method:</h2>
+<p>hist(x, breaks = “Sturges”, freq = NULL, probability = !freq,
+include.lowest = TRUE, right = TRUE, fuzz = 1e-7, density = NULL, angle
+= 45, col = “lightgray”, border = NULL, main = paste(“Histogram of” ,
+xname), xlim = range(breaks), ylim = NULL, xlab = xname, ylab, axes =
+TRUE, plot = TRUE, labels = FALSE, nclass = NULL, warn.unused = TRUE,
+…)</p>
+<ol start="5" style="list-style-type: decimal">
 <li><p>Explain why this function works. Why is it confusing?</p>
 <pre class="r"><code>show_time &lt;- function(x = stop(&quot;Error!&quot;)) {
   stop &lt;- function(...) Sys.time()
   print(x)
 }
 show_time()</code></pre>
-<pre><code>## [1] &quot;2022-10-09 20:08:35 BST&quot;</code></pre></li>
-<li><p>How many arguments are required when calling
-<code>library()</code>?</p></li>
+<pre><code>## [1] &quot;2022-10-10 09:44:16 BST&quot;</code></pre></li>
 </ol>
-</div>
-</div>
-<div id="fun-dot-dot-dot" class="section level2">
-<h2><code>...</code> (dot-dot-dot)</h2>
-<p> </p>
-<p>Functions can have a special argument <code>...</code> (pronounced
-dot-dot-dot). With it, a function can take any number of additional
-arguments. In other programming languages, this type of argument is
-often called <em>varargs</em> (short for variable arguments), and a
-function that uses it is said to be variadic.</p>
-<p>You can also use <code>...</code> to pass those additional arguments
-on to another function.</p>
-<pre class="r"><code>i01 &lt;- function(y, z) {
-  list(y = y, z = z)
-}
-
-i02 &lt;- function(x, ...) {
-  i01(...)
-}
-
-str(i02(x = 1, y = 2, z = 3))</code></pre>
-<pre><code>## List of 2
-##  $ y: num 2
-##  $ z: num 3</code></pre>
-<p>Using a special form, <code>..N</code>, it’s possible (but rarely
-useful) to refer to elements of <code>...</code> by position:</p>
-<pre class="r"><code>i03 &lt;- function(...) {
-  list(first = ..1, third = ..3)
-}
-str(i03(1, 2, 3))</code></pre>
-<pre><code>## List of 2
-##  $ first: num 1
-##  $ third: num 3</code></pre>
-<p>More useful is <code>list(...)</code>, which evaluates the arguments
-and stores them in a list:</p>
-<pre class="r"><code>i04 &lt;- function(...) {
-  list(...)
-}
-str(i04(a = 1, b = 2))</code></pre>
-<pre><code>## List of 2
-##  $ a: num 1
-##  $ b: num 2</code></pre>
-<p>(See also <code>rlang::list2()</code> to support splicing and to
-silently ignore trailing commas, and <code>rlang::enquos()</code> to
-capture unevaluated arguments, the topic of [quasiquotation].)</p>
-<p>There are two primary uses of <code>...</code>, both of which we’ll
-come back to later in the book:</p>
-<ul>
-<li><p>If your function takes a function as an argument, you want some
-way to pass additional arguments to that function. In this example,
-<code>lapply()</code> uses <code>...</code> to pass <code>na.rm</code>
-on to <code>mean()</code>:</p>
-<pre class="r"><code>x &lt;- list(c(1, 3, NA), c(4, NA, 6))
-str(lapply(x, mean, na.rm = TRUE))</code></pre>
-<pre><code>## List of 2
-##  $ : num 2
-##  $ : num 5</code></pre>
-<p>We’ll come back to this technique in Section
-@ref(passing-arguments).</p></li>
-<li><p>If your function is an S3 generic, you need some way to allow
-methods to take arbitrary extra arguments. For example, take the
-<code>print()</code> function. Because there are different options for
-printing depending on the type of object, there’s no way to pre-specify
-every possible argument and <code>...</code> allows individual methods
-to have different arguments:</p>
-<pre class="r"><code>print(factor(letters), max.levels = 4)
-
-print(y ~ x, showEnv = TRUE)</code></pre>
-<p>We’ll come back to this use of <code>...</code> in Section
-@ref(s3-arguments).</p></li>
-</ul>
-<p>Using <code>...</code> comes with two downsides:</p>
-<ul>
-<li><p>When you use it to pass arguments to another function, you have
-to carefully explain to the user where those arguments go. This makes it
-hard to understand what you can do with functions like
-<code>lapply()</code> and <code>plot()</code>.</p></li>
-<li><p>A misspelled argument will not raise an error. This makes it easy
-for typos to go unnoticed:</p>
-<pre class="r"><code>sum(1, 2, NA, na_rm = TRUE)</code></pre>
-<pre><code>## [1] NA</code></pre></li>
-</ul>
-<div id="exercises-3" class="section level3">
-<h3>Exercises</h3>
-<ol style="list-style-type: decimal">
-<li><p>Explain the following results:</p>
-<pre class="r"><code>sum(1, 2, 3)</code></pre>
-<pre><code>## [1] 6</code></pre>
-<pre class="r"><code>mean(1, 2, 3)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<pre class="r"><code>sum(1, 2, 3, na.omit = TRUE)</code></pre>
-<pre><code>## [1] 7</code></pre>
-<pre class="r"><code>mean(1, 2, 3, na.omit = TRUE)</code></pre>
-<pre><code>## [1] 1</code></pre></li>
-<li><p>Explain how to find the documentation for the named arguments in
-the following function call:</p>
-<pre class="r"><code>plot(1:10, col = &quot;red&quot;, pch = 20, xlab = &quot;x&quot;, col.lab = &quot;blue&quot;)</code></pre>
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAAbFBMVEUAAAAAADoAAGYAAP8AOjoAOpAAOv8AZrYAZv86AAA6ADo6AGY6kNs6kP9mAABmAP9mZv9mtv+QOgCQOv+QZgCQ2/+2ZgC2Zv+2/7a2///bkDrbkP/b////AAD/tmb/tv//25D//7b//9v////GVNXlAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAF80lEQVR4nO3d63LaRgBAYWzqOGkd3EBNajmWDbz/OxaxQNJRtAdZWnZtzvnReiYaCT7E6gZosrFok9wPoPQEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEggSCBIIEgkYGmrybcgGNO7t0CdTV8/Nz8z+BOnp+DkJnBur/1s5VJqBUsxs/gSjHoNMSCBIIEggSCBIIEggSaN9+t6eVQKHDjnMrgUICQQJRjkFvTCBIIEggSCAoEdByMrldzyeTybdRZpexNEDVzY+t0e1ms5rdjTC78evaqLdLArSeb1nqq4dNoBo6u/Hr3C1slwRoNdu+s+rrx83hvz/nUsZln9xArkHUcQzaUQ2e3fhlHoPcip1xubkTCBIIEggSCBIIugyg03d7Wl0EUI8d51YCQQJBFwF03jFoMQ09xqYeb7m56wv0NP0a/ng5/JF4ubnrC7Q4sjx9+v2ZnpGXm7u+QPfH8xcvg95kHxbINQgmfJruV6H4GLS8fty8fplMdqddBy03d/23YvdhIxZdf3Y+fz7sT98PWu4bGrBRb5foqsbdFum2+TPDSfshu4Xtkl322Z+uz3DZ5x0A7daeyjWou9Xs+vGXi2NDZ9ezrGPQfojGg406vJFuBy83d73XoMXAg7C+y83dGw5WP591ubnrD/Qy7bpammS5ubuM80EDEggSCPoAQKPu9rR6A9B9OIx/KuR80Lg7zq3e/xokECQQVdwYdN7l5i7Vwepoy82dB6uQB6uQB6tQ0kH69Uun5WUDrWY/T85f/37IejtQ2q16qzRrUD3ZXdJIsQYl3i9slegttpo1VzPaQMMv+3wQoM1mefXgGhStmtwlGaQ/xBi06/XLH27Foq3nnd+GEujMs0uXQJBAkECQQFDpQGfe62lXONC595vbCQQJBBUO5BhUfAJBAkECQQJBiYCqwy/jVKNf1ThzaYCqq4fNatZ8irwnUPateqskQOGLLOv5zY+eQPn3C1slunAYTrUub35Uvb7tcylAx18uW966Bv22A8tq1vPSc3E+6bZi4U22nrsVS7zc3AkECQQJBAkEZQUqb6PeLidQgbuF7QSCBIIcgyC3YpBAUDagd1MmoAGL4UlGmUnfZyzQuJO/NYGGL0agwZMIdI6ZCDTCJAMmf2sCDV/MZQO93wSCBIIEggSCBIIEggSCBIIEggSCBIIEgs4AtLtzbcedfX9p2fEz+fua23l0/hB66Pg9gM55/LX7ZGUduTFIq/RA6/n20VT05LaPOgpUb/81fMi/s+Z7AHVMqPlJ/k34Qf7OH+VvlR4o/FZM1werD61mUaDwEe3oTNbzhm/ZbViH380Ks4pM9//ONQbRS1bd/BMD2t0PJh4B1ZO73d1ATnvBjp0LaBl/QFuA6BhUX/87o4EM32LhdinBui4MqI4/uWa1jwJVzbsjrCOxhcDgu1MJ6/LJg9B5gGoYo3c3so8CXfHLHm5dFXshigWC9Ses9XGgHU3kt8FOGltKfYtVtBdU7T+S0v30w/OJDtUnrBmFDtJVfO/tUHQNCl9Vi77s4YlHJ6mL3MzHh4Wfxfekm1Hq+H21jhmcNgYVt6O4f//gI4JDjZqPV5Y0yX71qso61HjnCQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBJUO9NTcxfz+a74HUDrQZvF18/Qp+smhtBUP9DJ9vD/5004JKh5o8336Oefiywd6mZ70GdBUlQ+0+Ht64id2k1Q80HaEXmTciJUPdP+tGafzLb90oO/NJn6RcZguHSh7AkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQQJBAkECQf8Bhz25WYqlht4AAAAASUVORK5CYII=" /><!-- --></p></li>
-<li><p>Why does <code>plot(1:10, col = &quot;red&quot;)</code> only colour the
-points, not the axes or labels? Read the source code of
-<code>plot.default()</code> to find out.</p></li>
-</ol>
-</div>
-</div>
-<div id="exiting-a-function" class="section level2">
-<h2>Exiting a function</h2>
-<p>Most functions exit in one of two ways<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>: they either return a
-value, indicating success, or they throw an error, indicating failure.
-This section describes return values (implicit versus explicit; visible
-versus invisible), briefly discusses errors, and introduces exit
-handlers, which allow you to run code when a function exits.</p>
-<div id="implicit-versus-explicit-returns" class="section level3">
-<h3>Implicit versus explicit returns</h3>
-<p> </p>
-<p>There are two ways that a function can return a value:</p>
-<ul>
-<li><p>Implicitly, where the last evaluated expression is the return
-value:</p>
-<pre class="r"><code>j01 &lt;- function(x) {
-  if (x &lt; 10) {
-    0
-  } else {
-    10
-  }
-}
-j01(5)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>j01(15)</code></pre>
-<pre><code>## [1] 10</code></pre></li>
-<li><p>Explicitly, by calling <code>return()</code>:</p>
-<pre class="r"><code>j02 &lt;- function(x) {
-  if (x &lt; 10) {
-    return(0)
-  } else {
-    return(10)
-  }
-}</code></pre></li>
-</ul>
-</div>
-<div id="invisible" class="section level3">
-<h3>Invisible values</h3>
-<p> </p>
-<p>Most functions return visibly: calling the function in an interactive
-context prints the result.</p>
-<pre class="r"><code>j03 &lt;- function() 1
-j03()</code></pre>
-<pre><code>## [1] 1</code></pre>
-<p>However, you can prevent automatic printing by applying
-<code>invisible()</code> to the last value:</p>
-<pre class="r"><code>j04 &lt;- function() invisible(1)
-j04()</code></pre>
-<p>To verify that this value does indeed exist, you can explicitly print
-it or wrap it in parentheses:</p>
-<pre class="r"><code>print(j04())</code></pre>
-<pre><code>## [1] 1</code></pre>
-<pre class="r"><code>(j04())</code></pre>
-<pre><code>## [1] 1</code></pre>
-<p>Alternatively, you can use <code>withVisible()</code> to return the
-value and a visibility flag:</p>
-<pre class="r"><code>str(withVisible(j04()))</code></pre>
-<pre><code>## List of 2
-##  $ value  : num 1
-##  $ visible: logi FALSE</code></pre>
-<p>The most common function that returns invisibly is
-<code>&lt;-</code>:</p>
-<pre class="r"><code>a &lt;- 2
-(a &lt;- 2)</code></pre>
-<pre><code>## [1] 2</code></pre>
-<p>This is what makes it possible to chain assignments:</p>
-<pre class="r"><code>a &lt;- b &lt;- c &lt;- d &lt;- 2</code></pre>
-<p>In general, any function called primarily for a side effect (like
-<code>&lt;-</code>, <code>print()</code>, or <code>plot()</code>) should
-return an invisible value (typically the value of the first
-argument).</p>
-</div>
-<div id="errors" class="section level3">
-<h3>Errors</h3>
-<p></p>
-<p>If a function cannot complete its assigned task, it should throw an
-error with <code>stop()</code>, which immediately terminates the
-execution of the function.</p>
-<pre class="r"><code>j05 &lt;- function() {
-  stop(&quot;I&#39;m an error&quot;)
-  return(10)
-}
-j05()</code></pre>
-<pre><code>## Error in j05(): I&#39;m an error</code></pre>
-<p>An error indicates that something has gone wrong, and forces the user
-to deal with the problem. Some languages (like C, Go, and Rust) rely on
-special return values to indicate problems, but in R you should always
-throw an error. You’ll learn more about errors, and how to handle them,
-in Chapter @ref(conditions).</p>
-</div>
-<div id="on-exit" class="section level3">
-<h3>Exit handlers</h3>
-<p></p>
-<p>Sometimes a function needs to make temporary changes to the global
-state. But having to cleanup those changes can be painful (what happens
-if there’s an error?). To ensure that these changes are undone and that
-the global state is restored no matter how a function exits, use
-<code>on.exit()</code> to set up an <strong>exit handler</strong>. The
-following simple example shows that the exit handler is run regardless
-of whether the function exits normally or with an error.</p>
-<pre class="r"><code>j06 &lt;- function(x) {
-  cat(&quot;Hello\n&quot;)
-  on.exit(cat(&quot;Goodbye!\n&quot;), add = TRUE)
-  
-  if (x) {
-    return(10)
-  } else {
-    stop(&quot;Error&quot;)
-  }
-}
-
-j06(TRUE)</code></pre>
-<pre><code>## Hello
-## Goodbye!</code></pre>
-<pre><code>## [1] 10</code></pre>
-<pre class="r"><code>j06(FALSE)</code></pre>
-<pre><code>## Hello</code></pre>
-<pre><code>## Error in j06(FALSE): Error</code></pre>
-<pre><code>## Goodbye!</code></pre>
-<div class="sidebar">
-<p>Always set <code>add = TRUE</code> when using <code>on.exit()</code>.
-If you don’t, each call to <code>on.exit()</code> will overwrite the
-previous exit handler. Even when only registering a single handler, it’s
-good practice to set <code>add = TRUE</code> so that you won’t get any
-unpleasant surprises if you later add more exit handlers.</p>
-</div>
-<p><code>on.exit()</code> is useful because it allows you to place
-clean-up code directly next to the code that requires clean-up:</p>
-<pre class="r"><code>cleanup &lt;- function(dir, code) {
-  old_dir &lt;- setwd(dir)
-  on.exit(setwd(old_dir), add = TRUE)
-  
-  old_opt &lt;- options(stringsAsFactors = FALSE)
-  on.exit(options(old_opt), add = TRUE)
-}</code></pre>
-<p>Coupled with lazy evaluation, this creates a very useful pattern for
-running a block of code in an altered environment:</p>
-<pre class="r"><code>with_dir &lt;- function(dir, code) {
-  old &lt;- setwd(dir)
-  on.exit(setwd(old), add = TRUE)
-
-  force(code)
-}
-
-getwd()</code></pre>
-<pre><code>## [1] &quot;D:/Oldroyd_lab/GitHub/Advanced_R&quot;</code></pre>
-<pre class="r"><code>with_dir(&quot;~&quot;, getwd())</code></pre>
-<pre><code>## [1] &quot;C:/Users/myj23/Documents&quot;</code></pre>
-<p>The use of <code>force()</code> isn’t strictly necessary here as
-simply referring to <code>code</code> will force its evaluation.
-However, using <code>force()</code> makes it very clear that we are
-deliberately forcing the execution. You’ll learn other uses of
-<code>force()</code> in Chapter @ref(function-factories).</p>
-<p>The withr package <span class="citation">[@withr]</span> provides a
-collection of other functions for setting up a temporary state.</p>
-<p>In R 3.4 and earlier, <code>on.exit()</code> expressions are always
-run in order of creation:</p>
-<pre class="r"><code>j08 &lt;- function() {
-  on.exit(message(&quot;a&quot;), add = TRUE)
-  on.exit(message(&quot;b&quot;), add = TRUE)
-}
-j08()</code></pre>
-<pre><code>## a</code></pre>
-<pre><code>## b</code></pre>
-<p>This can make cleanup a little tricky if some actions need to happen
-in a specific order; typically you want the most recent added expression
-to be run first. In R 3.5 and later, you can control this by setting
-<code>after = FALSE</code>:</p>
-<pre class="r"><code>j09 &lt;- function() {
-  on.exit(message(&quot;a&quot;), add = TRUE, after = FALSE)
-  on.exit(message(&quot;b&quot;), add = TRUE, after = FALSE)
-}
-j09()</code></pre>
-<pre><code>## b</code></pre>
-<pre><code>## a</code></pre>
-</div>
-<div id="exercises-4" class="section level3">
-<h3>Exercises</h3>
-<ol style="list-style-type: decimal">
-<li><p>What does <code>load()</code> return? Why don’t you normally see
-these values?</p></li>
-<li><p>What does <code>write.table()</code> return? What would be more
-useful?</p></li>
-<li><p>How does the <code>chdir</code> parameter of
-<code>source()</code> compare to <code>with_dir()</code>? Why might you
-prefer one to the other?</p></li>
-<li><p>Write a function that opens a graphics device, runs the supplied
-code, and closes the graphics device (always, regardless of whether or
-not the plotting code works).</p></li>
-<li><p>We can use <code>on.exit()</code> to implement a simple version
-of <code>capture.output()</code>.</p>
-<pre class="r"><code>capture.output2 &lt;- function(code) {
-  temp &lt;- tempfile()
-  on.exit(file.remove(temp), add = TRUE, after = TRUE)
-
-  sink(temp)
-  on.exit(sink(), add = TRUE, after = TRUE)
-
-  force(code)
-  readLines(temp)
-}
-capture.output2(cat(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, sep = &quot;\n&quot;))</code></pre>
-<pre><code>## Warning in file.remove(temp): cannot remove file &#39;C:
-## \Users\myj23\AppData\Local\Temp\RtmpO0xmww\file635c1cb94a87&#39;, reason &#39;Permission
-## denied&#39;</code></pre>
-<pre><code>## [1] &quot;a&quot; &quot;b&quot; &quot;c&quot;</code></pre>
-<p>Compare <code>capture.output()</code> to
-<code>capture.output2()</code>. How do the functions differ? What
-features have I removed to make the key ideas easier to see? How have I
-rewritten the key ideas so they’re easier to understand?</p></li>
-</ol>
-</div>
-</div>
-<div id="function-forms" class="section level2">
-<h2>Function forms</h2>
+<pre class="r"><code>print(Sys.time())</code></pre>
+<pre><code>## [1] &quot;2022-10-10 09:44:16 BST&quot;</code></pre>
 <blockquote>
-<p>To understand computations in R, two slogans are helpful:</p>
-<ul>
-<li>Everything that exists is an object.</li>
-<li>Everything that happens is a function call.</li>
-</ul>
-<p>— John Chambers</p>
+<p>Functions can have a special argument … (pronounced dot-dot-dot).
+With it, a function can take any number of additional arguments.</p>
 </blockquote>
-<p>While everything that happens in R is a result of a function call,
-not all calls look the same. Function calls come in four varieties:</p>
-<ul>
-<li><p><strong>prefix</strong>: the function name comes before its
-arguments, like <code>foofy(a, b, c)</code>. These constitute of the
-majority of function calls in R.</p></li>
-<li><p><strong>infix</strong>: the function name comes in between its
-arguments, like <code>x + y</code>. Infix forms are used for many
-mathematical operators, and for user-defined functions that begin and
-end with <code>%</code>.</p></li>
-<li><p><strong>replacement</strong>: functions that replace values by
-assignment, like <code>names(df) &lt;- c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)</code>. They
-actually look like prefix functions.</p></li>
-<li><p><strong>special</strong>: functions like <code>[[</code>,
-<code>if</code>, and <code>for</code>. While they don’t have a
-consistent structure, they play important roles in R’s syntax.</p></li>
-</ul>
-<p>While there are four forms, you actually only need one because any
-call can be written in prefix form. I’ll demonstrate this property, and
-then you’ll learn about each of the forms in turn.</p>
-<div id="prefix-transform" class="section level3">
-<h3>Rewriting to prefix form</h3>
-<p> </p>
-<p>An interesting property of R is that every infix, replacement, or
-special form can be rewritten in prefix form. Doing so is useful because
-it helps you better understand the structure of the language, it gives
-you the real name of every function, and it allows you to modify those
-functions for fun and profit.</p>
-<p>The following example shows three pairs of equivalent calls,
-rewriting an infix form, replacement form, and a special form into
-prefix form.</p>
-<pre class="r"><code>x + y
-`+`(x, y)
-
-names(df) &lt;- c(&quot;x&quot;, &quot;y&quot;, &quot;z&quot;)
-`names&lt;-`(df, c(&quot;x&quot;, &quot;y&quot;, &quot;z&quot;))
-
-for(i in 1:10) print(i)
-`for`(i, 1:10, print(i))</code></pre>
-<p>Suprisingly, in R, <code>for</code> can be called like a regular
-function! The same is true for basically every operation in R, which
-means that knowing the function name of a non-prefix function allows you
-to override its behaviour. For example, if you’re ever feeling
-particularly evil, run the following code while a friend is away from
-their computer. It will introduce a fun bug: 10% of the time, it will
-add 1 to any numeric calculation inside the parentheses.</p>
-<pre class="r"><code>`(` &lt;- function(e1) {
-  if (is.numeric(e1) &amp;&amp; runif(1) &lt; 0.1) {
-    e1 + 1
-  } else {
-    e1
-  }
-}
-replicate(50, (1 + 2))</code></pre>
-<pre><code>##  [1] 3 4 4 3 3 3 4 3 3 3 4 3 3 3 3 3 3 3 4 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
-## [39] 4 3 3 3 3 3 3 3 3 3 3 3</code></pre>
-<pre class="r"><code>rm(&quot;(&quot;)</code></pre>
-<p>Of course, overriding built-in functions like this is a bad idea,
-but, as you’ll learn in Section @ref(html-env), it’s possible to apply
-it only to selected code blocks. This provides a clean and elegant
-approach to writing domain specific languages and translators to other
-languages.</p>
-<p>A more useful application comes up when using functional programming
-tools. For example, you could use <code>lapply()</code> to add 3 to
-every element of a list by first defining a function
-<code>add()</code>:</p>
-<pre class="r"><code>add &lt;- function(x, y) x + y
-lapply(list(1:3, 4:5), add, 3)</code></pre>
-<pre><code>## [[1]]
-## [1] 4 5 6
-## 
-## [[2]]
-## [1] 7 8</code></pre>
-<p>But we can also get the same result simply by relying on the existing
-<code>+</code> function:</p>
-<pre class="r"><code>lapply(list(1:3, 4:5), `+`, 3)</code></pre>
-<pre><code>## [[1]]
-## [1] 4 5 6
-## 
-## [[2]]
-## [1] 7 8</code></pre>
-<p>We’ll explore this idea in detail in Section @ref(functionals).</p>
-</div>
-<div id="prefix-form" class="section level3">
-<h3>Prefix form</h3>
-<p> </p>
-<p>The prefix form is the most common form in R code, and indeed in the
-majority of programming languages. Prefix calls in R are a little
-special because you can specify arguments in three ways:</p>
-<ul>
-<li>By position, like <code>help(mean)</code>.</li>
-<li>Using partial matching, like <code>help(top = mean)</code>.</li>
-<li>By name, like <code>help(topic = mean)</code>.</li>
-</ul>
-<p>As illustrated by the following chunk, arguments are matched by exact
-name, then with unique prefixes, and finally by position.</p>
-<pre class="r"><code>k01 &lt;- function(abcdef, bcde1, bcde2) {
-  list(a = abcdef, b1 = bcde1, b2 = bcde2)
-}
-str(k01(1, 2, 3))</code></pre>
-<pre><code>## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3</code></pre>
-<pre class="r"><code>str(k01(2, 3, abcdef = 1))</code></pre>
-<pre><code>## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3</code></pre>
-<pre class="r"><code># Can abbreviate long argument names:
-str(k01(2, 3, a = 1))</code></pre>
-<pre><code>## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3</code></pre>
-<pre class="r"><code># But this doesn&#39;t work because abbreviation is ambiguous
-str(k01(1, 3, b = 1))</code></pre>
-<pre><code>## Error in k01(1, 3, b = 1): argument 3 matches multiple formal arguments</code></pre>
-<p>In general, use positional matching only for the first one or two
-arguments; they will be the most commonly used, and most readers will
-know what they are. Avoid using positional matching for less commonly
-used arguments, and never use partial matching. Unfortunately you can’t
-disable partial matching, but you can turn it into a warning with the
-<code>warnPartialMatchArgs</code> option: </p>
-<pre class="r"><code>options(warnPartialMatchArgs = TRUE)
-x &lt;- k01(a = 1, 2, 3)</code></pre>
-<pre><code>## Warning in k01(a = 1, 2, 3): partial argument match of &#39;a&#39; to &#39;abcdef&#39;</code></pre>
-</div>
-<div id="infix-functions" class="section level3">
-<h3>Infix functions</h3>
-<p> </p>
-<p>Infix functions get their name from the fact the function name comes
-inbetween its arguments, and hence have two arguments. R comes with a
-number of built-in infix operators: <code>:</code>, <code>::</code>,
-<code>:::</code>, <code>$</code>, <code>@</code>, <code>^</code>,
-<code>*</code>, <code>/</code>, <code>+</code>, <code>-</code>,
-<code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>,
-<code>&lt;=</code>, <code>==</code>, <code>!=</code>, <code>!</code>,
-<code>&amp;</code>, <code>&amp;&amp;</code>, <code>|</code>,
-<code>||</code>, <code>~</code>, <code>&lt;-</code>, and
-<code>&lt;&lt;-</code>. You can also create your own infix functions
-that start and end with <code>%</code>. Base R uses this pattern to
-define <code>%%</code>, <code>%*%</code>, <code>%/%</code>,
-<code>%in%</code>, <code>%o%</code>, and <code>%x%</code>.</p>
-<p>Defining your own infix function is simple. You create a two argument
-function and bind it to a name that starts and ends with
-<code>%</code>:</p>
-<pre class="r"><code>`%+%` &lt;- function(a, b) paste0(a, b)
-&quot;new &quot; %+% &quot;string&quot;</code></pre>
-<pre><code>## [1] &quot;new string&quot;</code></pre>
-<p>The names of infix functions are more flexible than regular R
-functions: they can contain any sequence of characters except for
-<code>%</code>. You will need to escape any special characters in the
-string used to define the function, but not when you call it:</p>
-<pre class="r"><code>`% %` &lt;- function(a, b) paste(a, b)
-`%/\\%` &lt;- function(a, b) paste(a, b)
-
-&quot;a&quot; % % &quot;b&quot;</code></pre>
-<pre><code>## [1] &quot;a b&quot;</code></pre>
-<pre class="r"><code>&quot;a&quot; %/\% &quot;b&quot;</code></pre>
-<pre><code>## [1] &quot;a b&quot;</code></pre>
-<p>R’s default precedence rules mean that infix operators are composed
-left to right:</p>
-<pre class="r"><code>`%-%` &lt;- function(a, b) paste0(&quot;(&quot;, a, &quot; %-% &quot;, b, &quot;)&quot;)
-&quot;a&quot; %-% &quot;b&quot; %-% &quot;c&quot;</code></pre>
-<pre><code>## [1] &quot;((a %-% b) %-% c)&quot;</code></pre>
-<p>There are two special infix functions that can be called with a
-single argument: <code>+</code> and <code>-</code>.</p>
-<pre class="r"><code>-1</code></pre>
-<pre><code>## [1] -1</code></pre>
-<pre class="r"><code>+10</code></pre>
-<pre><code>## [1] 10</code></pre>
-</div>
-<div id="replacement-functions" class="section level3">
-<h3>Replacement functions</h3>
-<p> </p>
-<p>Replacement functions act like they modify their arguments in place,
-and have the special name <code>xxx&lt;-</code>. They must have
-arguments named <code>x</code> and <code>value</code>, and must return
-the modified object. For example, the following function modifies the
-second element of a vector:</p>
-<pre class="r"><code>`second&lt;-` &lt;- function(x, value) {
-  x[2] &lt;- value
-  x
-}</code></pre>
-<p>Replacement functions are used by placing the function call on the
-left side of <code>&lt;-</code>:</p>
-<pre class="r"><code>x &lt;- 1:10
-second(x) &lt;- 5L
-x</code></pre>
-<pre><code>##  [1]  1  5  3  4  5  6  7  8  9 10</code></pre>
-<p>I say they act like they modify their arguments in place, because, as
-explained in Section @ref(modify-in-place), they actually create a
-modified copy. We can see that by using <code>tracemem()</code>:</p>
-<pre class="r"><code>x &lt;- 1:10
-tracemem(x)
-#&gt; &lt;0x7ffae71bd880&gt;
-
-second(x) &lt;- 6L
-#&gt; tracemem[0x7ffae71bd880 -&gt; 0x7ffae61b5480]: 
-#&gt; tracemem[0x7ffae61b5480 -&gt; 0x7ffae73f0408]: second&lt;- </code></pre>
-<p>If your replacement function needs additional arguments, place them
-between <code>x</code> and <code>value</code>, and call the replacement
-function with additional arguments on the left:</p>
-<pre class="r"><code>`modify&lt;-` &lt;- function(x, position, value) {
-  x[position] &lt;- value
-  x
-}
-modify(x, 1) &lt;- 10
-x</code></pre>
-<pre><code>##  [1] 10  5  3  4  5  6  7  8  9 10</code></pre>
-<p>When you write <code>modify(x, 1) &lt;- 10</code>, behind the scenes
-R turns it into:</p>
-<pre class="r"><code>x &lt;- `modify&lt;-`(x, 1, 10)</code></pre>
-<p>Combining replacement with other functions requires more complex
-translation. For example:</p>
-<pre class="r"><code>x &lt;- c(a = 1, b = 2, c = 3)
-names(x)</code></pre>
-<pre><code>## [1] &quot;a&quot; &quot;b&quot; &quot;c&quot;</code></pre>
-<pre class="r"><code>names(x)[2] &lt;- &quot;two&quot;
-names(x)</code></pre>
-<pre><code>## [1] &quot;a&quot;   &quot;two&quot; &quot;c&quot;</code></pre>
-<p>is translated into:</p>
-<pre class="r"><code>`*tmp*` &lt;- x
-x &lt;- `names&lt;-`(`*tmp*`, `[&lt;-`(names(`*tmp*`), 2, &quot;two&quot;))
-rm(`*tmp*`)</code></pre>
-<p>(Yes, it really does create a local variable named
-<code>*tmp*</code>, which is removed afterwards.)</p>
-</div>
-<div id="special-forms" class="section level3">
-<h3>Special forms</h3>
-<p> </p>
-<p>Finally, there are a bunch of language features that are usually
-written in special ways, but also have prefix forms. These include
-parentheses:</p>
-<ul>
-<li><code>(x)</code> (<code>`(`(x)</code>)</li>
-<li><code>{x}</code> (<code>`{`(x)</code>).</li>
-</ul>
-<p>The subsetting operators:</p>
-<ul>
-<li><code>x[i]</code> (<code>`[`(x, i)</code>)</li>
-<li><code>x[[i]]</code> (<code>`[[`(x, i)</code>)</li>
-</ul>
-<p>And the tools of control flow:</p>
-<ul>
-<li><code>if (cond) true</code> (<code>`if`(cond, true)</code>)</li>
-<li><code>if (cond) true else false</code>
-(<code>`if`(cond, true, false)</code>)</li>
-<li><code>for(var in seq) action</code>
-(<code>`for`(var, seq, action)</code>)</li>
-<li><code>while(cond) action</code>
-(<code>`while`(cond, action)</code>)</li>
-<li><code>repeat expr</code> (<code>`repeat`(expr)</code>)</li>
-<li><code>next</code> (<code>`next`()</code>)</li>
-<li><code>break</code> (<code>`break`()</code>)</li>
-</ul>
-<p>Finally, the most complex is the <code>function</code> function:</p>
-<ul>
-<li><code>function(arg1, arg2) {body}</code>
-(<code>`function`(alist(arg1, arg2), body, env)</code>)</li>
-</ul>
-<p>Knowing the name of the function that underlies a special form is
-useful for getting documentation: <code>?(</code> is a syntax error;
-<code>?`(`</code> will give you the documentation for parentheses.</p>
-<p>All special forms are implemented as primitive functions (i.e. in C);
-this means printing these functions is not informative:</p>
-<pre class="r"><code>`for`</code></pre>
-<pre><code>## .Primitive(&quot;for&quot;)</code></pre>
-</div>
-<div id="exercises-5" class="section level3">
-<h3>Exercises</h3>
-<ol style="list-style-type: decimal">
-<li><p>Rewrite the following code snippets into prefix form:</p>
-<pre class="r"><code>1 + 2 + 3
-
-1 + (2 + 3)
-
-if (length(x) &lt;= 5) x[[5]] else x[[n]]</code></pre></li>
-<li><p>Clarify the following list of odd function calls:</p>
-<pre class="r"><code>x &lt;- sample(replace = TRUE, 20, x = c(1:10, NA))
-y &lt;- runif(min = 0, max = 1, 20)
-cor(m = &quot;k&quot;, y = y, u = &quot;p&quot;, x = x)</code></pre></li>
-<li><p>Explain why the following code fails:</p>
-<pre class="r"><code>modify(get(&quot;x&quot;), 1) &lt;- 10
-#&gt; Error: target of assignment expands to non-language object</code></pre></li>
-<li><p>Create a replacement function that modifies a random location in
-a vector.</p></li>
-<li><p>Write your own version of <code>+</code> that pastes its inputs
-together if they are character vectors but behaves as usual otherwise.
-In other words, make this code work:</p>
-<pre class="r"><code>1 + 2
-#&gt; [1] 3
-
-&quot;a&quot; + &quot;b&quot;
-#&gt; [1] &quot;ab&quot;</code></pre></li>
-<li><p>Create a list of all the replacement functions found in the base
-package. Which ones are primitive functions? (Hint: use
-<code>apropos()</code>.)</p></li>
-<li><p>What are valid names for user-created infix functions?</p></li>
-<li><p>Create an infix <code>xor()</code> operator.</p></li>
-<li><p>Create infix versions of the set functions
-<code>intersect()</code>, <code>union()</code>, and
-<code>setdiff()</code>. You might call them <code>%n%</code>,
-<code>%u%</code>, and <code>%/%</code> to match conventions from
-mathematics.</p></li>
+<ol start="6" style="list-style-type: decimal">
+<li>How many arguments are required when calling
+<code>library()</code>?</li>
 </ol>
-</div>
-</div>
-<div id="function-answers" class="section level2">
-<h2>Quiz answers</h2>
-<ol style="list-style-type: decimal">
-<li><p>The three components of a function are its body, arguments, and
-environment.</p></li>
-<li><p><code>f1(1)()</code> returns 11.</p></li>
-<li><p>You’d normally write it in infix style:
-<code>1 + (2 * 3)</code>.</p></li>
-<li><p>Rewriting the call to
-<code>mean(c(1:10, NA), na.rm = TRUE)</code> is easier to
-understand.</p></li>
-<li><p>No, it does not throw an error because the second argument is
-never used so it’s never evaluated.</p></li>
-<li><p>See Sections @ref(infix-functions) and
-@ref(replacement-functions).</p></li>
-<li><p>You use <code>on.exit()</code>; see Section @ref(on-exit) for
-details.</p></li>
-</ol>
+<pre class="r"><code>?library()</code></pre>
+<pre class="r"><code>formals(library)</code></pre>
+<pre><code>## $package
+## 
+## 
+## $help
+## 
+## 
+## $pos
+## [1] 2
+## 
+## $lib.loc
+## NULL
+## 
+## $character.only
+## [1] FALSE
+## 
+## $logical.return
+## [1] FALSE
+## 
+## $warn.conflicts
+## 
+## 
+## $quietly
+## [1] FALSE
+## 
+## $verbose
+## getOption(&quot;verbose&quot;)
+## 
+## $mask.ok
+## 
+## 
+## $exclude
+## 
+## 
+## $include.only
+## 
+## 
+## $attach.required
+## missing(include.only)</code></pre>
+<pre class="r"><code>length(formals(library))</code></pre>
+<pre><code>## [1] 13</code></pre>
+<blockquote>
+<p>13</p>
+</blockquote>
 </div>
 </div>
 <div class="footnotes footnotes-end-of-document">
@@ -1824,9 +1664,6 @@ scoping. You’ll learn more about that in Chapter @ref(evaluation).<a href="#fn
 <li id="fn3"><p><code>g04()</code> returns <code>c(1, 2, 3)</code>.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
 <li id="fn4"><p><code>g11()</code> returns <code>1</code> every time
 it’s called.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
-<li id="fn5"><p>Functions can exit in other more esoteric ways like
-signalling a condition that is caught by an exit handler, invoking a
-restart, or pressing “Q” in an interactive browser.<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
 

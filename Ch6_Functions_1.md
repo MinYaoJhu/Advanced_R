@@ -7,9 +7,26 @@ output:
     keep_md: yes
 ---
 
-# Functions
 
-## Introduction
+```r
+library(tidyverse)
+```
+
+```
+## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+```
+
+
+# 6 Functions
+
+## 6.1 Introduction
 \index{functions}
 \index{closures|see {functions}}
 
@@ -129,7 +146,7 @@ mean(x, na.rm = TRUE)
   disguises ordinary function calls, and how you can use the standard prefix
   form to better understand what's going on.
 
-## Function fundamentals
+## 6.2 Function fundamentals
 
 To understand functions in R you need to internalise two important ideas:
 
@@ -139,7 +156,7 @@ There are exceptions to every rule, and in this case, there is a small selection
 
 * Functions are objects, just as vectors are objects.
 
-### Function components {#fun-components}
+### 6.2.1 Function components {#fun-components}
 \index{functions!body} 
 \indexc{body()} 
 \index{functions!formals} 
@@ -195,6 +212,50 @@ environment(f02)
 ## <environment: R_GlobalEnv>
 ```
 
+
+```r
+    x <- 10
+    f1 <- function(x) {
+      function() {
+        x + 10
+      }
+    }
+    f1(1)()
+```
+
+```
+## [1] 11
+```
+
+
+```r
+onePlusTen <- f1(1)
+tenPlusTen <- f1(10)
+
+onePlusTen
+```
+
+```
+## function() {
+##         x + 10
+##       }
+## <bytecode: 0x000001e38dd8bcf0>
+## <environment: 0x000001e38e032a60>
+```
+
+```r
+tenPlusTen
+```
+
+```
+## function() {
+##         x + 10
+##       }
+## <bytecode: 0x000001e38dd8bcf0>
+## <environment: 0x000001e38dd1e540>
+```
+
+
 I'll draw functions as in the following diagram. The black dot on the left is the environment. The two blocks to the right are the function arguments. I won't draw the body, because it's usually large, and doesn't help you understand the shape of the function.
 
 <img src="diagrams/functions/components.png" width="295" />
@@ -213,7 +274,7 @@ attr(f02, "srcref")
 ## }
 ```
 
-### Primitive functions
+### 6.2.2 Primitive functions
 \index{primitive functions} 
 \index{functions!primitive} 
 \indexc{.Primitive()}
@@ -287,7 +348,7 @@ Primitive functions are only found in the base package. While they have certain 
 
 <!-- HW: mention internal functions here too? Cross-reference to perf example -->
 
-### First-class functions {#first-class-functions}
+### 6.2.3 First-class functions {#first-class-functions}
 \index{functions!anonymous} 
 \index{anonymous functions}
 
@@ -329,7 +390,7 @@ funs$double(10)
 
 In R, you'll often see functions called __closures__. This name reflects the fact that R functions capture, or enclose, their environments, which you'll learn more about in Section \@ref(function-environments).
 
-### Invoking a function
+### 6.2.4 Invoking a function
 \indexc{do.call()}
 
 You normally call a function by placing its arguments, wrapped in parentheses, after its name: `mean(1:10, na.rm = TRUE)`. But what happens if you have the arguments already in a data structure?
@@ -352,12 +413,39 @@ do.call(mean, args)
 
 We'll come back to this idea in Section \@ref(tidy-dots).
 
-### Exercises
+### 6.2.5 Exercises
 
 1. Given a name, like `"mean"`, `match.fun()` lets you find a function. 
    Given a function, can you find its name? Why doesn't that make sense in R?
+   
 
-1.  It's possible (although typically not useful) to call an anonymous function.
+```r
+?match.fun()
+```
+
+```
+## starting httpd help server ... done
+```
+
+> Extract a Function Specified by Name
+Description: When called inside functions that take a function as argument, extract the desired function object while avoiding undesired matching to objects of other types.
+
+
+```r
+match.fun(mean)
+```
+
+```
+## function (x, ...) 
+## UseMethod("mean")
+## <bytecode: 0x000001e38a7c6700>
+## <environment: namespace:base>
+```
+
+> A function can have more than one name.
+
+
+2.  It's possible (although typically not useful) to call an anonymous function.
     Which of the two approaches below is correct? Why?
 
     
@@ -377,36 +465,369 @@ We'll come back to this idea in Section \@ref(tidy-dots).
     ## [1] 3
     ```
 
-1. A good rule of thumb is that an anonymous function should fit on one line 
+
+```r
+function1 <- function(x) 3()
+#function1()
+#Error in function1() : attempt to apply non-function
+```
+
+> `(function(x) 3)()` is correct.
+
+3. A good rule of thumb is that an anonymous function should fit on one line 
    and shouldn't need to use `{}`. Review your code. Where could you have 
    used an anonymous function instead of a named function? Where should you 
    have used a named function instead of an anonymous function?
 
-1.  What function allows you to tell if an object is a function? What function
-    allows you to tell if a function is a primitive function?
 
-1.  This code makes a list of all functions in the base package. 
+```r
+sapply(1:2, function(x) x + 1L)
+```
+
+```
+## [1] 2 3
+```
+
+
+4.  What function allows you to tell if an object is a function? What function
+    allows you to tell if a function is a primitive function?
+    
+
+```r
+?is.function() 
+?is.primitive()
+```
+
+> Use is.function(x): Checks whether its argument is a function.
+
+> Use is.primitive(x): Checks whether its argument is a primitive function.
+
+5.  This code makes a list of all functions in the base package. 
     
     
     ```r
     objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
     funs <- Filter(is.function, objs)
+    
+    ?mget
     ```
+    
+> Search by name for an object (get) or zero or more objects (mget).
+    
+
+```r
+str(funs)
+```
+
+```
+## List of 1333
+##  $ -                                 :function (e1, e2)  
+##  $ -.Date                            :function (e1, e2)  
+##  $ -.POSIXt                          :function (e1, e2)  
+##  $ !                                 :function (x)  
+##  $ !.hexmode                         :function (a)  
+##  $ !.octmode                         :function (a)  
+##  $ !=                                :function (e1, e2)  
+##  $ $                                 :.Primitive("$") 
+##  $ $.DLLInfo                         :function (x, name)  
+##  $ $.package_version                 :function (x, name)  
+##  $ $<-                               :.Primitive("$<-") 
+##  $ $<-.data.frame                    :function (x, name, value)  
+##  $ %%                                :function (e1, e2)  
+##  $ %*%                               :function (x, y)  
+##  $ %/%                               :function (e1, e2)  
+##  $ %in%                              :function (x, table)  
+##  $ %o%                               :function (X, Y)  
+##  $ %x%                               :function (X, Y)  
+##  $ &                                 :function (e1, e2)  
+##  $ &&                                :.Primitive("&&") 
+##  $ &.hexmode                         :function (a, b)  
+##  $ &.octmode                         :function (a, b)  
+##  $ (                                 :.Primitive("(") 
+##  $ *                                 :function (e1, e2)  
+##  $ *.difftime                        :function (e1, e2)  
+##  $ ...elt                            :function (n)  
+##  $ ...length                         :function ()  
+##  $ ...names                          :function ()  
+##  $ ..getNamespace                    :function (name, where)  
+##  $ .__H__.cbind                      :function (..., deparse.level = 1)  
+##  $ .__H__.rbind                      :function (..., deparse.level = 1)  
+##  $ .amatch_bounds                    :function (x = 0.1)  
+##  $ .amatch_costs                     :function (x = NULL)  
+##  $ .bincode                          :function (x, breaks, right = TRUE, include.lowest = FALSE)  
+##  $ .C                                :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .cache_class                      :function (class, extends)  
+##  $ .Call                             :function (.NAME, ..., PACKAGE)  
+##  $ .Call.graphics                    :function (.NAME, ..., PACKAGE)  
+##  $ .class2                           :function (x)  
+##  $ .col                              :function (dim)  
+##  $ .colMeans                         :function (x, m, n, na.rm = FALSE)  
+##  $ .colSums                          :function (x, m, n, na.rm = FALSE)  
+##  $ .Date                             :function (xx, cl = "Date")  
+##  $ .decode_numeric_version           :function (x)  
+##  $ .Defunct                          :function (new, package = NULL, msg)  
+##  $ .deparseOpts                      :function (control)  
+##  $ .Deprecated                       :function (new, package = NULL, msg, old = as.character(sys.call(sys.parent()))[1L])  
+##  $ .detach                           :function (pos)  
+##  $ .difftime                         :function (xx, units, cl = "difftime")  
+##  $ .doSortWrap                       :function (vec, decr, nalast, noNA = NA)  
+##  $ .doTrace                          :function (expr, msg)  
+##  $ .doWrap                           :function (vec, decr, nalast, noNA = NA)  
+##  $ .dynLibs                          :function (new)  
+##  $ .encode_numeric_version           :function (x)  
+##  $ .expand_R_libs_env_var            :function (x)  
+##  $ .External                         :function (.NAME, ..., PACKAGE)  
+##  $ .External.graphics                :function (.NAME, ..., PACKAGE)  
+##  $ .External2                        :function (.NAME, ..., PACKAGE)  
+##  $ .First.sys                        :function ()  
+##  $ .fixupGFortranStderr              :function ()  
+##  $ .fixupGFortranStdout              :function ()  
+##  $ .format.zeros                     :function (x, zero.print, nx = suppressWarnings(as.numeric(x)), replace = FALSE, 
+##     warn.non.fitting = TRUE)  
+##  $ .Fortran                          :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .getNamespace                     :function (name)  
+##  $ .getNamespaceInfo                 :function (ns, which)  
+##  $ .getRequiredPackages              :function (file = "DESCRIPTION", lib.loc = NULL, quietly = FALSE, useImports = FALSE)  
+##  $ .getRequiredPackages2             :function (pkgInfo, quietly = FALSE, lib.loc = NULL, useImports = FALSE)  
+##  $ .gt                               :function (x, i, j)  
+##  $ .gtn                              :function (x, strictly)  
+##  $ .handleSimpleError                :function (h, msg, call)  
+##  $ .Internal                         :function (call)  
+##  $ .isMethodsDispatchOn              :function (onOff = NULL)  
+##  $ .isOpen                           :function (srcfile)  
+##  $ .kappa_tri                        :function (z, exact = FALSE, LINPACK = TRUE, norm = NULL, ...)  
+##  $ .kronecker                        :function (X, Y, FUN = "*", make.dimnames = FALSE, ...)  
+##  $ .libPaths                         :function (new, include.site = TRUE)  
+##  $ .make_numeric_version             :function (x, strict = TRUE, regexp, classes = NULL)  
+##  $ .makeMessage                      :function (..., domain = NULL, appendLF = FALSE)  
+##  $ .mapply                           :function (FUN, dots, MoreArgs)  
+##  $ .maskedMsg                        :function (same, pkg, by)  
+##  $ .mergeExportMethods               :function (new, ns)  
+##  $ .mergeImportMethods               :function (impenv, expenv, metaname)  
+##  $ .NotYetImplemented                :function ()  
+##  $ .NotYetUsed                       :function (arg, error = TRUE)  
+##  $ .OptRequireMethods                :function ()  
+##  $ .packages                         :function (all.available = FALSE, lib.loc = NULL)  
+##  $ .packageStartupMessage            :function (message, call = NULL)  
+##  $ .POSIXct                          :function (xx, tz = NULL, cl = c("POSIXct", "POSIXt"))  
+##  $ .POSIXlt                          :function (xx, tz = NULL, cl = c("POSIXlt", "POSIXt"))  
+##  $ .pretty                           :function (x, n = 5L, min.n = n%/%3L, shrink.sml = 0.75, high.u.bias = 1.5, 
+##     u5.bias = 0.5 + 1.5 * high.u.bias, eps.correct = 0L, f.min = 2^-20, 
+##     bounds = TRUE)  
+##  $ .Primitive                        :function (name)  
+##  $ .primTrace                        :function (obj)  
+##  $ .primUntrace                      :function (obj)  
+##  $ .rmpkg                            :function (pkg)  
+##  $ .row                              :function (dim)  
+##  $ .row_names_info                   :function (x, type = 1L)  
+##  $ .rowMeans                         :function (x, m, n, na.rm = FALSE)  
+##  $ .rowNamesDF<-                     :function (x, make.names = FALSE, value)  
+##  $ .rowSums                          :function (x, m, n, na.rm = FALSE)  
+##   [list output truncated]
+```
 
     Use it to answer the following questions:
 
     a. Which base function has the most arguments?
-    
-    a. How many base functions have no arguments? What's special about those
+
+
+```r
+library(purrr)
+
+?map_int
+
+n_args <- funs %>% 
+  map(formals) %>%
+  map_int(length)
+```
+
+> map() always returns a list. 
+> map_lgl(), map_int(), map_dbl() and map_chr() return an atomic vector of the indicated type (or die trying).
+
+
+```r
+str(n_args)
+```
+
+```
+##  Named int [1:1333] 0 2 2 0 1 1 0 0 2 2 ...
+##  - attr(*, "names")= chr [1:1333] "-" "-.Date" "-.POSIXt" "!" ...
+```
+
+
+
+```r
+n_args %>% 
+  which.max()
+```
+
+```
+## scan 
+## 1056
+```
+
+
+
+    b. How many base functions have no arguments? What's special about those
        functions?
        
+
+```r
+sum(n_args == 0)
+```
+
+```
+## [1] 253
+```
+
+
+```r
+n_args2 <- funs %>% 
+  discard(is.primitive) %>% 
+  map(formals) %>%
+  map_int(length)
+
+sum(n_args2 == 0)
+```
+
+```
+## [1] 49
+```
+
+       
     a. How could you adapt the code to find all primitive functions?
+    
 
-1. What are the three important components of a function?
+```r
+    objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+    pri <- Filter(is.primitive, objs)
+    str(pri)
+```
 
-1. When does printing a function not show the environment it was created in?
-  
-## Function composition {#function-composition}
+```
+## List of 204
+##  $ -                   :function (e1, e2)  
+##  $ !                   :function (x)  
+##  $ !=                  :function (e1, e2)  
+##  $ $                   :.Primitive("$") 
+##  $ $<-                 :.Primitive("$<-") 
+##  $ %%                  :function (e1, e2)  
+##  $ %*%                 :function (x, y)  
+##  $ %/%                 :function (e1, e2)  
+##  $ &                   :function (e1, e2)  
+##  $ &&                  :.Primitive("&&") 
+##  $ (                   :.Primitive("(") 
+##  $ *                   :function (e1, e2)  
+##  $ ...elt              :function (n)  
+##  $ ...length           :function ()  
+##  $ ...names            :function ()  
+##  $ .C                  :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .cache_class        :function (class, extends)  
+##  $ .Call               :function (.NAME, ..., PACKAGE)  
+##  $ .Call.graphics      :function (.NAME, ..., PACKAGE)  
+##  $ .class2             :function (x)  
+##  $ .External           :function (.NAME, ..., PACKAGE)  
+##  $ .External.graphics  :function (.NAME, ..., PACKAGE)  
+##  $ .External2          :function (.NAME, ..., PACKAGE)  
+##  $ .Fortran            :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
+##  $ .Internal           :function (call)  
+##  $ .isMethodsDispatchOn:function (onOff = NULL)  
+##  $ .Primitive          :function (name)  
+##  $ .primTrace          :function (obj)  
+##  $ .primUntrace        :function (obj)  
+##  $ .subset             :function (x, ...)  
+##  $ .subset2            :function (x, ...)  
+##  $ /                   :function (e1, e2)  
+##  $ :                   :.Primitive(":") 
+##  $ ::                  :function (pkg, name)  
+##  $ :::                 :function (pkg, name)  
+##  $ @                   :.Primitive("@") 
+##  $ @<-                 :.Primitive("@<-") 
+##  $ [                   :.Primitive("[") 
+##  $ [[                  :.Primitive("[[") 
+##  $ [[<-                :.Primitive("[[<-") 
+##  $ [<-                 :.Primitive("[<-") 
+##  $ ^                   :function (e1, e2)  
+##  $ {                   :.Primitive("{") 
+##  $ |                   :function (e1, e2)  
+##  $ ||                  :.Primitive("||") 
+##  $ ~                   :.Primitive("~") 
+##  $ +                   :function (e1, e2)  
+##  $ <                   :function (e1, e2)  
+##  $ <-                  :.Primitive("<-") 
+##  $ <<-                 :.Primitive("<<-") 
+##  $ <=                  :function (e1, e2)  
+##  $ =                   :.Primitive("=") 
+##  $ ==                  :function (e1, e2)  
+##  $ >                   :function (e1, e2)  
+##  $ >=                  :function (e1, e2)  
+##  $ abs                 :function (x)  
+##  $ acos                :function (x)  
+##  $ acosh               :function (x)  
+##  $ all                 :function (..., na.rm = FALSE)  
+##  $ any                 :function (..., na.rm = FALSE)  
+##  $ anyNA               :function (x, recursive = FALSE)  
+##  $ Arg                 :function (z)  
+##  $ as.call             :function (x)  
+##  $ as.character        :function (x, ...)  
+##  $ as.complex          :function (x, ...)  
+##  $ as.double           :function (x, ...)  
+##  $ as.environment      :function (x)  
+##  $ as.integer          :function (x, ...)  
+##  $ as.logical          :function (x, ...)  
+##  $ as.numeric          :function (x, ...)  
+##  $ as.raw              :function (x)  
+##  $ asin                :function (x)  
+##  $ asinh               :function (x)  
+##  $ atan                :function (x)  
+##  $ atanh               :function (x)  
+##  $ attr                :function (x, which, exact = FALSE)  
+##  $ attr<-              :function (x, which, value)  
+##  $ attributes          :function (x)  
+##  $ attributes<-        :function (x, value)  
+##  $ baseenv             :function ()  
+##  $ break               :.Primitive("break") 
+##  $ browser             :function (text = "", condition = NULL, expr = TRUE, skipCalls = 0L)  
+##  $ c                   :function (...)  
+##  $ call                :function (name, ...)  
+##  $ ceiling             :function (x)  
+##  $ class               :function (x)  
+##  $ class<-             :function (x, value)  
+##  $ Conj                :function (z)  
+##  $ cos                 :function (x)  
+##  $ cosh                :function (x)  
+##  $ cospi               :function (x)  
+##  $ cummax              :function (x)  
+##  $ cummin              :function (x)  
+##  $ cumprod             :function (x)  
+##  $ cumsum              :function (x)  
+##  $ digamma             :function (x)  
+##  $ dim                 :function (x)  
+##  $ dim<-               :function (x, value)  
+##  $ dimnames            :function (x)  
+##   [list output truncated]
+```
+
+```r
+    length(pri)
+```
+
+```
+## [1] 204
+```
+
+
+6. What are the three important components of a function?
+
+> The three important components of a function are its body, arguments, and environment.
+
+7. When does printing a function not show the environment it was created in?
+
+> 1. When it's a primitive function.
+
+> 2. When the function is defined in the global environment.
+
+## 6.3 Function composition {#function-composition}
 \index{functions!composition}
 \indexc{\%>\%}
 \index{magrittr|see {\texttt{\%>\%}}}
@@ -430,7 +851,7 @@ sqrt(mean(square(deviation(x))))
 ```
 
 ```
-## [1] 0.3009364
+## [1] 0.2895154
 ```
 
 Or you save the intermediate results as variables:
@@ -445,7 +866,7 @@ out
 ```
 
 ```
-## [1] 0.3009364
+## [1] 0.2895154
 ```
 
 The magrittr package [@magrittr] provides a third option: the binary operator `%>%`, which is called the pipe and is pronounced as "and then".
@@ -453,7 +874,26 @@ The magrittr package [@magrittr] provides a third option: the binary operator `%
 
 ```r
 library(magrittr)
+```
 
+```
+## 
+## Attaching package: 'magrittr'
+```
+
+```
+## The following object is masked from 'package:purrr':
+## 
+##     set_names
+```
+
+```
+## The following object is masked from 'package:tidyr':
+## 
+##     extract
+```
+
+```r
 x %>%
   deviation() %>%
   square() %>%
@@ -462,7 +902,7 @@ x %>%
 ```
 
 ```
-## [1] 0.3009364
+## [1] 0.2895154
 ```
 
 `x %>% f()` is equivalent to `f(x)`; `x %>% f(y)` is equivalent to `f(x, y)`. The pipe allows you to focus on the high-level composition of functions rather than the low-level flow of data; the focus is on what's being done (the verbs), rather than on what's being modified (the nouns). This style is common in Haskell and F#, the main inspiration for magrittr, and is the default style in stack based programming languages like Forth and Factor. 
@@ -487,7 +927,7 @@ Each of the three options has its own strengths and weaknesses:
 
 Most code will use a combination of all three styles. Piping is more common in data analysis code, as much of an analysis consists of a sequence of transformations of an object (like a data frame or plot). I tend to use piping infrequently in packages; not because it is a bad idea, but because it's often a less natural fit.
 
-## Lexical scoping {#lexical-scoping}
+## 6.4 Lexical scoping {#lexical-scoping}
 \index{scoping!lexical}
 
 In Chapter \@ref(names-values), we discussed assignment, the act of binding a name to a value. Here we'll discuss __scoping__, the act of finding the value associated with a name.
@@ -520,7 +960,7 @@ R's lexical scoping follows four primary rules:
 
 [^dyn-scope]: Functions that automatically quote one or more arguments can override the default scoping rules to implement other varieties of scoping. You'll learn more about that in Chapter \@ref(evaluation).
 
-### Name masking
+### 6.4.1 Name masking
 \index{functions!scoping}
 
 The basic principle of lexical scoping is that names defined inside a function mask names defined outside a function. This is illustrated in the following example.
@@ -588,7 +1028,7 @@ g04()
 
 The same rules also apply to functions created by other functions, which I call manufactured functions, the topic of Chapter \@ref(function-factories). 
 
-### Functions versus variables
+### 6.4.2 Functions versus variables
 
 In R, functions are ordinary objects. This means the scoping rules described above also apply to functions:
 
@@ -624,7 +1064,7 @@ g10()
 
 For the record, using the same name for different things is confusing and best avoided!
 
-### A fresh start {#fresh-start}
+### 6.4.3 A fresh start {#fresh-start}
 
 What happens to values between invocations of a function? Consider the example below. What will happen the first time you run this function? What will happen the second time?[^answer4] (If you haven't seen `exists()` before, it returns `TRUE` if there's a variable with that name and returns `FALSE` if not.)
 
@@ -647,7 +1087,7 @@ g11()
 
 You might be surprised that `g11()` always returns the same value. This happens because every time a function is called a new environment is created to host its execution. This means that a function has no way to tell what happened the last time it was run; each invocation is completely independent. We'll see some ways to get around this in Section \@ref(stateful-funs).
 
-### Dynamic lookup
+### 6.4.4 Dynamic lookup
 \indexc{findGlobals()}
 
 Lexical scoping determines where, but not when to look for values. R looks for values when the function is run, not when the function is created. Together, these two properties tell us that the output of a function can differ depending on the objects outside the function's environment:
@@ -690,16 +1130,13 @@ To solve this problem, you can manually change the function's environment to the
 
 ```r
 environment(g12) <- emptyenv()
-g12()
-```
-
-```
-## Error in x + 1: could not find function "+"
+#g12()
+#Error in x + 1 : could not find function "+"
 ```
 
 The problem and its solution reveal why this seemingly undesirable behaviour exists: R relies on lexical scoping to find _everything_, from the obvious, like `mean()`, to the less obvious, like `+` or even `{`. This gives R's scoping rules a rather beautiful simplicity.
 
-### Exercises
+### 6.4.5 Exercises
 
 1. What does the following code return? Why? Describe how each of the three
    `c`'s is interpreted.
@@ -710,9 +1147,20 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
     c(c = c)
     ```
 
-1. What are the four principles that govern how R looks for values?
+> the `c()` represents the *c: Combine Values into a Vector or List* function.
+> the `c=` represents a name.
+> the `=c` represents a value, 10.
 
-1. What does the following function return? Make a prediction before 
+2. What are the four principles that govern how R looks for values?
+
+> R’s lexical scoping follows four primary rules:
+
+> 1. Name masking
+> 2. Functions versus variables
+> 3. A fresh start
+> 4. Dynamic lookup
+
+3. What does the following function return? Make a prediction before 
    running the code yourself.
 
     
@@ -729,7 +1177,9 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
     f(10)
     ```
 
-## Lazy evaluation {#lazy-evaluation}
+> 202. Correct!
+
+## 6.5 Lazy evaluation {#lazy-evaluation}
 \index{evaluation!lazy|see {lazy evaluation}} 
 \index{lazy evaluation} 
 \index{functions!lazy evaluation}
@@ -750,7 +1200,7 @@ h01(stop("This is an error!"))
 
 This is an important feature because it allows you to do things like include potentially expensive computations in function arguments that will only be evaluated if needed.
 
-### Promises
+### 6.5.1 Promises
 \index{promises}
 \index{thunks|see {promises}}
 
@@ -829,7 +1279,7 @@ A promise has three components:
 You cannot manipulate promises with R code. Promises are like a quantum state: any attempt to inspect them with R code will force an immediate evaluation, making the promise disappear. Later, in Section \@ref(quosures), you'll learn about quosures, which convert promises into an R object where you can easily inspect the expression and the environment.
 
 
-### Default arguments
+### 6.5.2 Default arguments
 \index{functions!default values}
 
 Thanks to lazy evaluation, default values can be defined in terms of other arguments, or even in terms of variables defined later in the function:
@@ -868,9 +1318,14 @@ h05()
 # ls() evaluated in global environment:
 h05(ls())
 #> [1] "h05"
+
+env <- ls()
+h05(env)
 ```
 
-### Missing arguments
+???
+
+### 6.5.3 Missing arguments
 \index{missing arguments!missing@\texttt{missing()}}
 \indexc{\%\textbar\textbar\%}
 
@@ -946,7 +1401,7 @@ sample <- function(x, size = NULL, replace = FALSE, prob = NULL) {
 
 Because of lazy evaluation, you don't need to worry about unnecessary computation: the right side of `%||%` will only be evaluated if the left side is `NULL`.
 
-### Exercises
+### 6.5.4 Exercises
 
 1.  What important property of `&&` makes `x_ok()` work?
 
@@ -979,7 +1434,14 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ## [1] FALSE
     ```
 
-    What is different with this code? Why is this behaviour undesirable here?
+
+```r
+?`&&`
+```
+
+> && does not perform elementwise comparisons; instead it uses the first element of each value only. 
+
+  What is different with this code? Why is this behaviour undesirable here?
     
     
     ```r
@@ -1010,7 +1472,25 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ## [1] FALSE FALSE FALSE
     ```
     
-1.  What does this function return? Why? Which principle does it illustrate?
+
+```r
+length(NULL) == 1
+```
+
+```
+## [1] FALSE
+```
+
+```r
+NULL > 0
+```
+
+```
+## logical(0)
+```
+
+    
+2.  What does this function return? Why? Which principle does it illustrate?
 
     
     ```r
@@ -1021,7 +1501,9 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     f2()
     ```
 
-1.  What does this function return? Why? Which principle does it illustrate?
+> 100. Lazy evaluation, Default arguments.
+
+3.  What does this function return? Why? Which principle does it illustrate?
   
     
     ```r
@@ -1032,8 +1514,29 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     f1()
     y
     ```
-  
-1.  In `hist()`, the default value of `xlim` is `range(breaks)`, the default 
+
+```r
+f1(x = 2)
+```
+
+```
+## [1] 2 0
+```
+
+```r
+f1(y = 3)
+```
+
+```
+## [1] 2 1
+```
+
+
+> f1() returns c(2, 1)
+
+> lexical scoping, name masking
+
+4.  In `hist()`, the default value of `xlim` is `range(breaks)`, the default 
     value for `breaks` is `"Sturges"`, and
 
     
@@ -1046,8 +1549,42 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ```
     
     Explain how `hist()` works to get a correct `xlim` value.
-    
-1.  Explain why this function works. Why is it confusing?
+
+
+```r
+?range
+```
+
+> range returns a vector containing the minimum and maximum of all the given arguments.
+
+
+```r
+range(1:10)
+```
+
+```
+## [1]  1 10
+```
+
+
+```r
+?hist()
+```
+
+> The generic function hist computes a histogram of the given data values.
+
+## Default S3 method:
+hist(x, breaks = "Sturges",
+     freq = NULL, probability = !freq,
+     include.lowest = TRUE, right = TRUE, fuzz = 1e-7,
+     density = NULL, angle = 45, col = "lightgray", border = NULL,
+     main = paste("Histogram of" , xname),
+     xlim = range(breaks), ylim = NULL,
+     xlab = xname, ylab,
+     axes = TRUE, plot = TRUE, labels = FALSE,
+     nclass = NULL, warn.unused = TRUE, ...)
+
+5.  Explain why this function works. Why is it confusing?
 
     
     ```r
@@ -1059,961 +1596,81 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ```
     
     ```
-    ## [1] "2022-10-09 20:08:35 BST"
+    ## [1] "2022-10-10 09:44:16 BST"
     ```
-
-1.  How many arguments are required when calling `library()`?
-
-## `...`  (dot-dot-dot) {#fun-dot-dot-dot}
-\indexc{...}
-\index{functions!variadic|see {...}}
-\index{ellipsis|see {...}}
-\index{dot-dot-dot|see {...}}
-
-Functions can have a special argument `...` (pronounced dot-dot-dot). With it, a function can take any number of additional arguments. In other programming languages, this type of argument is often called _varargs_ (short for variable arguments), and a function that uses it is said to be variadic. 
-
-You can also use `...` to pass those additional arguments on to another function.
 
 
 ```r
-i01 <- function(y, z) {
-  list(y = y, z = z)
-}
-
-i02 <- function(x, ...) {
-  i01(...)
-}
-
-str(i02(x = 1, y = 2, z = 3))
+print(Sys.time())
 ```
 
 ```
-## List of 2
-##  $ y: num 2
-##  $ z: num 3
+## [1] "2022-10-10 09:44:16 BST"
 ```
 
-Using a special form, `..N`, it's possible (but rarely useful) to refer to elements of `...` by position:
+
+
+> Functions can have a special argument ... (pronounced dot-dot-dot). With it, a function can take any number of additional arguments.
+
+6.  How many arguments are required when calling `library()`?
 
 
 ```r
-i03 <- function(...) {
-  list(first = ..1, third = ..3)
-}
-str(i03(1, 2, 3))
+?library()
 ```
-
-```
-## List of 2
-##  $ first: num 1
-##  $ third: num 3
-```
-
-More useful is `list(...)`, which evaluates the arguments and stores them in a list:
 
 
 ```r
-i04 <- function(...) {
-  list(...)
-}
-str(i04(a = 1, b = 2))
+formals(library)
 ```
 
 ```
-## List of 2
-##  $ a: num 1
-##  $ b: num 2
-```
-
-(See also `rlang::list2()` to support splicing and to silently ignore trailing commas, and `rlang::enquos()` to capture unevaluated arguments, the topic of [quasiquotation].)
-
-There are two primary uses of `...`, both of which we'll come back to later in the book:
-
-*   If your function takes a function as an argument, you want some way to 
-    pass additional arguments to that function. In this example, `lapply()`
-    uses `...` to pass `na.rm` on to `mean()`:
-    
-    
-    ```r
-    x <- list(c(1, 3, NA), c(4, NA, 6))
-    str(lapply(x, mean, na.rm = TRUE))
-    ```
-    
-    ```
-    ## List of 2
-    ##  $ : num 2
-    ##  $ : num 5
-    ```
-    
-    We'll come back to this technique in Section \@ref(passing-arguments).
-    
-*   If your function is an S3 generic, you need some way to allow methods to 
-    take arbitrary extra arguments. For example, take the `print()` function. 
-    Because there are different options for printing depending on the type of 
-    object, there's no way to pre-specify every possible argument and `...` 
-    allows individual methods to have different arguments:
-
-    
-    ```r
-    print(factor(letters), max.levels = 4)
-    
-    print(y ~ x, showEnv = TRUE)
-    ```
-    
-    We'll come back to this use of `...` in Section \@ref(s3-arguments).
-
-Using `...` comes with two downsides:
-
-*   When you use it to pass arguments to another function, you have to 
-    carefully explain to the user where those arguments go. This makes it
-    hard to understand what you can do with functions like `lapply()` and 
-    `plot()`.
-    
-*   A misspelled argument will not raise an error. This makes it easy for 
-    typos to go unnoticed:
-
-    
-    ```r
-    sum(1, 2, NA, na_rm = TRUE)
-    ```
-    
-    ```
-    ## [1] NA
-    ```
-
-### Exercises
-
-1.  Explain the following results:
-    
-    
-    ```r
-    sum(1, 2, 3)
-    ```
-    
-    ```
-    ## [1] 6
-    ```
-    
-    ```r
-    mean(1, 2, 3)
-    ```
-    
-    ```
-    ## [1] 1
-    ```
-    
-    ```r
-    sum(1, 2, 3, na.omit = TRUE)
-    ```
-    
-    ```
-    ## [1] 7
-    ```
-    
-    ```r
-    mean(1, 2, 3, na.omit = TRUE)
-    ```
-    
-    ```
-    ## [1] 1
-    ```
-
-1.  Explain how to find the documentation for the named arguments in the 
-    following function call:
-    
-    
-    ```r
-    plot(1:10, col = "red", pch = 20, xlab = "x", col.lab = "blue")
-    ```
-    
-    ![](Ch6_Functions_1_files/figure-html/unnamed-chunk-59-1.png)<!-- -->
-    
-1.  Why does `plot(1:10, col = "red")` only colour the points, not the axes 
-    or labels? Read the source code of `plot.default()` to find out.
-
-## Exiting a function
-
-Most functions exit in one of two ways[^esoterica]: they either return a value, indicating success, or they throw an error, indicating failure. This section describes return values (implicit versus explicit; visible versus invisible), briefly discusses errors, and introduces exit handlers, which allow you to run code when a function exits.
-
-[^esoterica]: Functions can exit in other more esoteric ways like signalling a condition that is caught by an exit handler, invoking a restart, or pressing "Q" in an interactive browser.
-
-### Implicit versus explicit returns
-\index{functions!return value}
-\indexc{return()}
-
-There are two ways that a function can return a value:
-
-*   Implicitly, where the last evaluated expression is the return value:
-
-    
-    ```r
-    j01 <- function(x) {
-      if (x < 10) {
-        0
-      } else {
-        10
-      }
-    }
-    j01(5)
-    ```
-    
-    ```
-    ## [1] 0
-    ```
-    
-    ```r
-    j01(15)
-    ```
-    
-    ```
-    ## [1] 10
-    ```
-
-*   Explicitly, by calling `return()`:
-
-    
-    ```r
-    j02 <- function(x) {
-      if (x < 10) {
-        return(0)
-      } else {
-        return(10)
-      }
-    }
-    ```
-    
-### Invisible values {#invisible}
-\indexc{invisible()} 
-\index{functions!invisible results}
-\index{assignment}
-
-Most functions return visibly: calling the function in an interactive context prints the result.
-
-
-```r
-j03 <- function() 1
-j03()
-```
-
-```
-## [1] 1
-```
-
-However, you can prevent automatic printing by applying `invisible()` to the last value:
-
-
-```r
-j04 <- function() invisible(1)
-j04()
-```
-
-To verify that this value does indeed exist, you can explicitly print it or wrap it in parentheses:
-
-
-```r
-print(j04())
-```
-
-```
-## [1] 1
-```
-
-```r
-(j04())
-```
-
-```
-## [1] 1
-```
-
-Alternatively, you can use `withVisible()` to return the value and a visibility flag:
-
-
-```r
-str(withVisible(j04()))
-```
-
-```
-## List of 2
-##  $ value  : num 1
-##  $ visible: logi FALSE
-```
-
-The most common function that returns invisibly is `<-`: 
-
-
-```r
-a <- 2
-(a <- 2)
-```
-
-```
+## $package
+## 
+## 
+## $help
+## 
+## 
+## $pos
 ## [1] 2
-```
-
-This is what makes it possible to chain assignments:
-
-
-```r
-a <- b <- c <- d <- 2
-```
-
-In general, any function called primarily for a side effect (like `<-`, `print()`, or `plot()`) should return an invisible value (typically the value of the first argument).
-
-### Errors
-\indexc{stop()}
-\index{errors}
-
-If a function cannot complete its assigned task, it should throw an error with `stop()`, which immediately terminates the execution of the function.
-
-
-```r
-j05 <- function() {
-  stop("I'm an error")
-  return(10)
-}
-j05()
-```
-
-```
-## Error in j05(): I'm an error
-```
-
-An error indicates that something has gone wrong, and forces the user to deal with the problem. Some languages (like C, Go, and Rust) rely on special return values to indicate problems, but in R you should always throw an error. You'll learn more about errors, and how to handle them, in Chapter \@ref(conditions).
-
-### Exit handlers {#on-exit}
-\indexc{on.exit()}
-\index{handlers!exit}
-
-Sometimes a function needs to make temporary changes to the global state. But having to cleanup those changes can be painful (what happens if there's an error?). To ensure that these changes are undone and that the global state is restored no matter how a function exits, use `on.exit()` to set up an __exit handler__. The following simple example shows that the exit handler is run regardless of whether the function exits normally or with an error.
-
-
-```r
-j06 <- function(x) {
-  cat("Hello\n")
-  on.exit(cat("Goodbye!\n"), add = TRUE)
-  
-  if (x) {
-    return(10)
-  } else {
-    stop("Error")
-  }
-}
-
-j06(TRUE)
-```
-
-```
-## Hello
-## Goodbye!
-```
-
-```
-## [1] 10
-```
-
-```r
-j06(FALSE)
-```
-
-```
-## Hello
-```
-
-```
-## Error in j06(FALSE): Error
-```
-
-```
-## Goodbye!
-```
-
-::: sidebar
-Always set `add = TRUE` when using `on.exit()`. If you don't, each call to `on.exit()` will overwrite the previous exit handler. Even when only registering a single handler, it's good practice to set `add = TRUE` so that you won't get any unpleasant surprises if you later add more exit handlers.
-:::
-
-`on.exit()` is useful because it allows you to place clean-up code directly next to the code that requires clean-up:
-
-
-```r
-cleanup <- function(dir, code) {
-  old_dir <- setwd(dir)
-  on.exit(setwd(old_dir), add = TRUE)
-  
-  old_opt <- options(stringsAsFactors = FALSE)
-  on.exit(options(old_opt), add = TRUE)
-}
-```
-
-Coupled with lazy evaluation, this creates a very useful pattern for running a block of code in an altered environment:
-
-
-```r
-with_dir <- function(dir, code) {
-  old <- setwd(dir)
-  on.exit(setwd(old), add = TRUE)
-
-  force(code)
-}
-
-getwd()
-```
-
-```
-## [1] "D:/Oldroyd_lab/GitHub/Advanced_R"
-```
-
-```r
-with_dir("~", getwd())
-```
-
-```
-## [1] "C:/Users/myj23/Documents"
-```
-
-The use of `force()` isn't strictly necessary here as simply referring to `code` will force its evaluation. However, using `force()` makes it very clear that we are deliberately forcing the execution. You'll learn other uses of `force()` in Chapter \@ref(function-factories).
-
-The withr package [@withr] provides a collection of other functions for setting up a temporary state.
-
-In R 3.4 and earlier, `on.exit()` expressions are always run in order of creation:
-
-
-```r
-j08 <- function() {
-  on.exit(message("a"), add = TRUE)
-  on.exit(message("b"), add = TRUE)
-}
-j08()
-```
-
-```
-## a
-```
-
-```
-## b
-```
-
-This can make cleanup a little tricky if some actions need to happen in a specific order; typically you want the most recent added expression to be run first. In R 3.5 and later, you can control this by setting `after = FALSE`:
-
-
-```r
-j09 <- function() {
-  on.exit(message("a"), add = TRUE, after = FALSE)
-  on.exit(message("b"), add = TRUE, after = FALSE)
-}
-j09()
-```
-
-```
-## b
-```
-
-```
-## a
-```
-
-### Exercises
-
-1.  What does `load()` return? Why don't you normally see these values?
-
-1.  What does `write.table()` return? What would be more useful?
-
-1.  How does the `chdir` parameter of `source()` compare to `with_dir()`? Why 
-    might you prefer one to the other?
-
-1.  Write a function that opens a graphics device, runs the supplied code, and 
-    closes the graphics device (always, regardless of whether or not the 
-    plotting code works).
-
-1.  We can use `on.exit()` to implement a simple version of `capture.output()`.
-
-    
-    ```r
-    capture.output2 <- function(code) {
-      temp <- tempfile()
-      on.exit(file.remove(temp), add = TRUE, after = TRUE)
-    
-      sink(temp)
-      on.exit(sink(), add = TRUE, after = TRUE)
-    
-      force(code)
-      readLines(temp)
-    }
-    capture.output2(cat("a", "b", "c", sep = "\n"))
-    ```
-    
-    ```
-    ## Warning in file.remove(temp): cannot remove file 'C:
-    ## \Users\myj23\AppData\Local\Temp\RtmpO0xmww\file635c1cb94a87', reason 'Permission
-    ## denied'
-    ```
-    
-    ```
-    ## [1] "a" "b" "c"
-    ```
-
-    Compare `capture.output()` to `capture.output2()`. How do the functions 
-    differ? What features have I removed to make the key ideas easier to see? 
-    How have I rewritten the key ideas so they're easier to understand?
-    
-## Function forms
-
-> To understand computations in R, two slogans are helpful:
->
-> * Everything that exists is an object.
-> * Everything that happens is a function call.
->
-> --- John Chambers
-
-While everything that happens in R is a result of a function call, not all calls look the same. Function calls come in four varieties:
-
-* __prefix__: the function name comes before its arguments, like
-  `foofy(a, b, c)`. These constitute of the majority of function calls in R.
-
-* __infix__: the function name comes in between its arguments, like
-  `x + y`. Infix forms are used for many mathematical operators, and for
-  user-defined functions that begin and end with `%`.
-
-* __replacement__: functions that replace values by assignment, like
-  `names(df) <- c("a", "b", "c")`. They actually look like prefix functions.
-
-* __special__: functions like `[[`, `if`, and `for`. While they don't have a
-  consistent structure, they play important roles in R's syntax.
-
-While there are four forms, you actually only need one because any call can be written in prefix form. I'll demonstrate this property, and then you'll learn about each of the forms in turn.
-
-### Rewriting to prefix form {#prefix-transform}
-\index{'@\texttt{`}}
-\index{backticks|see {\texttt{`}}}
-\indexc{sapply()}
-
-An interesting property of R is that every infix, replacement, or special form can be rewritten in prefix form. Doing so is useful because it helps you better understand the structure of the language, it gives you the real name of every function, and it allows you to modify those functions for fun and profit.
-
-The following example shows three pairs of equivalent calls, rewriting an infix form, replacement form, and a special form into prefix form. 
-
-
-```r
-x + y
-`+`(x, y)
-
-names(df) <- c("x", "y", "z")
-`names<-`(df, c("x", "y", "z"))
-
-for(i in 1:10) print(i)
-`for`(i, 1:10, print(i))
-```
-
-Suprisingly, in R, `for` can be called like a regular function! The same is true for basically every operation in R, which means that knowing the function name of a non-prefix function allows you to override its behaviour. For example, if you're ever feeling particularly evil, run the following code while a friend is away from their computer. It will introduce a fun bug: 10% of the time, it will add 1 to any numeric calculation inside the parentheses.
-
-
-```r
-`(` <- function(e1) {
-  if (is.numeric(e1) && runif(1) < 0.1) {
-    e1 + 1
-  } else {
-    e1
-  }
-}
-replicate(50, (1 + 2))
-```
-
-```
-##  [1] 3 4 4 3 3 3 4 3 3 3 4 3 3 3 3 3 3 3 4 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
-## [39] 4 3 3 3 3 3 3 3 3 3 3 3
-```
-
-```r
-rm("(")
-```
-
-Of course, overriding built-in functions like this is a bad idea, but, as you'll learn in Section \@ref(html-env), it's possible to apply it only to selected code blocks. This provides a clean and elegant approach to writing domain specific languages and translators to other languages.
-
-A more useful application comes up when using functional programming tools. For example, you could use `lapply()` to add 3 to every element of a list by first defining a function `add()`:
-
-
-```r
-add <- function(x, y) x + y
-lapply(list(1:3, 4:5), add, 3)
-```
-
-```
-## [[1]]
-## [1] 4 5 6
 ## 
-## [[2]]
-## [1] 7 8
-```
-
-But we can also get the same result simply by relying on the existing `+` function:
-
-
-```r
-lapply(list(1:3, 4:5), `+`, 3)
-```
-
-```
-## [[1]]
-## [1] 4 5 6
+## $lib.loc
+## NULL
 ## 
-## [[2]]
-## [1] 7 8
-```
-
-We'll explore this idea in detail in Section \@ref(functionals).
-
-### Prefix form {#prefix-form}
-\index{functions!arguments}
-\index{arguments!matching}
-
-The prefix form is the most common form in R code, and indeed in the majority of programming languages. Prefix calls in R are a little special because you can specify arguments in three ways:
-
-* By position, like `help(mean)`.
-* Using partial matching, like `help(top = mean)`.
-* By name, like `help(topic = mean)`.
-
-As illustrated by the following chunk, arguments are matched by exact name, then with unique prefixes, and finally by position.
-
-
-```r
-k01 <- function(abcdef, bcde1, bcde2) {
-  list(a = abcdef, b1 = bcde1, b2 = bcde2)
-}
-str(k01(1, 2, 3))
-```
-
-```
-## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3
+## $character.only
+## [1] FALSE
+## 
+## $logical.return
+## [1] FALSE
+## 
+## $warn.conflicts
+## 
+## 
+## $quietly
+## [1] FALSE
+## 
+## $verbose
+## getOption("verbose")
+## 
+## $mask.ok
+## 
+## 
+## $exclude
+## 
+## 
+## $include.only
+## 
+## 
+## $attach.required
+## missing(include.only)
 ```
 
 ```r
-str(k01(2, 3, abcdef = 1))
+length(formals(library))
 ```
 
 ```
-## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3
+## [1] 13
 ```
 
-```r
-# Can abbreviate long argument names:
-str(k01(2, 3, a = 1))
-```
-
-```
-## List of 3
-##  $ a : num 1
-##  $ b1: num 2
-##  $ b2: num 3
-```
-
-```r
-# But this doesn't work because abbreviation is ambiguous
-str(k01(1, 3, b = 1))
-```
-
-```
-## Error in k01(1, 3, b = 1): argument 3 matches multiple formal arguments
-```
-
-In general, use positional matching only for the first one or two arguments; they will be the most commonly used, and most readers will know what they are. Avoid using positional matching for less commonly used arguments, and never use partial matching. Unfortunately you can't disable partial matching, but you can turn it into a warning with the `warnPartialMatchArgs` option:
-\index{options!warnPartialMatchArgs@\texttt{warnPartialMatchArgs}}
-
-
-```r
-options(warnPartialMatchArgs = TRUE)
-x <- k01(a = 1, 2, 3)
-```
-
-```
-## Warning in k01(a = 1, 2, 3): partial argument match of 'a' to 'abcdef'
-```
-
-### Infix functions
-\index{functions!infix} 
-\index{infix functions} 
-\indexc{\%\%}
-
-Infix functions get their name from the fact the function name comes inbetween its arguments, and hence have two arguments. R comes with a number of built-in infix operators: `:`, `::`, `:::`, `$`, `@`, `^`, `*`, `/`, `+`, `-`, `>`, `>=`, `<`, `<=`, `==`, `!=`, `!`, `&`, `&&`, `|`, `||`, `~`, `<-`, and `<<-`. You can also create your own infix functions that start and end with `%`. Base R uses this pattern to define `%%`, `%*%`, `%/%`, `%in%`, `%o%`, and `%x%`.
-
-Defining your own infix function is simple. You create a two argument function and bind it to a name that starts and ends with `%`:
-
-
-```r
-`%+%` <- function(a, b) paste0(a, b)
-"new " %+% "string"
-```
-
-```
-## [1] "new string"
-```
-
-The names of infix functions are more flexible than regular R functions: they can contain any sequence of characters except for `%`. You will need to escape any special characters in the string used to define the function, but not when you call it:
-
-
-```r
-`% %` <- function(a, b) paste(a, b)
-`%/\\%` <- function(a, b) paste(a, b)
-
-"a" % % "b"
-```
-
-```
-## [1] "a b"
-```
-
-```r
-"a" %/\% "b"
-```
-
-```
-## [1] "a b"
-```
-
-R's default precedence rules mean that infix operators are composed left to right:
-
-
-```r
-`%-%` <- function(a, b) paste0("(", a, " %-% ", b, ")")
-"a" %-% "b" %-% "c"
-```
-
-```
-## [1] "((a %-% b) %-% c)"
-```
-
-There are two special infix functions that can be called with a single argument: `+` and `-`.  
-
-```r
--1
-```
-
-```
-## [1] -1
-```
-
-```r
-+10
-```
-
-```
-## [1] 10
-```
-
-### Replacement functions {#replacement-functions}
-\index{replacement functions} 
-\index{functions!replacement}
-\index{assignment!in replacement functions}
-
-Replacement functions act like they modify their arguments in place, and have the special name `xxx<-`. They must have arguments named `x` and `value`, and must return the modified object. For example, the following function modifies the second element of a vector: 
-
-
-```r
-`second<-` <- function(x, value) {
-  x[2] <- value
-  x
-}
-```
-
-Replacement functions are used by placing the function call on the left side of `<-`: 
-
-
-```r
-x <- 1:10
-second(x) <- 5L
-x
-```
-
-```
-##  [1]  1  5  3  4  5  6  7  8  9 10
-```
-
-I say they act like they modify their arguments in place, because, as explained in Section \@ref(modify-in-place), they actually create a modified copy. We can see that by using `tracemem()`:
-
-
-```r
-x <- 1:10
-tracemem(x)
-#> <0x7ffae71bd880>
-
-second(x) <- 6L
-#> tracemem[0x7ffae71bd880 -> 0x7ffae61b5480]: 
-#> tracemem[0x7ffae61b5480 -> 0x7ffae73f0408]: second<- 
-```
-
-If your replacement function needs additional arguments, place them between `x` and `value`, and call the replacement function with additional arguments on the left:
-
-
-```r
-`modify<-` <- function(x, position, value) {
-  x[position] <- value
-  x
-}
-modify(x, 1) <- 10
-x
-```
-
-```
-##  [1] 10  5  3  4  5  6  7  8  9 10
-```
-
-When you write `modify(x, 1) <- 10`, behind the scenes R turns it into:
-
-
-```r
-x <- `modify<-`(x, 1, 10)
-```
-
-Combining replacement with other functions requires more complex translation. For example:
-
-
-```r
-x <- c(a = 1, b = 2, c = 3)
-names(x)
-```
-
-```
-## [1] "a" "b" "c"
-```
-
-```r
-names(x)[2] <- "two"
-names(x)
-```
-
-```
-## [1] "a"   "two" "c"
-```
-
-is translated into:
-
-
-```r
-`*tmp*` <- x
-x <- `names<-`(`*tmp*`, `[<-`(names(`*tmp*`), 2, "two"))
-rm(`*tmp*`)
-```
-
-(Yes, it really does create a local variable named `*tmp*`, which is removed afterwards.)
-
-### Special forms
-\index{special forms}
-\index{functions!special}
-
-Finally, there are a bunch of language features that are usually written in special ways, but also have prefix forms. These include parentheses:
-
-* `(x)` (`` `(`(x) ``)
-* `{x}` (`` `{`(x) ``).
-
-The subsetting operators:
-
-* `x[i]` (`` `[`(x, i) ``) 
-* `x[[i]]` (`` `[[`(x, i) ``)
-
-And the tools of control flow:
-
-* `if (cond) true` (`` `if`(cond, true) ``)
-* `if (cond) true else false` (`` `if`(cond, true, false) ``)
-* `for(var in seq) action` (`` `for`(var, seq, action) ``)
-* `while(cond) action` (`` `while`(cond, action)  ``)
-* `repeat expr` (`` `repeat`(expr) ``)
-* `next` (`` `next`() ``)
-* `break` (`` `break`() ``)
-
-Finally, the most complex is the `function` function:
-
-* `function(arg1, arg2) {body}` (`` `function`(alist(arg1, arg2), body, env)``)
-
-Knowing the name of the function that underlies a special form is useful for getting documentation: `?(` is a syntax error; `` ?`(` `` will give you the documentation for parentheses.
-
-All special forms are implemented as primitive functions (i.e. in C); this means printing these functions is not informative:
-
-
-```r
-`for`
-```
-
-```
-## .Primitive("for")
-```
-
-### Exercises
-
-1. Rewrite the following code snippets into prefix form:
-
-    
-    ```r
-    1 + 2 + 3
-    
-    1 + (2 + 3)
-    
-    if (length(x) <= 5) x[[5]] else x[[n]]
-    ```
-
-1.  Clarify the following list of odd function calls:
-
-    
-    ```r
-    x <- sample(replace = TRUE, 20, x = c(1:10, NA))
-    y <- runif(min = 0, max = 1, 20)
-    cor(m = "k", y = y, u = "p", x = x)
-    ```
-
-
-1. Explain why the following code fails:
-
-    
-    ```r
-    modify(get("x"), 1) <- 10
-    #> Error: target of assignment expands to non-language object
-    ```
-
-1. Create a replacement function that modifies a random location in a vector.
-
-1. Write your own version of `+` that pastes its inputs together if they are 
-   character vectors but behaves as usual otherwise. In other words, make this 
-   code work:
-   
-    
-    ```r
-    1 + 2
-    #> [1] 3
-    
-    "a" + "b"
-    #> [1] "ab"
-    ```
-
-1. Create a list of all the replacement functions found in the base package. 
-   Which ones are primitive functions? (Hint: use `apropos()`.)
-
-1. What are valid names for user-created infix functions?
-
-1. Create an infix `xor()` operator.
-
-1. Create infix versions of the set functions `intersect()`, `union()`, and
-   `setdiff()`. You might call them `%n%`, `%u%`, and `%/%` to match 
-   conventions from mathematics.
-
-
-## Quiz answers {#function-answers}
-
-1.  The three components of a function are its body, arguments, and environment.
-
-1.  `f1(1)()` returns 11.
-
-1.  You'd normally write it in infix style: `1 + (2 * 3)`.
-
-1.  Rewriting the call to `mean(c(1:10, NA), na.rm = TRUE)` is easier to
-    understand.
-    
-1.  No, it does not throw an error because the second argument is never used 
-    so it's never evaluated.
-
-1.  See Sections \@ref(infix-functions) and \@ref(replacement-functions).
-
-1.  You use `on.exit()`; see Section \@ref(on-exit) for details.
+> 13

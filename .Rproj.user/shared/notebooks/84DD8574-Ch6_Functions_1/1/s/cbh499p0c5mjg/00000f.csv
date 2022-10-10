@@ -1,0 +1,7 @@
+"0","sample <- function(x, size = NULL, replace = FALSE, prob = NULL) {"
+"0","  if (is.null(size)) {"
+"0","    size <- length(x)"
+"0","  }"
+"0","  "
+"0","  x[sample.int(length(x), size, replace = replace, prob = prob)]"
+"0","}"
