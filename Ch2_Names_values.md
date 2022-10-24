@@ -43,9 +43,9 @@ str(df)
 
 ```
 ## 'data.frame':	3 obs. of  3 variables:
-##  $ 1: num  0.0927 0.0398 0.9564
-##  $ 2: num  0.109 0.614 0.664
-##  $ 3: num  0.202 0.654 1.621
+##  $ 1: num  0.20787 0.93624 0.00989
+##  $ 2: num  0.729 0.538 0.267
+##  $ 3: num  0.937 1.474 0.277
 ```
 
 > After reading:
@@ -58,9 +58,9 @@ str(df)
 
 ```
 ## 'data.frame':	3 obs. of  3 variables:
-##  $ 1: num  0.0927 0.0398 0.9564
-##  $ 2: num  0.109 0.614 0.664
-##  $ 3: num  0.202 0.654 1.621
+##  $ 1: num  0.20787 0.93624 0.00989
+##  $ 2: num  0.729 0.538 0.267
+##  $ 3: num  0.937 1.474 0.277
 ```
 
 > Using numbers for column name is confusing.   
@@ -181,7 +181,7 @@ obj_addr(x)
 ```
 
 ```
-## [1] "0x25e35f60278"
+## [1] "0x1592025c498"
 ```
 
 ```r
@@ -189,7 +189,7 @@ obj_addr(y)
 ```
 
 ```
-## [1] "0x25e35f60278"
+## [1] "0x1592025c498"
 ```
 
 These identifiers are long, and change every time you restart R.
@@ -260,7 +260,7 @@ obj_addr(a)
 ```
 
 ```
-## [1] "0x25e33e61b78"
+## [1] "0x15920818f78"
 ```
 
 ```r
@@ -268,7 +268,7 @@ obj_addr(b)
 ```
 
 ```
-## [1] "0x25e33e61b78"
+## [1] "0x15920818f78"
 ```
 
 ```r
@@ -276,7 +276,7 @@ obj_addr(c)
 ```
 
 ```
-## [1] "0x25e33e61b78"
+## [1] "0x15920818f78"
 ```
 
 ```r
@@ -284,7 +284,7 @@ obj_addr(d)
 ```
 
 ```
-## [1] "0x25e371dc600"
+## [1] "0x15920932eb0"
 ```
 
 > `a`, `b`, and `c` all point to the same object. `d` is another object.
@@ -307,7 +307,7 @@ obj_addr(mean)
 ```
 
 ```
-## [1] "0x25e36295f58"
+## [1] "0x1591f66d888"
 ```
 
 ```r
@@ -315,7 +315,7 @@ obj_addr(base::mean)
 ```
 
 ```
-## [1] "0x25e36295f58"
+## [1] "0x1591f66d888"
 ```
 
 ```r
@@ -323,7 +323,7 @@ obj_addr(get("mean"))
 ```
 
 ```
-## [1] "0x25e36295f58"
+## [1] "0x1591f66d888"
 ```
 
 ```r
@@ -331,7 +331,7 @@ obj_addr(evalq(mean))
 ```
 
 ```
-## [1] "0x25e36295f58"
+## [1] "0x1591f66d888"
 ```
 
 ```r
@@ -339,7 +339,7 @@ obj_addr(match.fun("mean"))
 ```
 
 ```
-## [1] "0x25e36295f58"
+## [1] "0x1591f66d888"
 ```
 
 > Yes. They all point to the same underlying function object.
@@ -355,9 +355,72 @@ obj_addr(match.fun("mean"))
     
 > The character "X" is prepended if necessary. All invalid characters are translated to ".". A missing value is translated to "NA". Names which match R keywords have a dot appended to them. Duplicated values are altered by make.unique.
 
+> 1. Names that do not start with a letter or a dot will be prepended with an "X".
+
+
+```r
+make.names("")
+```
+
+```
+## [1] "X"
+```
+
+The same holds for names that begin with a dot followed by a number.
+
+
+```r
+make.names(".1")
+```
+
+```
+## [1] "X.1"
+```
+
+> 2. Additionally, non-valid characters are replaced by a dot.
+
+
+```r
+make.names("non-valid")
+```
+
+```
+## [1] "non.valid"
+```
+
+```r
+make.names("@")
+```
+
+```
+## [1] "X."
+```
+
+```r
+make.names("  R")
+```
+
+```
+## [1] "X..R"
+```
+
+> 3. Reserved R keywords (see ?reserved) are suffixed by a dot.
+
+
+```r
+make.names("if")
+```
+
+```
+## [1] "if."
+```
+
+
 5.  I slightly simplified the rules that govern syntactic names. Why is `.123e1` not a syntactic name? Read `?make.names` for the full details.
 
 > A syntactically valid name consists of letters, numbers and the dot or underline characters and starts with a letter or the dot not followed by a number. 
+
+> This makes it a double, 1.23.
 
 ## 2.3 Copy-on-modify
 \index{copy-on-modify}
@@ -378,6 +441,40 @@ x
 ```
 ## [1] 1 2 3
 ```
+
+```r
+str(y)
+```
+
+```
+##  num [1:3] 1 2 4
+```
+
+```r
+y
+```
+
+```
+## [1] 1 2 4
+```
+
+```r
+y[[2]]
+```
+
+```
+## [1] 2
+```
+
+```r
+y[c(1,3)]
+```
+
+```
+## [1] 1 4
+```
+
+> The most important distinction between [, [[ and $ is that the [ can select more than one element whereas the other two select a single element.
 
 Modifying `y` clearly didn't modify `x`. So what happened to the shared binding? While the value associated with `y` changed, the original object did not. Instead, R created a new object, `0xcd2`, a copy of `0x74b` with one value changed, then rebound `y` to that object.
 
@@ -418,12 +515,18 @@ tracemem(y)
 ```
 
 ```
-## [1] "<0000025E39B1B158>"
+## [1] "<0000015923B49858>"
 ```
 
 ```r
 y[[3]] <- 5L
+```
 
+```
+## tracemem[0x0000015923b49858 -> 0x00000159203a15e8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+```
+
+```r
 untracemem(x)
 ```
 
@@ -444,7 +547,7 @@ cat(tracemem(x), "\n")
 ```
 
 ```
-## <0000025E3A6B5548>
+## <000001591F38A738>
 ```
 
 ```r
@@ -465,7 +568,7 @@ cat(tracemem(x), "\n")
 ```
 
 ```
-## <0000025E3AAF1628>
+## <000001592083A098>
 ```
 
 ```r
@@ -527,15 +630,15 @@ ref(l1, l2)
 ```
 
 ```
-## █ [1:0x25e370177a8] <list> 
-## ├─[2:0x25e36e45de0] <dbl> 
-## ├─[3:0x25e36e45e18] <dbl> 
-## └─[4:0x25e36e45e50] <dbl> 
+## █ [1:0x15922bb23c8] <list> 
+## ├─[2:0x1592293b1c8] <dbl> 
+## ├─[3:0x1592293b190] <dbl> 
+## └─[4:0x1592293b158] <dbl> 
 ##  
-## █ [5:0x25e37047298] <list> 
-## ├─[2:0x25e36e45de0] 
-## ├─[3:0x25e36e45e18] 
-## └─[6:0x25e36fcbc10] <dbl>
+## █ [5:0x159232ac298] <list> 
+## ├─[2:0x1592293b1c8] 
+## ├─[3:0x1592293b190] 
+## └─[6:0x159230b9918] <dbl>
 ```
 
 ### 2.3.4 Data frames {#df-modify}
@@ -591,11 +694,11 @@ ref(x, character = TRUE)
 ```
 
 ```
-## █ [1:0x25e39a7bbf8] <chr> 
-## ├─[2:0x25e33a07578] <string: "a"> 
-## ├─[2:0x25e33a07578] 
-## ├─[3:0x25e37399f08] <string: "abc"> 
-## └─[4:0x25e33c38b70] <string: "d">
+## █ [1:0x15924096cd8] <chr> 
+## ├─[2:0x1591cdf4f28] <string: "a"> 
+## ├─[2:0x1591cdf4f28] 
+## ├─[3:0x15923210f58] <string: "abc"> 
+## └─[4:0x1591d009140] <string: "d">
 ```
 
 This has a profound impact on the amount of memory a character vector uses but is otherwise generally unimportant, so elsewhere in the book I'll draw character vectors as if the strings lived inside a vector.
@@ -610,7 +713,7 @@ tracemem(1:10)
 ```
 
 ```
-## [1] "<0000025E39C0D300>"
+## [1] "<0000015923CE0FC0>"
 ```
 
 ```r
@@ -618,7 +721,7 @@ tracemem(1:10)
 ```
 
 ```
-## [1] "<0000025E39C5FBE8>"
+## [1] "<0000015923D3B190>"
 ```
 
 > This `tracemem()` function marks an object so that a message is printed whenever the internal code copies the object. When we enter `1:10`, it creates a new object. Therefore, the address is different every time, but it's not a copy of the original one so that no new message, like tracemem [0x7f80c0e0ffc8 -> 0x7f80c4427f40], will show up. 
@@ -643,7 +746,7 @@ tracemem(1:10)
 ```
 
 ```
-## [1] "<0000025E3ABD6D98>"
+## [1] "<00000159201BB818>"
 ```
 
 ```r
@@ -659,7 +762,7 @@ tracemem(1:10)
 ```
 
 ```
-## tracemem[0x0000025e3abd6d98 -> 0x0000025e3aee29a8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+## tracemem[0x00000159201bb818 -> 0x00000159200ac878]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
 ```
 
 ```r
@@ -676,7 +779,7 @@ tracemem(1:10)
 ```
 
 ```
-## [1] "<0000025E3B46CE28>"
+## [1] "<00000159230EA8F8>"
 ```
 
 ```r
@@ -692,7 +795,7 @@ tracemem(1:10)
 ```
 
 ```
-## tracemem[0x0000025e3b46ce28 -> 0x0000025e3b47c4f8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+## tracemem[0x00000159230ea8f8 -> 0x0000015923258a28]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
 ```
 
 ```r
@@ -710,7 +813,7 @@ tracemem(1:10)
 ```
 
 ```
-## [1] "<0000025E37014A28>"
+## [1] "<0000015924491798>"
 ```
 
 ```r
@@ -726,7 +829,7 @@ tracemem(1:10)
 ```
 
 ```
-## tracemem[0x0000025e37014a28 -> 0x0000025e36dd8b78]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+## tracemem[0x0000015924491798 -> 0x00000159244a8f98]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
 ```
 
 ```r
@@ -754,63 +857,85 @@ ref(a, b, c)
 ```
 
 ```
-## [1:0x25e35e86d50] <int> 
+## [1:0x15922a2da18] <int> 
 ##  
-## █ [2:0x25e36a90638] <list> 
-## ├─[1:0x25e35e86d50] 
-## └─[1:0x25e35e86d50] 
+## █ [2:0x159236cbac8] <list> 
+## ├─[1:0x15922a2da18] 
+## └─[1:0x15922a2da18] 
 ##  
-## █ [3:0x25e3773c4b8] <list> 
-## ├─[2:0x25e36a90638] 
-## ├─[1:0x25e35e86d50] 
-## └─[4:0x25e35a01e50] <int>
+## █ [3:0x159244cff08] <list> 
+## ├─[2:0x159236cbac8] 
+## ├─[1:0x15922a2da18] 
+## └─[4:0x15922af7018] <int>
 ```
 
 <img src="diagrams/name-value/R_advance_2.3.6_Q3.png" width="2362" />
 
+
+```r
+ref(c)
+```
+
+```
+## █ [1:0x159244cff08] <list> 
+## ├─█ [2:0x159236cbac8] <list> 
+## │ ├─[3:0x15922a2da18] <int> 
+## │ └─[3:0x15922a2da18] 
+## ├─[3:0x15922a2da18] 
+## └─[4:0x15922af7018] <int>
+```
+
+
 4.  What happens when you run this code?
 
-    
-    ```r
+
+```r
     x <- list(1:10)
-    x
-    ```
-    
-    ```
-    ## [[1]]
-    ##  [1]  1  2  3  4  5  6  7  8  9 10
-    ```
-    
-    ```r
+
     tracemem(x)
-    ```
-    
-    ```
-    ## [1] "<0000025E39E1A708>"
-    ```
-    
-    ```r
+```
+
+```
+## [1] "<00000159241B9D30>"
+```
+
+```r
     obj_addr(x)
-    ```
-    
-    ```
-    ## [1] "0x25e39e1a708"
-    ```
-    
-    ```r
+```
+
+```
+## [1] "0x159241b9d30"
+```
+
+```r
     obj_addrs(x)
-    ```
-    
-    ```
-    ## [1] "0x25e395af1d8"
-    ```
+```
+
+```
+## [1] "0x15923b9c4e8"
+```
+
+```r
+    ref(x)
+```
+
+```
+## tracemem[0x00000159241b9d30 -> 0x00000159243a8438]: FUN lapply ref eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+```
+
+```
+## █ [1:0x159241b9d30] <list> 
+## └─[2:0x15923b9c4e8] <int>
+```
+
+
     
     ```r
     x[[2]] <- x
     ```
     
     ```
-    ## tracemem[0x0000025e39e1a708 -> 0x0000025e3a124bc8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+    ## tracemem[0x00000159241b9d30 -> 0x0000015920472448]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
     ```
     
     ```r
@@ -823,15 +948,6 @@ ref(a, b, c)
     ## 
     ## [[2]]
     ## [[2]][[1]]
-    ##  [1]  1  2  3  4  5  6  7  8  9 10
-    ```
-    
-    ```r
-    x[[2]]
-    ```
-    
-    ```
-    ## [[1]]
     ##  [1]  1  2  3  4  5  6  7  8  9 10
     ```
     
@@ -851,7 +967,7 @@ ref(a, b, c)
     ```
     
     ```
-    ## [1] "0x25e3a1fc898"
+    ## [1] "0x15920482728"
     ```
     
     ```r
@@ -859,7 +975,7 @@ ref(a, b, c)
     ```
     
     ```
-    ## [1] "0x25e395af1d8" "0x25e39e1a708"
+    ## [1] "0x15923b9c4e8" "0x159241b9d30"
     ```
     
     ```r
@@ -872,14 +988,14 @@ ref(x)
 ```
 
 ```
-## tracemem[0x0000025e39e1a708 -> 0x0000025e3a6fee18]: FUN lapply FUN lapply ref eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+## tracemem[0x00000159241b9d30 -> 0x000001591dd8a960]: FUN lapply FUN lapply ref eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
 ```
 
 ```
-## █ [1:0x25e3a1fc898] <list> 
-## ├─[2:0x25e395af1d8] <int> 
-## └─█ [3:0x25e39e1a708] <list> 
-##   └─[2:0x25e395af1d8]
+## █ [1:0x15920482728] <list> 
+## ├─[2:0x15923b9c4e8] <int> 
+## └─█ [3:0x159241b9d30] <list> 
+##   └─[2:0x15923b9c4e8]
 ```
     
     Draw a picture.
@@ -1144,8 +1260,8 @@ str(b)
 
 ```
 ## List of 2
-##  $ : num [1:1000000] 0.1219 0.0112 0.9248 0.1068 0.7604 ...
-##  $ : num [1:1000000] 0.1219 0.0112 0.9248 0.1068 0.7604 ...
+##  $ : num [1:1000000] 0.6167 0.0867 0.9201 0.8751 0.5918 ...
+##  $ : num [1:1000000] 0.6167 0.0867 0.9201 0.8751 0.5918 ...
 ```
 
 ```r
@@ -1155,8 +1271,8 @@ str(b)
 
 ```
 ## List of 2
-##  $ : num [1:1000000] 10 0.0112 0.9248 0.1068 0.7604 ...
-##  $ : num [1:1000000] 0.1219 0.0112 0.9248 0.1068 0.7604 ...
+##  $ : num [1:1000000] 10 0.0867 0.9201 0.8751 0.5918 ...
+##  $ : num [1:1000000] 0.6167 0.0867 0.9201 0.8751 0.5918 ...
 ```
 
 ```r
@@ -1187,8 +1303,8 @@ str(b)
 
 ```
 ## List of 2
-##  $ : num [1:1000000] 10 0.0112 0.9248 0.1068 0.7604 ...
-##  $ : num [1:1000000] 0.1219 0.0112 0.9248 0.1068 0.7604 ...
+##  $ : num [1:1000000] 10 0.0867 0.9201 0.8751 0.5918 ...
+##  $ : num [1:1000000] 0.6167 0.0867 0.9201 0.8751 0.5918 ...
 ```
 
 ```r
@@ -1198,8 +1314,8 @@ str(b)
 
 ```
 ## List of 2
-##  $ : num [1:1000000] 10 0.0112 0.9248 0.1068 0.7604 ...
-##  $ : num [1:1000000] 10 0.0112 0.9248 0.1068 0.7604 ...
+##  $ : num [1:1000000] 10 0.0867 0.9201 0.8751 0.5918 ...
+##  $ : num [1:1000000] 10 0.0867 0.9201 0.8751 0.5918 ...
 ```
 
 ```r
@@ -1260,7 +1376,7 @@ tracemem(v)
 ```
 
 ```
-## [1] "<0000025E3BB88618>"
+## [1] "<0000015923B491C8>"
 ```
 
 <img src="diagrams/name-value/v-inplace-1.png" width="401" />
@@ -1271,7 +1387,7 @@ v[[3]] <- 4
 ```
 
 ```
-## tracemem[0x0000025e3bb88618 -> 0x0000025e3b6f48d8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+## tracemem[0x0000015923b491c8 -> 0x0000015920762ad8]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
 ```
 
 <img src="diagrams/name-value/v-inplace-2.png" width="401" />
@@ -1306,11 +1422,11 @@ str(x)
 
 ```
 ## 'data.frame':	10000 obs. of  5 variables:
-##  $ X1: num  0.942 0.268 0.429 0.147 0.761 ...
-##  $ X2: num  0.422 0.484 0.157 0.508 0.677 ...
-##  $ X3: num  0.649 0.553 0.98 0.366 0.459 ...
-##  $ X4: num  0.54 0.258 0.289 0.466 0.361 ...
-##  $ X5: num  0.585 0.622 0.78 0.382 0.94 ...
+##  $ X1: num  0.2085 0.0576 0.1649 0.99 0.9182 ...
+##  $ X2: num  0.924 0.373 0.651 0.98 0.325 ...
+##  $ X3: num  0.0645 0.5625 0.3241 0.6691 0.1455 ...
+##  $ X4: num  0.13 0.585 0.955 0.675 0.244 ...
+##  $ X5: num  0.0932 0.6782 0.4965 0.7919 0.1354 ...
 ```
 
 
@@ -1320,13 +1436,16 @@ str(medians)
 ```
 
 ```
-##  Named num [1:5] 0.504 0.495 0.505 0.499 0.501
+##  Named num [1:5] 0.494 0.502 0.496 0.503 0.494
 ##  - attr(*, "names")= chr [1:5] "X1" "X2" "X3" "X4" ...
 ```
 
 
 
 ```r
+x <- data.frame(matrix(runif(5 * 1e4), ncol = 5))
+medians <- vapply(x, median, numeric(1))
+
 for (i in seq_along(medians)) {
   x[[i]] <- x[[i]] - medians[[i]]
 }
@@ -1430,8 +1549,8 @@ ref(e)
 ```
 
 ```
-## █ [1:0x25e3a2be820] <env> 
-## └─self = [1:0x25e3a2be820]
+## █ [1:0x15922b24830] <env> 
+## └─self = [1:0x15922b24830]
 ```
 <img src="diagrams/name-value/e-self.png" width="354" />
 
@@ -1444,11 +1563,11 @@ This is a unique property of environments!
     
     ```r
     x <- list()
-    cat(tracemem(x), "\n")
+    tracemem(x)
     ```
     
     ```
-    ## <0000025E364703C8>
+    ## [1] "<0000015923264980>"
     ```
     
     ```r
@@ -1456,21 +1575,27 @@ This is a unique property of environments!
     ```
     
     ```
-    ## tracemem[0x0000025e364703c8 -> 0x0000025e363af870]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+    ## tracemem[0x0000015923264980 -> 0x00000159233892a0]: eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
     ```
     
     ```r
+    untracemem(x)
+    ```
+
+
+```r
     ref(x)
-    ```
-    
-    ```
-    ## tracemem[0x0000025e364703c8 -> 0x0000025e35e92c98]: FUN lapply FUN lapply ref eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
-    ```
-    
-    ```
-    ## █ [1:0x25e3645df70] <list> 
-    ## └─█ [2:0x25e364703c8] <list>
-    ```
+```
+
+```
+## tracemem[0x0000015923264980 -> 0x0000015923cbec10]: FUN lapply FUN lapply ref eval eval eval_with_user_handlers withVisible withCallingHandlers handle timing_fn evaluate_call <Anonymous> evaluate in_dir in_input_dir eng_r block_exec call_block process_group.block process_group withCallingHandlers process_file <Anonymous> <Anonymous>
+```
+
+```
+## █ [1:0x15924be4d10] <list> 
+## └─█ [2:0x15923264980] <list>
+```
+
 
 > Because R uses copy-on-modify on `x[[1]] <- x`, the new `x` is a new list with one object, which is an empty list.
 
@@ -1478,7 +1603,7 @@ This is a unique property of environments!
 
 
 ```r
-nc = 1000
+nc = 100
 x <- data.frame(matrix(runif(nc * 1e4), ncol = nc))
 medians <- vapply(x, median, numeric(1))
 ```
@@ -1490,6 +1615,7 @@ normalization_slow <- function(x, medians) {
   for (i in seq_along(medians)) {
     x[[i]] <- x[[i]] - medians[[i]]
   }
+  x
 }
 ```
 
@@ -1498,9 +1624,10 @@ normalization_slow <- function(x, medians) {
 ```r
 normalization_fast <- function(x, medians) {
   y <- as.list(x)
-  for (i in 1:5) {
+  for (i in seq_along(medians)) {
     y[[i]] <- y[[i]] - medians[[i]]
   }
+  list2DF(y)
 }
 ```
 
@@ -1516,7 +1643,7 @@ bench::mark(normalization_slow(x, medians))
 ## # A tibble: 1 × 6
 ##   expression                          min   median `itr/sec` mem_alloc `gc/sec`
 ##   <bch:expr>                     <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-## 1 normalization_slow(x, medians)   57.1ms   57.1ms      17.5    91.7MB     210.
+## 1 normalization_slow(x, medians)   2.22ms      3ms      327.    7.82MB     106.
 ```
 
 
@@ -1528,10 +1655,137 @@ bench::mark(normalization_fast(x, medians))
 ## # A tibble: 1 × 6
 ##   expression                          min   median `itr/sec` mem_alloc `gc/sec`
 ##   <bch:expr>                     <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-## 1 normalization_fast(x, medians)   67.8µs    145µs     6334.     422KB     22.9
+## 1 normalization_fast(x, medians)    1.1ms   2.23ms      447.    7.68MB     125.
 ```
 
-> With 1000 columns, it's much faster using a list! It improves from 387ms to 158µs.
+> With 1000 columns, it's much faster using a list! It improves from 54.1 ms to 25 ms.
+
+
+```r
+create_random_df <- function(nrow, ncol) {
+  random_matrix <- matrix(runif(nrow * ncol), nrow = nrow)
+  as.data.frame(random_matrix)
+}
+
+create_random_df(2, 2)
+```
+
+```
+##          V1        V2
+## 1 0.7379214 0.6790287
+## 2 0.7108728 0.4206241
+```
+
+
+
+```r
+benchmark_medians <- function(ncol) {
+  df <- create_random_df(nrow = 1e4, ncol = ncol)
+  medians <- vapply(df, median, numeric(1), USE.NAMES = FALSE)
+
+  bench::mark(
+    "data frame" = normalization_slow(df, medians),
+    "list" = normalization_fast(df, medians),
+    time_unit = "ms"
+  )
+}
+
+benchmark_medians(1000)
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is disabled.
+```
+
+```
+## # A tibble: 2 × 6
+##   expression   min median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr> <dbl>  <dbl>     <dbl> <bch:byt>    <dbl>
+## 1 data frame  45.1   50.0      18.3    91.7MB     18.3
+## 2 list        18.0   31.7      28.6    76.4MB     19.0
+```
+
+> press: Run setup code and benchmarks across a grid of parameters
+
+> The bench::press() function allows us to run our helper across a grid of parameters. We will use it to slowly increase the number of data frame columns in our benchmark.
+
+
+```r
+results <- bench::press(
+  ncol = c(1, 10, 50, 100, 250, 300, 400, 500, 750, 1000),
+  benchmark_medians(ncol)
+)
+```
+
+```
+## Running with:
+##     ncol
+```
+
+```
+##  1     1
+```
+
+```
+##  2    10
+```
+
+```
+##  3    50
+```
+
+```
+##  4   100
+```
+
+```
+##  5   250
+```
+
+```
+##  6   300
+```
+
+```
+##  7   400
+```
+
+```
+##  8   500
+```
+
+```
+##  9   750
+```
+
+```
+## 10  1000
+```
+
+
+```r
+library(ggplot2)
+
+ggplot(
+  results,
+  aes(ncol, median, col = attr(expression, "description"))
+) +
+  geom_point(size = 2) +
+  geom_smooth() +
+  labs(
+    x = "Number of Columns",
+    y = "Execution Time (ms)",
+    colour = "Data Structure"
+  ) +
+  theme(legend.position = "top")
+```
+
+```
+## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+```
+
+![](Ch2_Names_values_files/figure-html/unnamed-chunk-94-1.png)<!-- -->
+
 
 3.  What happens if you attempt to use `tracemem()` on an environment?
 
@@ -1586,9 +1840,9 @@ gc()
 ```
 
 ```
-##           used (Mb) gc trigger  (Mb) max used  (Mb)
-## Ncells  854458 45.7    1545877  82.6  1545877  82.6
-## Vcells 5009060 38.3   30758388 234.7 38447908 293.4
+##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
+## Ncells  2205127 117.8    3626698  193.7   3626698  193.7
+## Vcells 75068552 572.8  139530574 1064.6 139528242 1064.6
 ```
 
 `lobstr::mem_used()` is a wrapper around `gc()` that prints the total number of bytes used:
@@ -1599,7 +1853,7 @@ mem_used()
 ```
 
 ```
-## 87.92 MB
+## 724.04 MB
 ```
 
 This number won't agree with the amount of memory reported by your operating system. There are three reasons:

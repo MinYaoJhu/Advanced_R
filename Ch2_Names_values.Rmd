@@ -247,9 +247,38 @@ obj_addr(match.fun("mean"))
     
 > The character "X" is prepended if necessary. All invalid characters are translated to ".". A missing value is translated to "NA". Names which match R keywords have a dot appended to them. Duplicated values are altered by make.unique.
 
+> 1. Names that do not start with a letter or a dot will be prepended with an "X".
+
+```{r}
+make.names("")
+```
+
+The same holds for names that begin with a dot followed by a number.
+
+```{r}
+make.names(".1")
+```
+
+> 2. Additionally, non-valid characters are replaced by a dot.
+
+```{r}
+make.names("non-valid")
+make.names("@")
+make.names("  R")
+```
+
+> 3. Reserved R keywords (see ?reserved) are suffixed by a dot.
+
+```{r}
+make.names("if")
+```
+
+
 5.  I slightly simplified the rules that govern syntactic names. Why is `.123e1` not a syntactic name? Read `?make.names` for the full details.
 
 > A syntactically valid name consists of letters, numbers and the dot or underline characters and starts with a letter or the dot not followed by a number. 
+
+> This makes it a double, 1.23.
 
 ## 2.3 Copy-on-modify
 \index{copy-on-modify}
@@ -264,7 +293,14 @@ y <- x
 
 y[[3]] <- 4
 x
+
+str(y)
+y
+y[[2]]
+y[c(1,3)]
 ```
+
+> The most important distinction between [, [[ and $ is that the [ can select more than one element whereas the other two select a single element.
 
 Modifying `y` clearly didn't modify `x`. So what happened to the shared binding? While the value associated with `y` changed, the original object did not. Instead, R created a new object, `0xcd2`, a copy of `0x74b` with one value changed, then rebound `y` to that object.
 
@@ -521,21 +557,31 @@ ref(a, b, c)
 knitr::include_graphics("diagrams/name-value/R_advance_2.3.6_Q3.png")
 ```
 
+```{r}
+ref(c)
+```
+
+
 4.  What happens when you run this code?
 
-    ```{r}
+```{r}
     x <- list(1:10)
-    x
+
     tracemem(x)
     obj_addr(x)
     obj_addrs(x)
-    
+    ref(x)
+```
+
+
+    ```{r}
     x[[2]] <- x
     x
-    x[[2]]
+    
     str(x)
     obj_addr(x)
     obj_addrs(x)
+
     untracemem(x)
     ```
 
@@ -763,6 +809,9 @@ str(medians)
 
 
 ```{r}
+x <- data.frame(matrix(runif(5 * 1e4), ncol = 5))
+medians <- vapply(x, median, numeric(1))
+
 for (i in seq_along(medians)) {
   x[[i]] <- x[[i]] - medians[[i]]
 }
@@ -870,19 +919,24 @@ This is a unique property of environments!
 
     ```{r}
     x <- list()
-    cat(tracemem(x), "\n")
+    tracemem(x)
 
     x[[1]] <- x
-
-    ref(x)
+    
+    untracemem(x)
     ```
+
+```{r}
+    ref(x)
+```
+
 
 > Because R uses copy-on-modify on `x[[1]] <- x`, the new `x` is a new list with one object, which is an empty list.
 
 2.  Wrap the two methods for subtracting medians into two functions, then use the 'bench' package [@bench] to carefully compare their speeds. How does performance change as the number of columns increase?
 
 ```{r}
-nc = 1000
+nc = 100
 x <- data.frame(matrix(runif(nc * 1e4), ncol = nc))
 medians <- vapply(x, median, numeric(1))
 ```
@@ -893,6 +947,7 @@ normalization_slow <- function(x, medians) {
   for (i in seq_along(medians)) {
     x[[i]] <- x[[i]] - medians[[i]]
   }
+  x
 }
 ```
 
@@ -900,9 +955,10 @@ normalization_slow <- function(x, medians) {
 ```{r}
 normalization_fast <- function(x, medians) {
   y <- as.list(x)
-  for (i in 1:5) {
+  for (i in seq_along(medians)) {
     y[[i]] <- y[[i]] - medians[[i]]
   }
+  list2DF(y)
 }
 ```
 
@@ -917,7 +973,61 @@ bench::mark(normalization_slow(x, medians))
 bench::mark(normalization_fast(x, medians))
 ```
 
-> With 1000 columns, it's much faster using a list! It improves from 387ms to 158µs.
+> With 1000 columns, it's much faster using a list! It improves from 54.1 ms to 25 ms.
+
+```{r}
+create_random_df <- function(nrow, ncol) {
+  random_matrix <- matrix(runif(nrow * ncol), nrow = nrow)
+  as.data.frame(random_matrix)
+}
+
+create_random_df(2, 2)
+```
+
+
+```{r}
+benchmark_medians <- function(ncol) {
+  df <- create_random_df(nrow = 1e4, ncol = ncol)
+  medians <- vapply(df, median, numeric(1), USE.NAMES = FALSE)
+
+  bench::mark(
+    "data frame" = normalization_slow(df, medians),
+    "list" = normalization_fast(df, medians),
+    time_unit = "ms"
+  )
+}
+
+benchmark_medians(1000)
+```
+
+> press: Run setup code and benchmarks across a grid of parameters
+
+> The bench::press() function allows us to run our helper across a grid of parameters. We will use it to slowly increase the number of data frame columns in our benchmark.
+
+```{r}
+results <- bench::press(
+  ncol = c(1, 10, 50, 100, 250, 300, 400, 500, 750, 1000),
+  benchmark_medians(ncol)
+)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(
+  results,
+  aes(ncol, median, col = attr(expression, "description"))
+) +
+  geom_point(size = 2) +
+  geom_smooth() +
+  labs(
+    x = "Number of Columns",
+    y = "Execution Time (ms)",
+    colour = "Data Structure"
+  ) +
+  theme(legend.position = "top")
+```
+
 
 3.  What happens if you attempt to use `tracemem()` on an environment?
 
