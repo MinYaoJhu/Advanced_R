@@ -439,11 +439,11 @@ See  `?delayedAssign()` and `?makeActiveBinding()`.
 :::
 
 ```{r}
-?delayedAssign()
+#?delayedAssign()
 ```
 
 ```{r}
-?makeActiveBinding()
+#?makeActiveBinding()
 ```
 
 ### 7.2.7 Exercises
@@ -510,7 +510,7 @@ lobstr::ref(e7_3)
     as [single assignment languages][single assignment].
 
 ```{r}
-?env_poke()
+#?env_poke()
 getAnywhere(env_poke)
 ```
 
@@ -739,7 +739,8 @@ fget <- function(name, env = caller_env()) {
 # Test
 mean <- 10
 fget("mean")
-fget("meanx")
+#fget("meanx")
+#Error: Could not find a function called meanx.
 ```
 
 ```{r}
@@ -769,8 +770,11 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
 
 # Test
 mean <- 10
-new_fget("mean", inherits = FALSE)
+#new_fget("mean", inherits = FALSE)
+#Error in new_fget("mean", inherits = FALSE) : inherits = FALSE.
+
 new_fget("mean")
-new_fget("meanx")
+#new_fget("meanx")
+#Error: Could not find a function called meanx.
 ```
 

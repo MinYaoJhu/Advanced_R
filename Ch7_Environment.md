@@ -88,7 +88,8 @@ If you can answer the following questions correctly, you already know the most i
 
 This chapter will use [rlang](https://rlang.r-lib.org) functions for working with environments, because it allows us to focus on the essence of environments, rather than the incidental details. 
 
-```{r setup, message = FALSE}
+
+```r
 library(rlang)
 ```
 
@@ -116,7 +117,8 @@ Let's explore these ideas with code and pictures.
 
 To create an environment, use `rlang::env()`. It works like `list()`, taking a set of name-value pairs:
 
-```{r}
+
+```r
 e1 <- env(
   a = FALSE,
   b = "a",
@@ -131,44 +133,67 @@ Use `new.env()` to create a new environment. Ignore the `hash` and `size` parame
 
 The job of an environment is to associate, or __bind__, a set of names to a set of values. You can think of an environment as a bag of names, with no implied order (i.e. it doesn't make sense to ask which is the first element in an environment). For that reason, we'll draw the environment as so:
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/bindings.png")
-```
+<img src="diagrams/environments/bindings.png" width="732" />
 
 As discussed in Section \@ref(env-modify), environments have reference semantics: unlike most R objects, when you modify them, you modify them in place, and don't create a copy. One important implication is that environments can contain themselves. 
 
-```{r}
+
+```r
 e1$d <- e1
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/loop.png")
-```
+<img src="diagrams/environments/loop.png" width="732" />
 
 Printing an environment just displays its memory address, which is not terribly useful:
 
-```{r}
+
+```r
 e1
+```
+
+```
+## <environment: 0x000002708742fcc0>
 ```
 
 Instead, we'll use `env_print()` which gives us a little more information:
 
-```{r}
+
+```r
 env_print(e1)
+```
+
+```
+## <environment: 0x000002708742fcc0>
+## Parent: <environment: global>
+## Bindings:
+## • a: <lgl>
+## • b: <chr>
+## • c: <dbl>
+## • d: <env>
 ```
 
 You can use `env_names()` to get a character vector giving the current bindings
 
-```{r}
+
+```r
 env_names(e1)
+```
+
+```
+## [1] "a" "b" "c" "d"
 ```
 
 ::: base
 In R 3.2.0 and greater, use `names()` to list the bindings in an environment. If your code needs to work with R 3.1.0 or earlier, use `ls()`, but note that you'll need to set `all.names = TRUE` to show all bindings.
 :::
 
-```{r}
+
+```r
 names(e1)
+```
+
+```
+## [1] "a" "b" "c" "d"
 ```
 
 
@@ -180,18 +205,35 @@ We'll talk in detail about special environments in \@ref(special-environments), 
 
 To compare environments, you need to use `identical()` and not `==`. This is because `==` is a vectorised operator, and environments are not vectors.
 
-```{r, error = TRUE}
-identical(global_env(), current_env())
 
+```r
+identical(global_env(), current_env())
+```
+
+```
+## [1] TRUE
+```
+
+```r
 #global_env() == current_env()
 ```
 
-```{r}
+
+```r
 global_env()
 ```
 
-```{r}
+```
+## <environment: R_GlobalEnv>
+```
+
+
+```r
 current_env()
+```
+
+```
+## <environment: R_GlobalEnv>
 ```
 
 
@@ -199,12 +241,22 @@ current_env()
 Access the global environment with `globalenv()` and the current environment with `environment()`. The global environment is printed as `R_GlobalEnv` and `.GlobalEnv`.
 :::
 
-```{r}
+
+```r
 globalenv()
 ```
 
-```{r}
+```
+## <environment: R_GlobalEnv>
+```
+
+
+```r
 environment()
+```
+
+```
+## <environment: R_GlobalEnv>
 ```
 
 
@@ -214,58 +266,132 @@ environment()
 
 Every environment has a __parent__, another environment. In diagrams, the parent is shown as a small pale blue circle and arrow that points to another environment. The parent is what's used to implement lexical scoping: if a name is not found in an environment, then R will look in its parent (and so on).  You can set the parent environment by supplying an unnamed argument to `env()`. If you don't supply it, it defaults to the current environment. In the code below, `e2a` is the parent of `e2b`.
 
-```{r}
+
+```r
 e2a <- env(d = 4, e = 5)
 e2b <- env(e2a, a = 1, b = 2, c = 3)
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/parents.png")
-```
+<img src="diagrams/environments/parents.png" width="897" />
 
 To save space, I typically won't draw all the ancestors; just remember whenever you see a pale blue circle, there's a parent environment somewhere. 
 
 You can find the parent of an environment with `env_parent()`:
 
-```{r}
-env_parent(e2b)
-env_parent(e2a)
 
+```r
+env_parent(e2b)
+```
+
+```
+## <environment: 0x000002708bd5be00>
+```
+
+```r
+env_parent(e2a)
+```
+
+```
+## <environment: R_GlobalEnv>
+```
+
+```r
 env_print(e2b)
+```
+
+```
+## <environment: 0x000002708bda8720>
+## Parent: <environment: 0x000002708bd5be00>
+## Bindings:
+## • a: <dbl>
+## • b: <dbl>
+## • c: <dbl>
+```
+
+```r
 env_print(e2a)
+```
+
+```
+## <environment: 0x000002708bd5be00>
+## Parent: <environment: global>
+## Bindings:
+## • d: <dbl>
+## • e: <dbl>
 ```
 
 Only one environment doesn't have a parent: the __empty__ environment.  I draw the empty environment with a hollow parent environment, and where space allows I'll label it with `R_EmptyEnv`, the name R uses.
 
-```{r}
+
+```r
 e2c <- env(empty_env(), d = 4, e = 5)
 e2d <- env(e2c, a = 1, b = 2, c = 3)
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/parents-empty.png")
-```
+<img src="diagrams/environments/parents-empty.png" width="897" />
 
 The ancestors of every environment eventually terminate with the empty environment. You can see all ancestors with `env_parents()`:
 
-```{r}
+
+```r
 env_parents(e2b)
+```
+
+```
+## [[1]]   <env: 0x000002708bd5be00>
+## [[2]] $ <env: global>
+```
+
+```r
 env_parents(e2d)
+```
+
+```
+## [[1]]   <env: 0x0000027088bbd150>
+## [[2]] $ <env: empty>
 ```
 
 By default, `env_parents()` stops when it gets to the global environment. This is useful because the ancestors of the global environment include every attached package, which you can see if you override the default behaviour as below. We'll come back to these environments in Section \@ref(search-path). 
 
-```{r}
+
+```r
 env_parents(e2b, last = empty_env())
+```
+
+```
+##  [[1]]   <env: 0x000002708bd5be00>
+##  [[2]] $ <env: global>
+##  [[3]] $ <env: package:rlang>
+##  [[4]] $ <env: package:stats>
+##  [[5]] $ <env: package:graphics>
+##  [[6]] $ <env: package:grDevices>
+##  [[7]] $ <env: package:utils>
+##  [[8]] $ <env: package:datasets>
+##  [[9]] $ <env: package:methods>
+## [[10]] $ <env: Autoloads>
+## [[11]] $ <env: package:base>
+## [[12]] $ <env: empty>
 ```
 
 ::: base 
 Use `parent.env()` to find the parent of an environment. No base function returns all ancestors.
 :::
 
-```{r}
+
+```r
 parent.env(e2b)
+```
+
+```
+## <environment: 0x000002708bd5be00>
+```
+
+```r
 parent.env(e2d)
+```
+
+```
+## <environment: 0x0000027088bbd150>
 ```
 
 
@@ -276,13 +402,18 @@ parent.env(e2d)
 
 The ancestors of an environment have an important relationship to `<<-`. Regular assignment, `<-`, always creates a variable in the current environment. Super assignment, `<<-`, never creates a variable in the current environment, but instead modifies an existing variable found in a parent environment. 
 
-```{r}
+
+```r
 x <- 0
 f <- function() {
   x <<- 1
 }
 f()
 x
+```
+
+```
+## [1] 1
 ```
 
 If `<<-` doesn't find an existing variable, it will create one in the global environment. This is usually undesirable, because global variables introduce non-obvious dependencies between functions. `<<-` is most often used in conjunction with a function factory, as described in Section \@ref(stateful-funs).
@@ -293,19 +424,50 @@ If `<<-` doesn't find an existing variable, it will create one in the global env
 
 You can get and set elements of an environment with `$` and `[[` in the same way as a list:
 
-```{r}
+
+```r
 e3 <- env(x = 1, y = 2)
 e3$x
+```
+
+```
+## [1] 1
+```
+
+```r
 e3$z <- 3
 e3[["z"]]
-e3
+```
 
+```
+## [1] 3
+```
+
+```r
+e3
+```
+
+```
+## <environment: 0x000002708bb167a0>
+```
+
+```r
 env_print(e3)
+```
+
+```
+## <environment: 0x000002708bb167a0>
+## Parent: <environment: global>
+## Bindings:
+## • x: <dbl>
+## • y: <dbl>
+## • z: <dbl>
 ```
 
 But you can't use `[[` with numeric indices, and you can't use `[`:
 
-```{r, error = TRUE}
+
+```r
 #e3[[1]]
 #Error in e3[[1]] : wrong arguments for subsetting an environment
 
@@ -316,11 +478,27 @@ But you can't use `[[` with numeric indices, and you can't use `[`:
 
 `$` and `[[` will return `NULL` if the binding doesn't exist. Use `env_get()` if you want an error:
 
-```{r, error = TRUE}
+
+```r
 e3$xyz
+```
+
+```
+## NULL
+```
+
+```r
 #NULL
 
 env_get(e3, "xyz")
+```
+
+```
+## Error in `env_get()`:
+## ! Can't find `xyz` in environment.
+```
+
+```r
 #Error in `env_get()`:
 #! Can't find `xyz` in environment.
 #Backtrace:
@@ -330,17 +508,27 @@ env_get(e3, "xyz")
 
 If you want to use a default value if the binding doesn't exist, you can use the `default` argument.
 
-```{r}
+
+```r
 env_get(e3, "xyz", default = NA)
+```
+
+```
+## [1] NA
 ```
 
 There are two other ways to add bindings to an environment: 
 
 *   `env_poke()`[^poke] takes a name (as string) and a value:
 
-    ```{r}
+    
+    ```r
     env_poke(e3, "a", 100)
     e3$a
+    ```
+    
+    ```
+    ## [1] 100
     ```
 
     [^poke]: You might wonder why rlang has `env_poke()` instead of `env_set()`. 
@@ -349,25 +537,49 @@ There are two other ways to add bindings to an environment:
 
 *   `env_bind()` allows you to bind multiple values: 
 
-    ```{r}
+    
+    ```r
     env_bind(e3, a = 10, b = 20)
     env_names(e3)
+    ```
+    
+    ```
+    ## [1] "x" "y" "z" "a" "b"
     ```
 
 You can determine if an environment has a binding with `env_has()`:
 
-```{r}
+
+```r
 env_has(e3, "a")
+```
+
+```
+##    a 
+## TRUE
 ```
 
 Unlike lists, setting an element to `NULL` does not remove it, because sometimes you want a name that refers to `NULL`. Instead, use `env_unbind()`:
 
-```{r}
+
+```r
 e3$a <- NULL
 env_has(e3, "a")
+```
 
+```
+##    a 
+## TRUE
+```
+
+```r
 env_unbind(e3, "a")
 env_has(e3, "a")
+```
+
+```
+##     a 
+## FALSE
 ```
 
 Unbinding a name doesn't delete the object. That's the job of the garbage collector, which automatically removes objects with no names binding to them. This process is described in more detail in Section \@ref(gc).
@@ -390,11 +602,33 @@ There are two more exotic variants of `env_bind()`:
     first time they are accessed. Behind the scenes, delayed bindings create 
     promises, so behave in the same way as function arguments.
 
-    ```{r, cache = TRUE}
+    
+    ```r
     env_bind_lazy(current_env(), b = {Sys.sleep(1); 1})
     
     system.time(print(b))
+    ```
+    
+    ```
+    ## [1] 1
+    ```
+    
+    ```
+    ##    user  system elapsed 
+    ##    0.00    0.00    1.02
+    ```
+    
+    ```r
     system.time(print(b))
+    ```
+    
+    ```
+    ## [1] 1
+    ```
+    
+    ```
+    ##    user  system elapsed 
+    ##       0       0       0
     ```
 
     The primary use of delayed bindings is in `autoload()`, which 
@@ -404,31 +638,110 @@ There are two more exotic variants of `env_bind()`:
 *   `env_bind_active()` creates __active bindings__ which are re-computed every 
     time they're accessed:
 
-    ```{r}
+    
+    ```r
     env_bind_active(current_env(), z1 = function(val) runif(1))
     
     z1
+    ```
+    
+    ```
+    ## [1] 0.08357573
+    ```
+    
+    ```r
     z1
     ```
-```{r}
+    
+    ```
+    ## [1] 0.9709415
+    ```
+
+```r
 env_bind(current_env(), b1 = {print('hi'); 1})
+```
+
+```
+## [1] "hi"
+```
+
+```r
 print('first')
-print(b1)
+```
+
+```
+## [1] "first"
+```
+
+```r
 print(b1)
 ```
 
-```{r}
+```
+## [1] 1
+```
+
+```r
+print(b1)
+```
+
+```
+## [1] 1
+```
+
+
+```r
 env_bind_lazy(current_env(), b2 = {print('yo'); 2})
 print('second')
-print(b2)
+```
+
+```
+## [1] "second"
+```
+
+```r
 print(b2)
 ```
 
-```{r}
+```
+## [1] "yo"
+## [1] 2
+```
+
+```r
+print(b2)
+```
+
+```
+## [1] 2
+```
+
+
+```r
 env_bind_active(current_env(), b3 = function(){print('foo'); 3})
 print('third')
+```
+
+```
+## [1] "third"
+```
+
+```r
 print(b3)
+```
+
+```
+## [1] "foo"
+## [1] 3
+```
+
+```r
 print(b3)
+```
+
+```
+## [1] "foo"
+## [1] 3
 ```
 
     Active bindings are used to implement R6's active fields, which you'll learn
@@ -438,11 +751,13 @@ print(b3)
 See  `?delayedAssign()` and `?makeActiveBinding()`.
 :::
 
-```{r}
+
+```r
 #?delayedAssign()
 ```
 
-```{r}
+
+```r
 #?makeActiveBinding()
 ```
 
@@ -464,29 +779,40 @@ See  `?delayedAssign()` and `?makeActiveBinding()`.
 
 2.  Create an environment as illustrated by this picture.
 
-    ```{r, echo = FALSE, out.width = NULL}
-    knitr::include_graphics("diagrams/environments/recursive-1.png")
-    ```
+    <img src="diagrams/environments/recursive-1.png" width="354" />
 
-```{r}
+
+```r
 e7_2 <- env()
 e7_2$loop <- e7_2
 
 env_print(e7_2)
 ```
-```{r}
+
+```
+## <environment: 0x000002708b2ff140>
+## Parent: <environment: global>
+## Bindings:
+## • loop: <env>
+```
+
+```r
 # Verify that it contains itself
 lobstr::ref(e7_2)
+```
+
+```
+## █ [1:0x2708b2ff140] <env> 
+## └─loop = [1:0x2708b2ff140]
 ```
 
 
 3.  Create a pair of environments as illustrated by this picture.
 
-    ```{r, echo = FALSE, out.width = NULL}
-    knitr::include_graphics("diagrams/environments/recursive-2.png")
-    ```
+    <img src="diagrams/environments/recursive-2.png" width="614" />
 
-```{r}
+
+```r
 e7_2 <- env()
 e7_3 <- env()
 
@@ -494,7 +820,22 @@ e7_3$dedoop <- e7_2
 e7_2$loop <- e7_3
 
 lobstr::ref(e7_2)
+```
+
+```
+## █ [1:0x2708c1d52f8] <env> 
+## └─loop = █ [2:0x2708c22c740] <env> 
+##          └─dedoop = [1:0x2708c1d52f8]
+```
+
+```r
 lobstr::ref(e7_3)
+```
+
+```
+## █ [1:0x2708c22c740] <env> 
+## └─dedoop = █ [2:0x2708c1d52f8] <env> 
+##            └─loop = [1:0x2708c22c740]
 ```
 
 
@@ -509,12 +850,31 @@ lobstr::ref(e7_3)
     re-bind old names. Some programming languages only do this, and are known 
     as [single assignment languages][single assignment].
 
-```{r}
+
+```r
 #?env_poke()
 getAnywhere(env_poke)
 ```
 
-```{r}
+```
+## A single object matching 'env_poke' was found
+## It was found in the following places
+##   package:rlang
+##   namespace:rlang
+## with value
+## 
+## function (env = caller_env(), nm, value, inherit = FALSE, create = !inherit) 
+## {
+##     check_environment(env)
+##     invisible(.Call(ffi_env_poke, env = env, nm = nm, values = value, 
+##         inherit = inherit, create = create))
+## }
+## <bytecode: 0x0000027087f812b8>
+## <environment: namespace:rlang>
+```
+
+
+```r
 new_env_poke <- function (env = caller_env(), nm, value, inherit = FALSE, create = !inherit) 
 {
   if (env_has(env, nm)) {
@@ -533,7 +893,8 @@ new_env_poke <- function (env = caller_env(), nm, value, inherit = FALSE, create
 6.  What does this function do? How does it differ from `<<-` and why
     might you prefer it?
     
-    ```{r, error = TRUE}
+    
+    ```r
     rebind <- function(name, value, env = caller_env()) {
       if (identical(env, empty_env())) {
         stop("Can't find `", name, "`", call. = FALSE)
@@ -545,9 +906,20 @@ new_env_poke <- function (env = caller_env(), nm, value, inherit = FALSE, create
     }
     
     rebind("a", 10)
+    ```
+    
+    ```
+    ## Error: Can't find `a`
+    ```
+    
+    ```r
     a <- 5
     rebind("a", 10)
     a
+    ```
+    
+    ```
+    ## [1] 10
     ```
 
 > rebind() will carry out an assignment when it finds an existing binding in the current environment or parent environment. If rebind() doesn’t find an existing variable, rebind() will NOT create a new one in the global environment.
@@ -563,7 +935,8 @@ If you want to operate on every ancestor of an environment, it's often convenien
 
 The definition of `where()` is straightforward. It has two arguments: the name to look for (as a string), and the environment in which to start the search. (We'll learn why `caller_env()` is a good default in Section \@ref(call-stack).)
 
-```{r}
+
+```r
 where <- function(name, env = caller_env()) {
   if (identical(env, empty_env())) {
     # Base case
@@ -591,25 +964,41 @@ There are three cases:
 
 These three cases are illustrated with these three examples:
 
-```{r, error = TRUE}
-where("yyy")
 
+```r
+where("yyy")
+```
+
+```
+## Error: Can't find yyy
+```
+
+```r
 x <- 5
 where("x")
+```
 
+```
+## <environment: R_GlobalEnv>
+```
+
+```r
 where("mean")
+```
+
+```
+## <environment: base>
 ```
 
 It might help to see a picture. Imagine you have two environments, as in the following code and diagram:
 
-```{r}
+
+```r
 e4a <- env(empty_env(), a = 1, b = 2)
 e4b <- env(e4a, x = 10, a = 11)
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/where-ex.png")
-```
+<img src="diagrams/environments/where-ex.png" width="885" />
 
 * `where("a", e4b)` will find `a` in `e4b`.
 
@@ -621,7 +1010,8 @@ knitr::include_graphics("diagrams/environments/where-ex.png")
 
 It's natural to work with environments recursively, so `where()` provides a useful template. Removing the specifics of `where()` shows the structure more clearly:
 
-```{r}
+
+```r
 f <- function(..., env = caller_env()) {
   if (identical(env, empty_env())) {
     # base case
@@ -639,7 +1029,8 @@ f <- function(..., env = caller_env()) {
 
 It's possible to use a loop instead of recursion. I think it's harder to understand than the recursive version, but I include it because you might find it easier to see what's happening if you haven't written many recursive functions.
 
-```{r}
+
+```r
 f2 <- function(..., env = caller_env()) {
   while (!identical(env, empty_env())) {
     if (success) {
@@ -661,7 +1052,8 @@ f2 <- function(..., env = caller_env()) {
     `name`. Carefully think through what type of object the function will
     need to return.
     
-```{r}
+
+```r
 where <- function(name, env = caller_env()) {
   if (identical(env, empty_env())) {
     # Base case
@@ -676,7 +1068,8 @@ where <- function(name, env = caller_env()) {
 }
 ```
 
-```{r}
+
+```r
 new_where <- function(name, env = caller_env(), results = list()) {
   if (identical(env, empty_env())) {
     # Base case
@@ -692,18 +1085,60 @@ new_where <- function(name, env = caller_env(), results = list()) {
 }
 ```
 
-```{r}
+
+```r
 # Test
 e1a <- env(empty_env(), a = 1, b = 2)
 e1b <- env(e1a, b = 10, c = 11)
 e1c <- env(e1b, a = 12, d = 13)
 
 lobstr::ref(e1a)
-lobstr::ref(e1b)
-lobstr::ref(e1c)
+```
 
+```
+## █ [1:0x2708c4c1bf0] <env> 
+## ├─a = [2:0x2708cdc7df8] <dbl> 
+## └─b = [3:0x2708cdc7dc0] <dbl>
+```
+
+```r
+lobstr::ref(e1b)
+```
+
+```
+## █ [1:0x2708c555580] <env> 
+## ├─b = [2:0x2708cdc0740] <dbl> 
+## └─c = [3:0x2708cdc0708] <dbl>
+```
+
+```r
+lobstr::ref(e1c)
+```
+
+```
+## █ [1:0x2708c601920] <env> 
+## ├─a = [2:0x2708ce5e4a8] <dbl> 
+## └─d = [3:0x2708ce5e470] <dbl>
+```
+
+```r
 where("a", e1c)
+```
+
+```
+## <environment: 0x000002708c601920>
+```
+
+```r
 new_where("a", e1c)
+```
+
+```
+## [[1]]
+## <environment: 0x000002708c601920>
+## 
+## [[2]]
+## <environment: 0x000002708c4c1bf0>
 ```
 
 
@@ -714,7 +1149,8 @@ new_where("a", e1c)
     add an `inherits` argument which controls whether the function recurses up 
     the parents or only looks in one environment.
 
-```{r}
+
+```r
 fget <- function(name, env = caller_env()) {
 
   # Base case  
@@ -739,11 +1175,22 @@ fget <- function(name, env = caller_env()) {
 # Test
 mean <- 10
 fget("mean")
+```
+
+```
+## function (x, ...) 
+## UseMethod("mean")
+## <bytecode: 0x0000027087d07890>
+## <environment: namespace:base>
+```
+
+```r
 #fget("meanx")
 #Error: Could not find a function called meanx.
 ```
 
-```{r}
+
+```r
 new_fget <- function(name, env = caller_env(),inherits = TRUE) {
 
   # Base case  
@@ -774,6 +1221,16 @@ mean <- 10
 #Error in new_fget("mean", inherits = FALSE) : inherits = FALSE.
 
 new_fget("mean")
+```
+
+```
+## function (x, ...) 
+## UseMethod("mean")
+## <bytecode: 0x0000027087d07890>
+## <environment: namespace:base>
+```
+
+```r
 #new_fget("meanx")
 #Error: Could not find a function called meanx.
 ```
