@@ -1,0 +1,5 @@
+"0","global_env() == current_env()
+"
+"2","Error in global_env() == current_env() : 
+  comparison (1) is possible only for atomic and list types
+"

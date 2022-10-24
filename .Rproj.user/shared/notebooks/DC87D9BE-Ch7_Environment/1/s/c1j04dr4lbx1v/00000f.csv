@@ -1,0 +1,5 @@
+"0","# Verify that it contains itself"
+"0","lobstr::ref(e7_2)"
+"1","[38;5;214m█[39m [[1m1[22m:0x1f3c9994b20] <env> 
+└─[3m[38;5;244mloop[39m[23m = [[38;5;244m1:0x1f3c9994b20[39m] 
+"

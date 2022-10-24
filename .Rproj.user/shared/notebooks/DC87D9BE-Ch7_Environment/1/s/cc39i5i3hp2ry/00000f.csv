@@ -1,0 +1,2 @@
+"0","e4a <- env(empty_env(), a = 1, b = 2)"
+"0","e4b <- env(e4a, x = 10, a = 11)"

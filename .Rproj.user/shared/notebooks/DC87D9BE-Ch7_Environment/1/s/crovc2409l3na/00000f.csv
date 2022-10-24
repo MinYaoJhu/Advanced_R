@@ -1,0 +1,35 @@
+"0","getAnywhere(env_poke)
+"
+"1","A single object matching"
+"1"," "
+"1","‘env_poke’"
+"1"," "
+"1","was found
+"
+"1","It was found in the following places
+"
+"1","  package:rlang"
+"1","
+"
+"1","  namespace:rlang"
+"1","
+"
+"1","with value
+
+"
+"1","function (env = caller_env(), nm, value, inherit = FALSE, create = !inherit) 
+"
+"1","{
+"
+"1","    check_environment(env)
+"
+"1","    invisible(.Call(ffi_env_poke, env = env, nm = nm, values = value, 
+"
+"1","        inherit = inherit, create = create))
+"
+"1","}
+"
+"1","<bytecode: 0x000001f3c0b9f0d8>
+"
+"1","<environment: namespace:rlang>
+"

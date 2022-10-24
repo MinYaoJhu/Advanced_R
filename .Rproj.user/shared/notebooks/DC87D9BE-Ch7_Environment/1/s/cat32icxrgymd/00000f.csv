@@ -1,0 +1,16 @@
+"0","env_parents(e2b, last = empty_env())"
+"1"," [[1]]   <env: 0x000001f3ca847cc0>
+ [[2]] $ <env: global>
+ [[3]] $ <env: package:rlang>
+ [[4]] $ <env: package:dplyr>
+ [[5]] $ <env: tools:rstudio>
+ [[6]] $ <env: package:stats>
+ [[7]] $ <env: package:graphics>
+ [[8]] $ <env: package:grDevices>
+ [[9]] $ <env: package:utils>
+[[10]] $ <env: package:datasets>
+[[11]] $ <env: package:methods>
+[[12]] $ <env: Autoloads>
+[[13]] $ <env: package:base>
+[[14]] $ <env: empty>
+"

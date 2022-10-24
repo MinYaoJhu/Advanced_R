@@ -1,0 +1,2 @@
+"0","e2c <- env(empty_env(), d = 4, e = 5)"
+"0","e2d <- env(e2c, a = 1, b = 2, c = 3)"

@@ -1,0 +1,9 @@
+"0","e3$xyz"
+"1","NULL
+"
+"0","env_get(e3, ""xyz"")"
+"1","[1m[33mError[39m in `env_get()`:[22m
+[38;5;250m[33m![38;5;250m Can't find `xyz` in environment.[39m
+Backtrace:
+[90m 1. [39m[1m[94mrlang::env_get([39m[22me3, ""xyz""[1m[94m)[39m[22m
+"

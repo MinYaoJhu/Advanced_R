@@ -346,7 +346,7 @@ sapply(1:2, function(x) x + 1L)
     
     ```{r}
     objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    funs <- Filter(is.function, objs)
+    funs <- Filter(is.function, objs) #
     
     ?mget
     ```
@@ -356,7 +356,6 @@ sapply(1:2, function(x) x + 1L)
 ```{r}
 str(funs)
 ```
-
     Use it to answer the following questions:
 
     a. Which base function has the most arguments?
@@ -364,6 +363,7 @@ str(funs)
 ```{r}
 library(purrr)
 
+?map
 ?map_int
 
 n_args <- funs %>% 
@@ -382,6 +382,14 @@ str(n_args)
 ```{r}
 n_args %>% 
   which.max()
+```
+
+other method:
+
+```{r}
+fun.args <- sapply(funs, function(x) length(formals(x))) 
+
+names(funs)[which.max(fun.args)] 
 ```
 
 
@@ -799,7 +807,6 @@ env <- ls()
 h05(env)
 ```
 
-???
 
 ### 6.5.3 Missing arguments
 \index{missing arguments!missing@\texttt{missing()}}
@@ -868,6 +875,11 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ```
 
 ```{r}
+FALSE & NA
+```
+
+
+```{r}
 ?`&&`
 ```
 
@@ -884,7 +896,12 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     x_ok(1)
     x_ok(1:3)
     ```
-    
+
+ `&` evaluate only first one, `&&` evaluate both
+ However, False > NA > True
+ 
+ the second version is not
+
 ```{r}
 length(NULL) == 1
 NULL > 0
@@ -901,7 +918,7 @@ NULL > 0
     f2()
     ```
 
-> 100. Lazy evaluation, Default arguments.
+> 100. Lazy evaluation, Default arguments. `x = z`can be supplied inside the function
 
 3.  What does this function return? Why? Which principle does it illustrate?
   
@@ -960,6 +977,22 @@ hist(x, breaks = "Sturges",
      axes = TRUE, plot = TRUE, labels = FALSE,
      nclass = NULL, warn.unused = TRUE, ...)
 
+breaks = "Sturges" get the number
+
+
+nclass {grDevices}
+
+Compute the Number of Classes for a Histogram
+
+Description
+Compute the number of classes for a histogram, notably hist().
+
+Usage
+nclass.Sturges(x)
+nclass.scott(x)
+nclass.FD(x, digits = 5)
+
+
 5.  Explain why this function works. Why is it confusing?
 
     ```{r}
@@ -989,4 +1022,11 @@ formals(library)
 length(formals(library))
 ```
 
-> 13
+> 0
+
+> library() doesn’t require any arguments. 
+
+```{r}
+print.libraryIQR()
+```
+

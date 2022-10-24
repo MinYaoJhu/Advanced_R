@@ -1,0 +1,1 @@
+{"frames":[],"message":"Error in global_env() == current_env() : \n  comparison (1) is possible only for atomic and list types\n"}
