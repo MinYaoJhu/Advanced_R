@@ -1,6 +1,8 @@
-"0","env_print(e7_2)
-"
-"1","[1m[34m<environment: 0x000001f3c9994b20>[39m[22m
+"0","e7_2 <- env()"
+"0","e7_2$loop <- e7_2"
+"0",""
+"0","env_print(e7_2)"
+"1","[1m[34m<environment: 0x000001813db991d0>[39m[22m
 Parent: <environment: global>
 "
 "1","Bindings:

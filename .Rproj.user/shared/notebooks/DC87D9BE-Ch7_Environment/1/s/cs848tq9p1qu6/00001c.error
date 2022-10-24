@@ -1,1 +1,0 @@
-{"frames":[{"func":"new_fget(\"mean\", inherits = FALSE)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0},{"func":"stop(\"inherits = FALSE.\")","file":"","line_number":17,"end_line_number":17,"character_number":7,"end_character_number":31}],"message":"Error in new_fget(\"mean\", inherits = FALSE) : inherits = FALSE.\n"}

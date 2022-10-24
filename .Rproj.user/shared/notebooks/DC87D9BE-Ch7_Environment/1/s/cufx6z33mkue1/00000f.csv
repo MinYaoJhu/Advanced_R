@@ -2,6 +2,7 @@
 "0","  if (identical(env, empty_env())) {"
 "0","    # Base case"
 "0","    results"
+"0","    "
 "0","  } else {"
 "0","    if (env_has(env, name)) {"
 "0","    # Success case"

@@ -662,6 +662,11 @@ f2 <- function(..., env = caller_env()) {
     need to return.
     
 ```{r}
+where
+```
+
+    
+```{r}
 where <- function(name, env = caller_env()) {
   if (identical(env, empty_env())) {
     # Base case
@@ -681,6 +686,7 @@ new_where <- function(name, env = caller_env(), results = list()) {
   if (identical(env, empty_env())) {
     # Base case
     results
+    
   } else {
     if (env_has(env, name)) {
     # Success case
@@ -695,8 +701,8 @@ new_where <- function(name, env = caller_env(), results = list()) {
 ```{r}
 # Test
 e1a <- env(empty_env(), a = 1, b = 2)
-e1b <- env(e1a, b = 10, c = 11)
-e1c <- env(e1b, a = 12, d = 13)
+e1b <- env(e1a, b = 3, c = 4)
+e1c <- env(e1b, a = 5, d = 6)
 
 lobstr::ref(e1a)
 lobstr::ref(e1b)
@@ -739,7 +745,8 @@ fget <- function(name, env = caller_env()) {
 # Test
 mean <- 10
 fget("mean")
-#fget("meanx")
+fget("sum")
+fget("meanx")
 #Error: Could not find a function called meanx.
 ```
 
@@ -760,7 +767,7 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
       }
     }
     if (inherits == FALSE) {
-      stop("inherits = FALSE.")
+      stop("Could not find a function in current env.")
       }
   }
   
@@ -770,11 +777,11 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
 
 # Test
 mean <- 10
-#new_fget("mean", inherits = FALSE)
+new_fget("mean", inherits = FALSE)
 #Error in new_fget("mean", inherits = FALSE) : inherits = FALSE.
-
+new_fget("sum", inherits = FALSE)
 new_fget("mean")
-#new_fget("meanx")
+new_fget("meanx")
 #Error: Could not find a function called meanx.
 ```
 

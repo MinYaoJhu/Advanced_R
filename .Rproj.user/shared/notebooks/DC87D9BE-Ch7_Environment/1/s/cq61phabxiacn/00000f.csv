@@ -1,12 +1,12 @@
 "0","env_parent(e2b)"
-"1","<environment: 0x000001f3ca847cc0>
+"1","<environment: 0x00000181483fc3e8>
 "
 "0","env_parent(e2a)"
 "1","<environment: R_GlobalEnv>
 "
 "0","env_print(e2b)"
-"1","[1m[34m<environment: 0x000001f3ca84c3c8>[39m[22m
-Parent: <environment: 0x000001f3ca847cc0>
+"1","[1m[34m<environment: 0x000001813c10b828>[39m[22m
+Parent: <environment: 0x00000181483fc3e8>
 "
 "1","Bindings:
 "
@@ -15,7 +15,7 @@ Parent: <environment: 0x000001f3ca847cc0>
 [36m•[39m c: <dbl>
 "
 "0","env_print(e2a)"
-"1","[1m[34m<environment: 0x000001f3ca847cc0>[39m[22m
+"1","[1m[34m<environment: 0x00000181483fc3e8>[39m[22m
 Parent: <environment: global>
 "
 "1","Bindings:
