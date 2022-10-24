@@ -1032,7 +1032,7 @@ ggplot(
 3.  What happens if you attempt to use `tracemem()` on an environment?
 
 ```{r}
-# tracemem(e1)
+tracemem(e1)
 # Error in tracemem(e1) : 
 #  'tracemem' is not useful for promise and environment objects
 ```
