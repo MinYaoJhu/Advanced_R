@@ -21,21 +21,43 @@ Each package attached by `library()` or `require()` becomes one of the parents o
 
 [^attach]: Note the difference between attached and loaded. A package is loaded automatically if you access one of its functions using `::`; it is only __attached__ to the search path by `library()` or `require()`.
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/search-path.png")
-```
+<img src="diagrams/environments/search-path.png" width="1299" />
 
 If you follow all the parents back, you see the order in which every package has been attached. This is known as the __search path__ because all objects in these environments can be found from the top-level interactive workspace. You can see the names of these environments with `base::search()`, or the environments themselves with `rlang::search_envs()`:
 
-```{r}
+
+```r
 library(rlang)
 ```
 
 
-```{r}
-search()
 
+```r
+search()
+```
+
+```
+##  [1] ".GlobalEnv"        "package:rlang"     "package:stats"    
+##  [4] "package:graphics"  "package:grDevices" "package:utils"    
+##  [7] "package:datasets"  "package:methods"   "Autoloads"        
+## [10] "package:base"
+```
+
+```r
 search_envs()
+```
+
+```
+##  [[1]] $ <env: global>
+##  [[2]] $ <env: package:rlang>
+##  [[3]] $ <env: package:stats>
+##  [[4]] $ <env: package:graphics>
+##  [[5]] $ <env: package:grDevices>
+##  [[6]] $ <env: package:utils>
+##  [[7]] $ <env: package:datasets>
+##  [[8]] $ <env: package:methods>
+##  [[9]] $ <env: Autoloads>
+## [[10]] $ <env: package:base>
 ```
 
 The last two environments on the search path are always the same:
@@ -50,9 +72,7 @@ The last two environments on the search path are always the same:
 
 Note that when you attach another package with `library()`, the parent environment of the global environment changes:
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/search-path-2.png")
-```
+<img src="diagrams/environments/search-path-2.png" width="1299" />
 
 ### 7.4.2 The function environment {#function-environments}
 \index{environments!function}
@@ -62,10 +82,15 @@ A function binds the current environment when it is created. This is called the 
 
 You can get the function environment with `fn_env()`: 
 
-```{r}
+
+```r
 y <- 1
 f <- function(x) x + y
 fn_env(f)
+```
+
+```
+## <environment: R_GlobalEnv>
 ```
 
 ::: base 
@@ -74,20 +99,17 @@ Use `environment(f)` to access the environment of function `f`.
 
 In diagrams, I'll draw a function as a rectangle with a rounded end that binds an environment. 
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/binding.png")
-```
+<img src="diagrams/environments/binding.png" width="555" />
 
 In this case, `f()` binds the environment that binds the name `f` to the function. But that's not always the case: in the following example `g` is bound in a new environment `e`, but `g()` binds the global environment. The distinction between binding and being bound by is subtle but important; the difference is how we find `g` versus how `g` finds its variables.
 
-```{r}
+
+```r
 e <- env()
 e$g <- function() 1
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/binding-2.png")
-```
+<img src="diagrams/environments/binding-2.png" width="519" />
 
 
 ### 7.4.3 Namespaces
@@ -97,8 +119,17 @@ In the diagram above, you saw that the parent environment of a package varies ba
 
 For example, take `sd()`:
 
-```{r}
+
+```r
 sd
+```
+
+```
+## function (x, na.rm = FALSE) 
+## sqrt(var(if (is.vector(x) || is.factor(x)) x else as.double(x), 
+##     na.rm = na.rm))
+## <bytecode: 0x0000023f536387e8>
+## <environment: namespace:stats>
 ```
 
 `sd()` is defined in terms of `var()`, so you might worry that the result of `sd()` would be affected by any function called `var()` either in the global environment, or in one of the other attached packages. R avoids this problem by taking advantage of the function versus binding environment described above. Every function in a package is associated with a pair of environments: the package environment, which you learned about earlier, and the __namespace__ environment. 
@@ -114,9 +145,7 @@ sd
 
 Every binding in the package environment is also found in the namespace environment; this ensures every function can use every other function in the package. But some bindings only occur in the namespace environment. These are known as internal or non-exported objects, which make it possible to hide internal implementation details from the user.
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/namespace-bind.png")
-```
+<img src="diagrams/environments/namespace-bind.png" width="625" />
 
 Every namespace environment has the same set of ancestors:
 
@@ -136,15 +165,11 @@ Every namespace environment has the same set of ancestors:
   such code. It is needed primarily for historical reasons, particularly due 
   to how S3 method dispatch works.
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/namespace-env.png")
-```
+<img src="diagrams/environments/namespace-env.png" width="1240" />
 
 Putting all these diagrams together we get:
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/namespace.png")
-```
+<img src="diagrams/environments/namespace.png" width="1240" />
 
 So when `sd()` looks for the value of `var` it always finds it in a sequence of environments determined by the package developer, but not by the package user. This ensures that package code always works the same way regardless of what packages have been attached by the user.
 
@@ -156,7 +181,8 @@ There's no direct link between the package and namespace environments; the link 
 
 The last important topic we need to cover is the __execution__ environment. What will the following function return the first time it's run? What about the second?
 
-```{r}
+
+```r
 g <- function(x) {
   if (!env_has(current_env(), "a")) {
     message("Defining a")
@@ -170,14 +196,35 @@ g <- function(x) {
 
 Think about it for a moment before you read on.
 
-```{r}
+
+```r
 g(10)
+```
+
+```
+## Defining a
+```
+
+```
+## [1] 1
+```
+
+```r
 g(10)
+```
+
+```
+## Defining a
+```
+
+```
+## [1] 1
 ```
 
 This function returns the same value every time because of the fresh start principle, described in Section \@ref(fresh-start). Each time a function is called, a new environment is created to host execution. This is called the execution environment, and its parent is the function environment. Let's illustrate that process with a simpler function. Figure \@ref(fig:execution-env) illustrates the graphical conventions: I draw execution environments with an indirect parent; the parent environment is found via the function environment.
 
-```{r}
+
+```r
 h <- function(x) {
   # 1.
   a <- 2 # 2.
@@ -186,13 +233,15 @@ h <- function(x) {
 y <- h(1) # 3.
 ```
 
-```{r execution-env, echo = FALSE, out.width = NULL, fig.cap = "The execution environment of a simple function call. Note that the parent of the execution environment is the function environment."}
-knitr::include_graphics("diagrams/environments/execution.png")
-```
+<div class="figure">
+<img src="diagrams/environments/execution.png" alt="The execution environment of a simple function call. Note that the parent of the execution environment is the function environment." width="791" />
+<p class="caption">The execution environment of a simple function call. Note that the parent of the execution environment is the function environment.</p>
+</div>
 
 An execution environment is usually ephemeral; once the function has completed, the environment will be garbage collected. There are several ways to make it stay around for longer. The first is to explicitly return it:
 
-```{r}
+
+```r
 h2 <- function(x) {
   a <- x * 2
   current_env()
@@ -200,14 +249,30 @@ h2 <- function(x) {
 
 e <- h2(x = 10)
 env_print(e)
+```
+
+```
+## <environment: 0x0000023f57c9a2d8>
+## Parent: <environment: global>
+## Bindings:
+## • a: <dbl>
+## • x: <dbl>
+```
+
+```r
 fn_env(h2)
+```
+
+```
+## <environment: R_GlobalEnv>
 ```
 
 Another way to capture it is to return an object with a binding to that environment, like a function. The following example illustrates that idea with a function factory, `plus()`. We use that factory to create a function called `plus_one()`. 
 
 There's a lot going on in the diagram because the enclosing environment of `plus_one()` is the execution environment of `plus()`. 
 
-```{r}
+
+```r
 plus <- function(x) {
   function(y) x + y
 }
@@ -216,19 +281,25 @@ plus_one <- plus(1)
 plus_one
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/closure.png")
 ```
+## function(y) x + y
+## <environment: 0x0000023f577979c8>
+```
+
+<img src="diagrams/environments/closure.png" width="507" />
 
 What happens when we call `plus_one()`? Its execution environment will have the captured execution environment of `plus()` as its parent:
 
-```{r}
+
+```r
 plus_one(2)
 ```
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/environments/closure-call.png")
 ```
+## [1] 3
+```
+
+<img src="diagrams/environments/closure-call.png" width="507" />
 
 You'll learn more about function factories in Section \@ref(factory-fundamentals).
 
@@ -238,7 +309,8 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
 
 2.  Draw a diagram that shows the enclosing environments of this function:
     
-    ```{r, eval = FALSE}
+    
+    ```r
     f1 <- function(x1) {
       f2 <- function(x2) {
         f3 <- function(x3) {
@@ -276,7 +348,8 @@ To fully understand the caller environment we need to discuss two related concep
 
 Let's illustrate this with a simple sequence of calls: `f()` calls `g()` calls `h()`.
 
-```{r}
+
+```r
 f <- function(x) {
   g(x = 2)
 }
@@ -290,7 +363,8 @@ h <- function(x) {
 
 The way you most commonly see a call stack in R is by looking at the `traceback()` after an error has occurred:
 
-```{r, eval = FALSE}
+
+```r
 f(x = 1)
 #> Error:
 traceback()
@@ -302,7 +376,8 @@ traceback()
 
 Instead of `stop()` + `traceback()` to understand the call stack, we're going to use `lobstr::cst()` to print out the **c**all **s**tack **t**ree:
 
-```{r, eval = FALSE}
+
+```r
 h <- function(x) {
   lobstr::cst()
 }
@@ -323,7 +398,8 @@ The call stack above is simple: while you get a hint that there's some tree-like
 
 Let's create a more complicated example that involves some lazy evaluation. We'll create a sequence of functions, `a()`, `b()`, `c()`, that pass along an argument `x`.
 
-```{r, eval = FALSE}
+
+```r
 a <- function(x) b(x)
 b <- function(x) c(x)
 c <- function(x) x
@@ -361,9 +437,10 @@ Figure \@ref(fig:calling) illustrates the stack for the call to `f(x = 1)` shown
 
 [^frame]: NB: `?environment` uses frame in a different sense: "Environments consist of a _frame_, or collection of named objects, and a pointer to an enclosing environment." We avoid this sense of frame, which comes from S, because it's very specific and not widely used in base R. For example, the frame in `parent.frame()` is an execution context, not a collection of named objects.
 
-```{r calling, echo = FALSE, out.width = NULL, fig.cap = "The graphical depiction of a simple call stack"}
-knitr::include_graphics("diagrams/environments/calling.png")
-```
+<div class="figure">
+<img src="diagrams/environments/calling.png" alt="The graphical depiction of a simple call stack" width="1074" />
+<p class="caption">The graphical depiction of a simple call stack</p>
+</div>
 
 (To focus on the calling environments, I have omitted the bindings in the global environment from `f`, `g`, and `h` to the respective function objects.)
 
@@ -395,7 +472,8 @@ As well as powering scoping, environments are also useful data structures in the
     Normally, objects in a package are locked, so you can't modify them 
     directly. Instead, you can do something like this:
 
-    ```{r}
+    
+    ```r
     my_env <- new.env(parent = emptyenv())
     my_env$a <- 1
     
