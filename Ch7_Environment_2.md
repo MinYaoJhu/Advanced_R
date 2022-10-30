@@ -7,6 +7,11 @@ output:
     keep_md: yes
 ---
 
+
+```r
+library(rlang)
+```
+
 ## 7.4 Special environments {#special-environments}
  
 Most environments are not created by you (e.g. with `env()`) but are instead created by R. In this section, you'll learn about the most important environments, starting with the package environments. You'll then learn about the function environment bound to the function when it is created, and the (usually) ephemeral execution environment created every time the function is called. Finally, you'll see how the package and function environments interact to support namespaces, which ensure that a package always behaves the same way, regardless of what other packages the user has loaded.
@@ -128,7 +133,7 @@ sd
 ## function (x, na.rm = FALSE) 
 ## sqrt(var(if (is.vector(x) || is.factor(x)) x else as.double(x), 
 ##     na.rm = na.rm))
-## <bytecode: 0x0000023f536387e8>
+## <bytecode: 0x00000157b96a5ad0>
 ## <environment: namespace:stats>
 ```
 
@@ -252,7 +257,7 @@ env_print(e)
 ```
 
 ```
-## <environment: 0x0000023f57c9a2d8>
+## <environment: 0x00000157bd6f1ad8>
 ## Parent: <environment: global>
 ## Bindings:
 ## • a: <dbl>
@@ -283,7 +288,7 @@ plus_one
 
 ```
 ## function(y) x + y
-## <environment: 0x0000023f577979c8>
+## <environment: 0x00000157bae9afc0>
 ```
 
 <img src="diagrams/environments/closure.png" width="507" />
@@ -307,6 +312,46 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
 
 1.  How is `search_envs()` different from `env_parents(global_env())`?
 
+
+```r
+search_envs()
+```
+
+```
+##  [[1]] $ <env: global>
+##  [[2]] $ <env: package:rlang>
+##  [[3]] $ <env: package:stats>
+##  [[4]] $ <env: package:graphics>
+##  [[5]] $ <env: package:grDevices>
+##  [[6]] $ <env: package:utils>
+##  [[7]] $ <env: package:datasets>
+##  [[8]] $ <env: package:methods>
+##  [[9]] $ <env: Autoloads>
+## [[10]] $ <env: package:base>
+```
+
+> search_envs() returns the environments on the search path as a list.
+
+
+```r
+env_parents(global_env())
+```
+
+```
+##  [[1]] $ <env: package:rlang>
+##  [[2]] $ <env: package:stats>
+##  [[3]] $ <env: package:graphics>
+##  [[4]] $ <env: package:grDevices>
+##  [[5]] $ <env: package:utils>
+##  [[6]] $ <env: package:datasets>
+##  [[7]] $ <env: package:methods>
+##  [[8]] $ <env: Autoloads>
+##  [[9]] $ <env: package:base>
+## [[10]] $ <env: empty>
+```
+
+> env_parents() returns the list of all parents, including the empty environment.
+
 2.  Draw a diagram that shows the enclosing environments of this function:
     
     
@@ -323,9 +368,119 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
     f1(1)
     ```
 
+
+```r
+    f1 <- function(x1) {
+      f2 <- function(x2) {
+        f3 <- function(x3) {
+          x1 + x2 + x3
+        }
+        f3(3)
+        env_print()
+      }
+      f2(2)
+      env_print()
+    }
+    f1(1)
+```
+
+```
+## <environment: 0x00000157be0faea0>
+## Parent: <environment: 0x00000157be0fb060>
+## Bindings:
+## • f3: <fn>
+## • x2: <dbl>
+## <environment: 0x00000157be0fb060>
+## Parent: <environment: global>
+## Bindings:
+## • f2: <fn>
+## • x1: <dbl>
+```
+
+```r
+    env_print()
+```
+
+```
+## <environment: global>
+## Parent: <environment: package:rlang>
+## Bindings:
+## • plus_one: <fn>
+## • h2: <fn>
+## • y: <dbl>
+## • e: <env>
+## • f: <fn>
+## • g: <fn>
+## • h: <fn>
+## • plus: <fn>
+## • f1: <fn>
+```
+
+
+<img src="diagrams/environments/Advanced_R_7.4.5_Exercises.png" width="3000" />
+
 3.  Write an enhanced version of `str()` that provides more information 
     about functions. Show where the function was found and what environment 
     it was defined in.
+    
+
+```r
+#?str
+```
+
+
+```r
+fget <- function(name, env = caller_env()) {
+
+  # Base case  
+  if (identical(env, emptyenv())) {
+    stop("Could not find a function called ", name, ".", call. = FALSE)
+    }
+  
+  # Success case
+  else{
+    if (env_has(env, name)) {
+      obj <- env_get(env, name)
+      if (is.function(obj)) {
+        return(list(fun = obj, env = env))
+      }
+    }
+  }
+
+  # Recursive anyway
+  fget(name, env_parent(env))
+}
+```
+
+
+```r
+fstr <- function(fun_name, env = caller_env()) {
+  if (!is.character(fun_name)) {
+    stop("`fun_name` should be a string.", call. = FALSE)
+  }
+  fun_env <- fget(fun_name, env)
+
+  list(
+    environment = fun_env$env,
+    namespace = fn_env(fun_env$fun)
+  )
+}
+```
+
+
+```r
+# Test
+fstr("mean")
+```
+
+```
+## $environment
+## <environment: base>
+## 
+## $namespace
+## <environment: namespace:base>
+```
+
 
 ## 7.5 Call stacks {#call-stack}
 \index{environments!calling}
@@ -455,6 +610,113 @@ Looking up variables in the calling stack rather than in the enclosing environme
 
 1.  Write a function that lists all the variables defined in the environment
     in which it was called. It should return the same results as `ls()`.
+
+
+```r
+ls
+```
+
+```
+## function (name, pos = -1L, envir = as.environment(pos), all.names = FALSE, 
+##     pattern, sorted = TRUE) 
+## {
+##     if (!missing(name)) {
+##         pos <- tryCatch(name, error = function(e) e)
+##         if (inherits(pos, "error")) {
+##             name <- substitute(name)
+##             if (!is.character(name)) 
+##                 name <- deparse(name)
+##             warning(gettextf("%s converted to character string", 
+##                 sQuote(name)), domain = NA)
+##             pos <- name
+##         }
+##     }
+##     all.names <- .Internal(ls(envir, all.names, sorted))
+##     if (!missing(pattern)) {
+##         if ((ll <- length(grep("[", pattern, fixed = TRUE))) && 
+##             ll != length(grep("]", pattern, fixed = TRUE))) {
+##             if (pattern == "[") {
+##                 pattern <- "\\["
+##                 warning("replaced regular expression pattern '[' by  '\\\\['")
+##             }
+##             else if (length(grep("[^\\\\]\\[<-", pattern))) {
+##                 pattern <- sub("\\[<-", "\\\\\\[<-", pattern)
+##                 warning("replaced '[<-' by '\\\\[<-' in regular expression pattern")
+##             }
+##         }
+##         grep(pattern, all.names, value = TRUE)
+##     }
+##     else all.names
+## }
+## <bytecode: 0x00000157b7f7f9d0>
+## <environment: namespace:base>
+```
+
+
+```r
+ls()
+```
+
+```
+##  [1] "e"        "f"        "f1"       "fget"     "fstr"     "g"       
+##  [7] "h"        "h2"       "plus"     "plus_one" "y"
+```
+
+
+```r
+env_names(current_env())
+```
+
+```
+##  [1] "plus_one" "h2"       "y"        "e"        "f"        "g"       
+##  [7] "fget"     "h"        "fstr"     "plus"     "f1"
+```
+
+
+```r
+new_ls <- function(env = caller_env()) {
+  sort(env_names(env))
+}
+```
+
+
+```r
+ls(all.names = TRUE)
+```
+
+```
+##  [1] "e"        "f"        "f1"       "fget"     "fstr"     "g"       
+##  [7] "h"        "h2"       "new_ls"   "plus"     "plus_one" "y"
+```
+
+
+```r
+new_ls()
+```
+
+```
+##  [1] "e"        "f"        "f1"       "fget"     "fstr"     "g"       
+##  [7] "h"        "h2"       "new_ls"   "plus"     "plus_one" "y"
+```
+
+
+```r
+#test
+ls(e)
+```
+
+```
+## [1] "a" "x"
+```
+
+```r
+new_ls(e)
+```
+
+```
+## [1] "a" "x"
+```
+
 
 ## 7.6 As data structures {#explicit-envs}
 \index{hashmaps} 

@@ -7,6 +7,10 @@ output:
     keep_md: yes
 ---
 
+```{r setup, message = FALSE}
+library(rlang)
+```
+
 ## 7.4 Special environments {#special-environments}
  
 Most environments are not created by you (e.g. with `env()`) but are instead created by R. In this section, you'll learn about the most important environments, starting with the package environments. You'll then learn about the function environment bound to the function when it is created, and the (usually) ephemeral execution environment created every time the function is called. Finally, you'll see how the package and function environments interact to support namespaces, which ensure that a package always behaves the same way, regardless of what other packages the user has loaded.
@@ -236,6 +240,18 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
 
 1.  How is `search_envs()` different from `env_parents(global_env())`?
 
+```{r}
+search_envs()
+```
+
+> search_envs() returns the environments on the search path as a list.
+
+```{r}
+env_parents(global_env())
+```
+
+> env_parents() returns the list of all parents, including the empty environment.
+
 2.  Draw a diagram that shows the enclosing environments of this function:
     
     ```{r, eval = FALSE}
@@ -251,9 +267,77 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
     f1(1)
     ```
 
+```{r}
+    f1 <- function(x1) {
+      f2 <- function(x2) {
+        f3 <- function(x3) {
+          x1 + x2 + x3
+        }
+        f3(3)
+        env_print()
+      }
+      f2(2)
+      env_print()
+    }
+    f1(1)
+    env_print()
+```
+
+
+```{r, echo = FALSE, out.width = NULL}
+knitr::include_graphics("diagrams/environments/Advanced_R_7.4.5_Exercises.png")
+```
+
 3.  Write an enhanced version of `str()` that provides more information 
     about functions. Show where the function was found and what environment 
     it was defined in.
+    
+```{r}
+#?str
+```
+
+```{r}
+fget <- function(name, env = caller_env()) {
+
+  # Base case  
+  if (identical(env, emptyenv())) {
+    stop("Could not find a function called ", name, ".", call. = FALSE)
+    }
+  
+  # Success case
+  else{
+    if (env_has(env, name)) {
+      obj <- env_get(env, name)
+      if (is.function(obj)) {
+        return(list(fun = obj, env = env))
+      }
+    }
+  }
+
+  # Recursive anyway
+  fget(name, env_parent(env))
+}
+```
+
+```{r}
+fstr <- function(fun_name, env = caller_env()) {
+  if (!is.character(fun_name)) {
+    stop("`fun_name` should be a string.", call. = FALSE)
+  }
+  fun_env <- fget(fun_name, env)
+
+  list(
+    environment = fun_env$env,
+    namespace = fn_env(fun_env$fun)
+  )
+}
+```
+
+```{r}
+# Test
+fstr("mean")
+```
+
 
 ## 7.5 Call stacks {#call-stack}
 \index{environments!calling}
@@ -378,6 +462,39 @@ Looking up variables in the calling stack rather than in the enclosing environme
 
 1.  Write a function that lists all the variables defined in the environment
     in which it was called. It should return the same results as `ls()`.
+
+```{r}
+ls
+```
+
+```{r}
+ls()
+```
+
+```{r}
+env_names(current_env())
+```
+
+```{r}
+new_ls <- function(env = caller_env()) {
+  sort(env_names(env))
+}
+```
+
+```{r}
+ls(all.names = TRUE)
+```
+
+```{r}
+new_ls()
+```
+
+```{r}
+#test
+ls(e)
+new_ls(e)
+```
+
 
 ## 7.6 As data structures {#explicit-envs}
 \index{hashmaps} 
