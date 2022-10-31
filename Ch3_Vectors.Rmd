@@ -978,6 +978,18 @@ These data structures are relatively esoteric but they can be useful if you want
 
 > In an atomic vector, all elements must be of the same type. In a list, the elements can be of different types.
 
+> Atomic vectors point to one address in memory, while lists contain a separate reference for each element. (This was described in the list sections of the vectors and the names and values chapters.)
+
+```{r}
+lobstr::ref(1:2)
+1:2
+```
+```{r}
+lobstr::ref(list(1:2, 2))
+list(1:2, 2)
+```
+
+
 > Because the elements of a list are references, creating a list does not involve copying the components into the list.
 
 2.  Why do you need to use `unlist()` to convert a list to an 
@@ -1009,7 +1021,9 @@ is.vector(L2)
 ```
 > L2 is a vector, but not a list.
 
-> as.vector, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
+> `as.vector`, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
+
+> `is.vector` returns TRUE if x is a vector of the specified mode having no attributes other than names. It returns FALSE otherwise.
 
 3.  Compare and contrast `c()` and `unlist()` when combining a 
     date and date-time into a single vector.
@@ -1051,6 +1065,7 @@ unlist(list(now_ct,today))
 
 > *notes: if you ever need to work with dates and times in R, use the lubridate package.
 
+> To summarise: c() coerces types and strips time zones. Errors may have occurred in older R versions because of inappropriate method dispatch/immature methods. unlist() strips attributes.
 
 ## 3.6 Data frames and tibbles {#tibble}
 \index{data frames}
@@ -1408,7 +1423,7 @@ is.matrix(t(t(df)))
 is.list(t(t(df)))
 ```
 
-> the output is a matrix
+> the output of t(df) and t(t(df)) are matrices.
 
 4.  What does `as.matrix()` do when applied to a data frame with 
     columns of different types? How does it differ from `data.matrix()`?
@@ -1418,8 +1433,9 @@ is.list(t(t(df)))
 #?data.matrix()
 ```
 
-> as.matrix attempts to turn its argument into a matrix.
-> data.matrix() Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes.
+> `as.matrix` attempts to turn its argument into a matrix. The method for data frames will return a character matrix if there is only atomic columns and any non-(numeric/logical/complex) column.
+
+> `data.matrix()` Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes. Character columns are first converted to factors and then to integers.
 
 ```{r}
 df

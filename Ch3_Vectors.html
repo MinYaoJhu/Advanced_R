@@ -429,6 +429,35 @@ types: complex?</p>
 integer, double, and character (which contains strings). There are two
 rare types: complex and raw.</p>
 </blockquote>
+<blockquote>
+<p>note: Complex Vector The complex data type is to store numbers with
+an imaginary component. Examples of complex values are 1+2i, 3i, 4-5i,
+-12+6i, etc.</p>
+</blockquote>
+<pre class="r"><code># R program to create complex Vectors 
+  
+# create complex vector
+v1 &lt;- c(1+2i, 3i, 4-5i, -12+6i)  
+  
+# print vector
+print(v1)</code></pre>
+<pre><code>## [1]   1+2i   0+3i   4-5i -12+6i</code></pre>
+<pre class="r"><code># display type of vector 
+print(typeof(v1))</code></pre>
+<pre><code>## [1] &quot;complex&quot;</code></pre>
+<blockquote>
+<p>notes: Raw Vector Raw vectors store raw bytes of data. Making raw
+vectors gets complicated, but raw vectors can be created using the raw()
+function.</p>
+</blockquote>
+<pre class="r"><code># R program to illustrate raw vector
+  
+# Creating raw vector using raw()
+print(raw(3))</code></pre>
+<pre><code>## [1] 00 00 00</code></pre>
+<pre class="r"><code># Print the type of vector
+print(typeof(raw(3)))</code></pre>
+<pre><code>## [1] &quot;raw&quot;</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>What are attributes? How do you get them and set them?</li>
 </ol>
@@ -662,18 +691,33 @@ warning and a missing value:</p>
 <li>How do you create raw and complex scalars? (See <code>?raw</code>
 and <code>?complex</code>.)</li>
 </ol>
-<pre class="r"><code>#?raw
-xx &lt;- raw(2)
-xx</code></pre>
-<pre><code>## [1] 00 00</code></pre>
-<pre class="r"><code>str(xx)</code></pre>
-<pre><code>##  raw [1:2] 00 00</code></pre>
+<pre class="r"><code>#?raw</code></pre>
+<pre class="r"><code>xx &lt;- raw(2)
+xx[1] &lt;- as.raw(40)     # NB, not just 40.
+xx[2] &lt;- charToRaw(&quot;A&quot;)
+xx       ## 28 41   -- raw prints hexadecimals</code></pre>
+<pre><code>## [1] 28 41</code></pre>
+<pre class="r"><code>dput(xx) ## as.raw(c(0x28, 0x41))</code></pre>
+<pre><code>## as.raw(c(0x28, 0x41))</code></pre>
+<pre class="r"><code>as.integer(xx) ## 40 65</code></pre>
+<pre><code>## [1] 40 65</code></pre>
 <pre class="r"><code>#?complex
 z &lt;- complex(length.out = 1, real = 2, imaginary = 3, modulus = 4, argument = 5)
 z</code></pre>
 <pre><code>## [1] 1.134649-3.835697i</code></pre>
 <pre class="r"><code>str(z)</code></pre>
 <pre><code>##  cplx 1.13-3.84i</code></pre>
+<pre class="r"><code>## create a complex normal vector
+z &lt;- complex(real = stats::rnorm(10), imaginary = stats::rnorm(10))
+z</code></pre>
+<pre><code>##  [1] -0.6193672-0.6805076i -0.1493491+1.0329827i  0.0816943+1.6331857i
+##  [4] -0.2743462+0.2111099i -0.6284611-0.3253443i -0.7619288-0.2161379i
+##  [7]  1.8218442+3.0940406i  1.9976523+0.3128574i -0.9472021+0.5648832i
+## [10] -0.0412568+0.5345046i</code></pre>
+<pre class="r"><code>## or also (less efficiently):
+z2 &lt;- 1:2 + 1i*(8:9)
+z2</code></pre>
+<pre><code>## [1] 1+8i 2+9i</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li><p>Test your knowledge of the vector coercion rules by predicting
 the output of the following uses of <code>c()</code>:</p>
@@ -681,6 +725,10 @@ the output of the following uses of <code>c()</code>:</p>
 c(&quot;a&quot;, 1)
 c(TRUE, 1L)</code></pre></li>
 </ol>
+<blockquote>
+<p>When you attempt to combine different types they will be coerced in a
+fixed order: character → double → integer → logical.</p>
+</blockquote>
 <blockquote>
 <p><code>c(1, FALSE)</code> -&gt; 1 0</p>
 </blockquote>
@@ -694,6 +742,10 @@ c(TRUE, 1L)</code></pre></li>
 <li>Why is <code>1 == &quot;1&quot;</code> true? Why is <code>-1 &lt; FALSE</code>
 true? Why is <code>&quot;one&quot; &lt; 2</code> false?</li>
 </ol>
+<blockquote>
+<p>These comparisons are carried out by operator-functions (==, &lt;),
+which coerce their arguments to a common type.</p>
+</blockquote>
 <pre class="r"><code>1 == &quot;1&quot;</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <blockquote>
@@ -710,6 +762,10 @@ true? Why is <code>&quot;one&quot; &lt; 2</code> false?</li>
 <p>2 is coerced to “2”. Therefore, <code>&quot;one&quot; &lt; &quot;2&quot;</code> is
 FALSE.</p>
 </blockquote>
+<blockquote>
+<p>numbers precede letters in lexicographic order (may depend on
+locale)</p>
+</blockquote>
 <ol start="4" style="list-style-type: decimal">
 <li>Why is the default missing value, <code>NA</code>, a logical vector?
 What’s special about logical vectors? (Hint: think about
@@ -720,6 +776,14 @@ What’s special about logical vectors? (Hint: think about
 logical, having the default missing value, NA, a logical vector will not
 change the types of other values in the same vector.</p>
 </blockquote>
+<blockquote>
+<p>The presence of missing values shouldn’t affect the type of an
+object. When combining NAs with other atomic types, the NAs will be
+coerced to integer (NA_integer_), double (NA_real_) or character
+(NA_character_) and not the other way round. If NA were a character and
+added to a set of other values all of these would be coerced to
+character as well.</p>
+</blockquote>
 <ol start="5" style="list-style-type: decimal">
 <li>Precisely what do <code>is.atomic()</code>,
 <code>is.numeric()</code>, and <code>is.vector()</code> test for?</li>
@@ -727,7 +791,8 @@ change the types of other values in the same vector.</p>
 <pre class="r"><code>#?is.atomic()</code></pre>
 <blockquote>
 <p>is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE
-otherwise.</p>
+otherwise. is.atomic() tests if an object is an atomic vector (as
+defined in Advanced R) or is NULL (!).</p>
 </blockquote>
 <blockquote>
 <p>The is.atomic() function in R is used to check if an R object is
@@ -772,10 +837,18 @@ or integer and values can reasonably be regarded as numeric (e.g.,
 arithmetic on them makes sense, and comparison should be done via the
 base type).</p>
 </blockquote>
+<blockquote>
+<p>is.numeric() tests if an object has type integer or double and is not
+of class factor, Date, POSIXt or difftime.</p>
+</blockquote>
 <pre class="r"><code>#?is.vector()</code></pre>
 <blockquote>
 <p>is.vector(x) returns TRUE if x is a vector of the specified mode
 having no attributes other than names.</p>
+</blockquote>
+<blockquote>
+<p>is.vector() tests if an object is a vector (as defined in Advanced R)
+or an expression and has no attributes, apart from names.</p>
 </blockquote>
 </div>
 </div>
@@ -971,6 +1044,14 @@ know they exist in case you get strange output from a function
 <blockquote>
 <p>here is how is setNames() implemented:</p>
 </blockquote>
+<pre class="r"><code>setNames</code></pre>
+<pre><code>## function (object = nm, nm) 
+## {
+##     names(object) &lt;- nm
+##     object
+## }
+## &lt;bytecode: 0x000002692b911ef0&gt;
+## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>getAnywhere(setNames)</code></pre>
 <pre><code>## A single object matching &#39;setNames&#39; was found
 ## It was found in the following places
@@ -984,7 +1065,7 @@ know they exist in case you get strange output from a function
 ##     names(object) &lt;- nm
 ##     object
 ## }
-## &lt;bytecode: 0x0000018bb72809a8&gt;
+## &lt;bytecode: 0x000002692b911ef0&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>x &lt;- setNames(1:3, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 str(x)</code></pre>
@@ -1011,7 +1092,7 @@ str(x)</code></pre>
 ##         dimnames(obj) &lt;- NULL
 ##     obj
 ## }
-## &lt;bytecode: 0x0000018bb6f9dfe8&gt;
+## &lt;bytecode: 0x000002692b633dc0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>unname(x) %&gt;% str()</code></pre>
 <pre><code>##  int [1:3] 1 2 3</code></pre>
@@ -1028,6 +1109,9 @@ vector</code></pre>
 <pre><code>##  [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
 <pre class="r"><code>dim(vector)</code></pre>
 <pre><code>## NULL</code></pre>
+<blockquote>
+<p>dim() returns NULL when applied to a 1-dimensional vector.</p>
+</blockquote>
 <pre class="r"><code>NROW(vector)</code></pre>
 <pre><code>## [1] 10</code></pre>
 <pre class="r"><code>NCOL(vector)</code></pre>
@@ -1038,12 +1122,13 @@ vector</code></pre>
 <pre><code>## NULL</code></pre>
 <pre class="r"><code>#?NROW()</code></pre>
 <blockquote>
-<p>dim() returns NULL when applied to a 1-dimensional vector.</p>
-</blockquote>
-<blockquote>
 <p>nrow and ncol return the number of rows or columns present in x. NCOL
 and NROW do the same treating a vector as 1-column matrix, even a
 0-length vector.</p>
+</blockquote>
+<blockquote>
+<p>use NROW() or NCOL() to handle atomic vectors, lists and NULL values
+in the same way as one column matrices or data frames.</p>
 </blockquote>
 <ol start="3" style="list-style-type: decimal">
 <li><p>How would you describe the following three objects? What makes
@@ -1075,7 +1160,10 @@ str(x1)</code></pre>
 <blockquote>
 <p>All of them are 3d array. x1 has five elements in the x-dimension, x2
 has five elements in the y-dimension, and x3 has five elements in the
-z-dimension. <code>1:5</code> doen’t have dim attributes.</p>
+z-dimension.</p>
+</blockquote>
+<blockquote>
+<p><code>1:5</code> doen’t have dim attributes.</p>
 </blockquote>
 <ol start="4" style="list-style-type: decimal">
 <li><p>An early draft used this code to illustrate
@@ -1087,12 +1175,13 @@ Why? Is the attribute missing, or is there something else special about
 it? (Hint: try using help.)</p></li>
 </ol>
 <pre class="r"><code>#?comment
-#?attributes() # These functions access an object&#39;s attributes. 
-#?attr() # Get or set specific attributes of an object.
+?attributes() # These functions access an object&#39;s attributes. </code></pre>
+<pre><code>## starting httpd help server ... done</code></pre>
+<pre class="r"><code>#?attr() # Get or set specific attributes of an object.
 #?structure() # structure returns the given object with further attributes set.</code></pre>
 <blockquote>
-<p>Contrary to other attributes, the comment is not printed (by print or
-print.default).</p>
+<p>from <code>?comment</code> Contrary to other attributes, the comment
+is not printed (by print or print.default).</p>
 </blockquote>
 <blockquote>
 <p>Note that some attributes (namely class, comment, dim, dimnames,
@@ -1103,6 +1192,13 @@ should be set for factors via the levels replacement function.)</p>
 <pre class="r"><code>attributes(structure(1:5, comment = &quot;my attribute&quot;))</code></pre>
 <pre><code>## $comment
 ## [1] &quot;my attribute&quot;</code></pre>
+<pre class="r"><code>test &lt;- structure(1:5, comment = &quot;my attribute&quot;)
+
+attributes(test)</code></pre>
+<pre><code>## $comment
+## [1] &quot;my attribute&quot;</code></pre>
+<pre class="r"><code>attr(test, which = &quot;comment&quot;)</code></pre>
+<pre><code>## [1] &quot;my attribute&quot;</code></pre>
 </div>
 </div>
 <div id="s3-atomic-vectors" class="section level2">
@@ -1283,18 +1379,25 @@ one_week_2</code></pre>
 type? What attributes does it have? How does the dimensionality change
 as you tabulate more variables?</li>
 </ol>
-<pre class="r"><code># ?table()</code></pre>
+<pre class="r"><code>#?table()</code></pre>
 <blockquote>
 <p>table uses cross-classifying factors to build a contingency table of
 the counts at each combination of factor levels.</p>
 </blockquote>
 <pre class="r"><code>## Check the design:
+# warpbreaks {datasets} The Number of Breaks in Yarn during Weaving
 with(warpbreaks, table(wool, tension))</code></pre>
 <pre><code>##     tension
 ## wool L M H
 ##    A 9 9 9
 ##    B 9 9 9</code></pre>
-<pre class="r"><code>table(state.division, state.region)</code></pre>
+<blockquote>
+<p>This data set gives the number of warp breaks per loom, where a loom
+corresponds to a fixed length of yarn.</p>
+</blockquote>
+<pre class="r"><code>## US State Facts and Figures
+# Data sets related to the 50 states of the United States of America.
+table(state.division, state.region)</code></pre>
 <pre><code>##                     state.region
 ## state.division       Northeast South North Central West
 ##   New England                6     0             0    0
@@ -1326,6 +1429,15 @@ typeof(t)</code></pre>
 ## 
 ## $class
 ## [1] &quot;table&quot;</code></pre>
+<blockquote>
+<p>state.division: factor giving state divisions (New England, Middle
+Atlantic, South Atlantic, East South Central, West South Central, East
+North Central, West North Central, Mountain, and Pacific).</p>
+</blockquote>
+<blockquote>
+<p>state.region: factor giving the region (Northeast, South, North
+Central, West) that each state belongs to.</p>
+</blockquote>
 <ol start="2" style="list-style-type: decimal">
 <li><p>What happens to a factor when you modify its levels?</p>
 <pre class="r"><code>f1 &lt;- factor(letters)
@@ -1487,6 +1599,25 @@ structure.</p>
 list, the elements can be of different types.</p>
 </blockquote>
 <blockquote>
+<p>Atomic vectors point to one address in memory, while lists contain a
+separate reference for each element. (This was described in the list
+sections of the vectors and the names and values chapters.)</p>
+</blockquote>
+<pre class="r"><code>lobstr::ref(1:2)</code></pre>
+<pre><code>## [1:0x26930457a90] &lt;int&gt;</code></pre>
+<pre class="r"><code>1:2</code></pre>
+<pre><code>## [1] 1 2</code></pre>
+<pre class="r"><code>lobstr::ref(list(1:2, 2))</code></pre>
+<pre><code>## █ [1:0x26931732668] &lt;list&gt; 
+## ├─[2:0x2692fdcaef0] &lt;int&gt; 
+## └─[3:0x26931217560] &lt;dbl&gt;</code></pre>
+<pre class="r"><code>list(1:2, 2)</code></pre>
+<pre><code>## [[1]]
+## [1] 1 2
+## 
+## [[2]]
+## [1] 2</code></pre>
+<blockquote>
 <p>Because the elements of a list are references, creating a list does
 not involve copying the components into the list.</p>
 </blockquote>
@@ -1523,10 +1654,15 @@ is.list(L2)</code></pre>
 <p>L2 is a vector, but not a list.</p>
 </blockquote>
 <blockquote>
-<p>as.vector, a generic, attempts to coerce its argument into a vector
-of mode mode (the default is to coerce to whichever vector mode is most
-convenient): if the result is atomic (is.atomic), all attributes are
-removed.</p>
+<p><code>as.vector</code>, a generic, attempts to coerce its argument
+into a vector of mode mode (the default is to coerce to whichever vector
+mode is most convenient): if the result is atomic (is.atomic), all
+attributes are removed.</p>
+</blockquote>
+<blockquote>
+<p><code>is.vector</code> returns TRUE if x is a vector of the specified
+mode having no attributes other than names. It returns FALSE
+otherwise.</p>
 </blockquote>
 <ol start="3" style="list-style-type: decimal">
 <li>Compare and contrast <code>c()</code> and <code>unlist()</code> when
@@ -1534,7 +1670,7 @@ combining a date and date-time into a single vector.</li>
 </ol>
 <pre class="r"><code>today &lt;- Sys.Date()
 today</code></pre>
-<pre><code>## [1] &quot;2022-10-30&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31&quot;</code></pre>
 <pre class="r"><code>typeof(today)</code></pre>
 <pre><code>## [1] &quot;double&quot;</code></pre>
 <pre class="r"><code>attributes(today)</code></pre>
@@ -1542,42 +1678,47 @@ today</code></pre>
 ## [1] &quot;Date&quot;</code></pre>
 <pre class="r"><code>now_ct &lt;- Sys.time()
 now_ct</code></pre>
-<pre><code>## [1] &quot;2022-10-30 23:04:40 GMT&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31 17:55:34 GMT&quot;</code></pre>
 <pre class="r"><code>typeof(now_ct)</code></pre>
 <pre><code>## [1] &quot;double&quot;</code></pre>
 <pre class="r"><code>attributes(now_ct)</code></pre>
 <pre><code>## $class
 ## [1] &quot;POSIXct&quot; &quot;POSIXt&quot;</code></pre>
 <pre class="r"><code>c(today,now_ct)</code></pre>
-<pre><code>## [1] &quot;2022-10-30&quot; &quot;2022-10-30&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31&quot; &quot;2022-10-31&quot;</code></pre>
 <pre class="r"><code>c(now_ct,today)</code></pre>
-<pre><code>## [1] &quot;2022-10-30 23:04:40 GMT&quot; &quot;2022-10-30 00:00:00 BST&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31 17:55:34 GMT&quot; &quot;2022-10-31 00:00:00 GMT&quot;</code></pre>
 <blockquote>
 <p>c() coerces all element types to the type of first element in the
 vector.</p>
 </blockquote>
 <pre class="r"><code>list(today,now_ct)</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2022-10-30&quot;
+## [1] &quot;2022-10-31&quot;
 ## 
 ## [[2]]
-## [1] &quot;2022-10-30 23:04:40 GMT&quot;</code></pre>
+## [1] &quot;2022-10-31 17:55:34 GMT&quot;</code></pre>
 <pre class="r"><code>list(now_ct,today)</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2022-10-30 23:04:40 GMT&quot;
+## [1] &quot;2022-10-31 17:55:34 GMT&quot;
 ## 
 ## [[2]]
-## [1] &quot;2022-10-30&quot;</code></pre>
+## [1] &quot;2022-10-31&quot;</code></pre>
 <pre class="r"><code>unlist(list(today,now_ct))</code></pre>
-<pre><code>## [1]      19295 1667171081</code></pre>
+<pre><code>## [1]      19296 1667238934</code></pre>
 <pre class="r"><code>unlist(list(now_ct,today))</code></pre>
-<pre><code>## [1] 1667171081      19295</code></pre>
+<pre><code>## [1] 1667238934      19296</code></pre>
 <blockquote>
 <p>unlist removes the attributes of the list.</p>
 </blockquote>
 <blockquote>
 <p>*notes: if you ever need to work with dates and times in R, use the
 lubridate package.</p>
+</blockquote>
+<blockquote>
+<p>To summarise: c() coerces types and strips time zones. Errors may
+have occurred in older R versions because of inappropriate method
+dispatch/immature methods. unlist() strips attributes.</p>
 </blockquote>
 </div>
 </div>
@@ -2035,7 +2176,7 @@ df</code></pre>
 <pre class="r"><code>is.list(t(t(df)))</code></pre>
 <pre><code>## [1] FALSE</code></pre>
 <blockquote>
-<p>the output is a matrix</p>
+<p>the output of t(df) and t(t(df)) are matrices.</p>
 </blockquote>
 <ol start="4" style="list-style-type: decimal">
 <li>What does <code>as.matrix()</code> do when applied to a data frame
@@ -2045,11 +2186,16 @@ with columns of different types? How does it differ from
 <pre class="r"><code>#?as.matrix
 #?data.matrix()</code></pre>
 <blockquote>
-<p>as.matrix attempts to turn its argument into a matrix. data.matrix()
-Return the matrix obtained by converting all the variables in a data
-frame to numeric mode and then binding them together as the columns of a
-matrix. Factors and ordered factors are replaced by their internal
-codes.</p>
+<p><code>as.matrix</code> attempts to turn its argument into a matrix.
+The method for data frames will return a character matrix if there is
+only atomic columns and any non-(numeric/logical/complex) column.</p>
+</blockquote>
+<blockquote>
+<p><code>data.matrix()</code> Return the matrix obtained by converting
+all the variables in a data frame to numeric mode and then binding them
+together as the columns of a matrix. Factors and ordered factors are
+replaced by their internal codes. Character columns are first converted
+to factors and then to integers.</p>
 </blockquote>
 <pre class="r"><code>df</code></pre>
 <pre><code>##   age  hair

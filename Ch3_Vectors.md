@@ -53,6 +53,57 @@ Take this short quiz to determine if you need to read this chapter. If the answe
 
 > After reading: The four common types of atomic vectors: logical, integer, double, and character (which contains strings). There are two rare types: complex and raw.
 
+> note: Complex Vector
+The complex data type is to store numbers with an imaginary component. Examples of complex values are 1+2i, 3i, 4-5i, -12+6i, etc.
+
+
+```r
+# R program to create complex Vectors 
+  
+# create complex vector
+v1 <- c(1+2i, 3i, 4-5i, -12+6i)  
+  
+# print vector
+print(v1)
+```
+
+```
+## [1]   1+2i   0+3i   4-5i -12+6i
+```
+
+```r
+# display type of vector 
+print(typeof(v1))
+```
+
+```
+## [1] "complex"
+```
+
+> notes: Raw Vector
+Raw vectors store raw bytes of data. Making raw vectors gets complicated, but raw vectors can be created using the raw() function.
+
+
+```r
+# R program to illustrate raw vector
+  
+# Creating raw vector using raw()
+print(raw(3))
+```
+
+```
+## [1] 00 00 00
+```
+
+```r
+# Print the type of vector
+print(typeof(raw(3)))
+```
+
+```
+## [1] "raw"
+```
+
 2. What are attributes? How do you get them and set them?
 
 > Before reading: Attributes are a named list of arbitrary metadata. I can get them use str() or attr().
@@ -411,21 +462,36 @@ as.integer(c("1", "1.5", "a"))
 
 ```r
 #?raw
+```
+
+
+```r
 xx <- raw(2)
-xx
+xx[1] <- as.raw(40)     # NB, not just 40.
+xx[2] <- charToRaw("A")
+xx       ## 28 41   -- raw prints hexadecimals
 ```
 
 ```
-## [1] 00 00
+## [1] 28 41
 ```
 
 ```r
-str(xx)
+dput(xx) ## as.raw(c(0x28, 0x41))
 ```
 
 ```
-##  raw [1:2] 00 00
+## as.raw(c(0x28, 0x41))
 ```
+
+```r
+as.integer(xx) ## 40 65
+```
+
+```
+## [1] 40 65
+```
+
 
 
 ```r
@@ -447,6 +513,30 @@ str(z)
 ```
 
 
+```r
+## create a complex normal vector
+z <- complex(real = stats::rnorm(10), imaginary = stats::rnorm(10))
+z
+```
+
+```
+##  [1] -0.6193672-0.6805076i -0.1493491+1.0329827i  0.0816943+1.6331857i
+##  [4] -0.2743462+0.2111099i -0.6284611-0.3253443i -0.7619288-0.2161379i
+##  [7]  1.8218442+3.0940406i  1.9976523+0.3128574i -0.9472021+0.5648832i
+## [10] -0.0412568+0.5345046i
+```
+
+```r
+## or also (less efficiently):
+z2 <- 1:2 + 1i*(8:9)
+z2
+```
+
+```
+## [1] 1+8i 2+9i
+```
+
+
 2. Test your knowledge of the vector coercion rules by predicting the output of the following uses of `c()`:
 
     
@@ -456,6 +546,8 @@ str(z)
     c(TRUE, 1L)
     ```
 
+> When you attempt to combine different types they will be coerced in a fixed order: character → double → integer → logical.
+
 > `c(1, FALSE)` -> 1 0
 
 > `c("a", 1)` -> "a" "1"
@@ -463,6 +555,8 @@ str(z)
 > `c(TRUE, 1L)` -> 1 1
 
 3. Why is `1 == "1"` true? Why is `-1 < FALSE` true? Why is `"one" < 2` false?
+
+> These comparisons are carried out by operator-functions (==, <), which coerce their arguments to a common type.
 
 
 ```r
@@ -498,10 +592,14 @@ str(z)
 
 > 2 is coerced to "2". Therefore, `"one" < "2"` is FALSE.
 
+> numbers precede letters in lexicographic order (may depend on locale)
+
 4. Why is the default missing value, `NA`, a logical vector? What's special
    about logical vectors? (Hint: think about `c(FALSE, NA_character_)`.)
 
 > Since the fixed order for coercing is character → double → integer → logical, having the default missing value, NA, a logical vector will not change the types of other values in the same vector.
+
+> The presence of missing values shouldn’t affect the type of an object. When combining NAs with other atomic types, the NAs will be coerced to integer (NA_integer_), double (NA_real_) or character (NA_character_) and not the other way round. If NA were a character and added to a set of other values all of these would be coerced to character as well.
 
 5. Precisely what do `is.atomic()`, `is.numeric()`, and `is.vector()` test for?
 
@@ -510,7 +608,7 @@ str(z)
 #?is.atomic()
 ```
 
-> is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise.
+> is.atomic returns TRUE if x is of an atomic type (or NULL) and FALSE otherwise. is.atomic() tests if an object is an atomic vector (as defined in Advanced R) or is NULL (!).
 
 > The is.atomic() function in R is used to check if an R object is atomic or not. When an R object is atomic it can be used to create atomic vectors. 
 Note: R has six basic atomic vector types: logical, integer, real, complex, string (or character), and raw.
@@ -614,12 +712,16 @@ is.vector(b)
 
 > is.numeric only return true if the base type of the class is double or integer and values can reasonably be regarded as numeric (e.g., arithmetic on them makes sense, and comparison should be done via the base type).
 
+> is.numeric() tests if an object has type integer or double and is not of class factor, Date, POSIXt or difftime.
+
 
 ```r
 #?is.vector()
 ```
 
 > is.vector(x) returns TRUE if x is a vector of the specified mode having no attributes other than names.
+
+> is.vector() tests if an object is a vector (as defined in Advanced R) or an expression and has no attributes, apart from names.
 
 ## 3.3 Attributes {#attributes}
 \index{attributes}
@@ -850,6 +952,22 @@ str(array(1:3, 3))         # "array" vector
 
 
 ```r
+setNames
+```
+
+```
+## function (object = nm, nm) 
+## {
+##     names(object) <- nm
+##     object
+## }
+## <bytecode: 0x000002692b911ef0>
+## <environment: namespace:stats>
+```
+
+
+
+```r
 getAnywhere(setNames)
 ```
 
@@ -866,7 +984,7 @@ getAnywhere(setNames)
 ##     names(object) <- nm
 ##     object
 ## }
-## <bytecode: 0x0000018bb72809a8>
+## <bytecode: 0x000002692b911ef0>
 ## <environment: namespace:stats>
 ```
 
@@ -905,7 +1023,7 @@ getAnywhere(unname)
 ##         dimnames(obj) <- NULL
 ##     obj
 ## }
-## <bytecode: 0x0000018bb6f9dfe8>
+## <bytecode: 0x000002692b633dc0>
 ## <environment: namespace:base>
 ```
 
@@ -939,6 +1057,9 @@ dim(vector)
 ```
 ## NULL
 ```
+
+> dim() returns NULL when applied to a 1-dimensional vector.
+
 
 ```r
 NROW(vector)
@@ -976,9 +1097,9 @@ ncol(vector)
 #?NROW()
 ```
 
-> dim() returns NULL when applied to a 1-dimensional vector.
-
 > nrow and ncol return the number of rows or columns present in x. NCOL and NROW do the same treating a vector as 1-column matrix, even a 0-length vector.
+
+> use NROW() or NCOL() to handle atomic vectors, lists and NULL values in the same way as one column matrices or data frames.
 
 3.  How would you describe the following three objects? What makes them
     different from `1:5`?
@@ -1057,6 +1178,7 @@ attributes(1:5)
 ```
 
 > All of them are 3d array. x1 has five elements in the x-dimension, x2 has five elements in the y-dimension, and x3 has five elements in the z-dimension.
+
 > `1:5` doen't have dim attributes.
 
 4.  An early draft used this code to illustrate `structure()`:
@@ -1077,12 +1199,19 @@ attributes(1:5)
 
 ```r
 #?comment
-#?attributes() # These functions access an object's attributes. 
+?attributes() # These functions access an object's attributes. 
+```
+
+```
+## starting httpd help server ... done
+```
+
+```r
 #?attr() # Get or set specific attributes of an object.
 #?structure() # structure returns the given object with further attributes set.
 ```
 
-> Contrary to other attributes, the comment is not printed (by print or print.default).
+> from `?comment` Contrary to other attributes, the comment is not printed (by print or print.default).
 
 > Note that some attributes (namely class, comment, dim, dimnames, names, row.names and tsp) are treated specially and have restrictions on the values which can be set. (Note that this is not true of levels which should be set for factors via the levels replacement function.)
 
@@ -1095,6 +1224,27 @@ attributes(structure(1:5, comment = "my attribute"))
 ## $comment
 ## [1] "my attribute"
 ```
+
+
+```r
+test <- structure(1:5, comment = "my attribute")
+
+attributes(test)
+```
+
+```
+## $comment
+## [1] "my attribute"
+```
+
+```r
+attr(test, which = "comment")
+```
+
+```
+## [1] "my attribute"
+```
+
 
 
 ## 3.4 S3 atomic vectors
@@ -1387,7 +1537,7 @@ attributes(one_week_2)
     
 
 ```r
-# ?table()
+#?table()
 ```
 
 > table uses cross-classifying factors to build a contingency table of the counts at each combination of factor levels.
@@ -1395,6 +1545,7 @@ attributes(one_week_2)
 
 ```r
 ## Check the design:
+# warpbreaks {datasets} The Number of Breaks in Yarn during Weaving
 with(warpbreaks, table(wool, tension))
 ```
 
@@ -1404,8 +1555,12 @@ with(warpbreaks, table(wool, tension))
 ##    A 9 9 9
 ##    B 9 9 9
 ```
+> This data set gives the number of warp breaks per loom, where a loom corresponds to a fixed length of yarn.
+
 
 ```r
+## US State Facts and Figures
+# Data sets related to the 50 states of the United States of America.
 table(state.division, state.region)
 ```
 
@@ -1455,6 +1610,11 @@ attributes(t)
 ## [1] "table"
 ```
 
+> state.division:
+factor giving state divisions (New England, Middle Atlantic, South Atlantic, East South Central, West South Central, East North Central, West North Central, Mountain, and Pacific).
+
+> state.region:
+factor giving the region (Northeast, South, North Central, West) that each state belongs to.
 
 2.  What happens to a factor when you modify its levels? 
     
@@ -1711,6 +1871,48 @@ These data structures are relatively esoteric but they can be useful if you want
 
 > In an atomic vector, all elements must be of the same type. In a list, the elements can be of different types.
 
+> Atomic vectors point to one address in memory, while lists contain a separate reference for each element. (This was described in the list sections of the vectors and the names and values chapters.)
+
+
+```r
+lobstr::ref(1:2)
+```
+
+```
+## [1:0x26930457a90] <int>
+```
+
+```r
+1:2
+```
+
+```
+## [1] 1 2
+```
+
+```r
+lobstr::ref(list(1:2, 2))
+```
+
+```
+## █ [1:0x26931732668] <list> 
+## ├─[2:0x2692fdcaef0] <int> 
+## └─[3:0x26931217560] <dbl>
+```
+
+```r
+list(1:2, 2)
+```
+
+```
+## [[1]]
+## [1] 1 2
+## 
+## [[2]]
+## [1] 2
+```
+
+
 > Because the elements of a list are references, creating a list does not involve copying the components into the list.
 
 2.  Why do you need to use `unlist()` to convert a list to an 
@@ -1795,7 +1997,9 @@ is.vector(L2)
 ```
 > L2 is a vector, but not a list.
 
-> as.vector, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
+> `as.vector`, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
+
+> `is.vector` returns TRUE if x is a vector of the specified mode having no attributes other than names. It returns FALSE otherwise.
 
 3.  Compare and contrast `c()` and `unlist()` when combining a 
     date and date-time into a single vector.
@@ -1807,7 +2011,7 @@ today
 ```
 
 ```
-## [1] "2022-10-30"
+## [1] "2022-10-31"
 ```
 
 ```r
@@ -1834,7 +2038,7 @@ now_ct
 ```
 
 ```
-## [1] "2022-10-30 23:04:40 GMT"
+## [1] "2022-10-31 17:55:34 GMT"
 ```
 
 ```r
@@ -1860,7 +2064,7 @@ c(today,now_ct)
 ```
 
 ```
-## [1] "2022-10-30" "2022-10-30"
+## [1] "2022-10-31" "2022-10-31"
 ```
 
 ```r
@@ -1868,7 +2072,7 @@ c(now_ct,today)
 ```
 
 ```
-## [1] "2022-10-30 23:04:40 GMT" "2022-10-30 00:00:00 BST"
+## [1] "2022-10-31 17:55:34 GMT" "2022-10-31 00:00:00 GMT"
 ```
 
 > c() coerces all element types to the type of first element in the vector.
@@ -1880,10 +2084,10 @@ list(today,now_ct)
 
 ```
 ## [[1]]
-## [1] "2022-10-30"
+## [1] "2022-10-31"
 ## 
 ## [[2]]
-## [1] "2022-10-30 23:04:40 GMT"
+## [1] "2022-10-31 17:55:34 GMT"
 ```
 
 ```r
@@ -1892,10 +2096,10 @@ list(now_ct,today)
 
 ```
 ## [[1]]
-## [1] "2022-10-30 23:04:40 GMT"
+## [1] "2022-10-31 17:55:34 GMT"
 ## 
 ## [[2]]
-## [1] "2022-10-30"
+## [1] "2022-10-31"
 ```
 
 
@@ -1904,7 +2108,7 @@ unlist(list(today,now_ct))
 ```
 
 ```
-## [1]      19295 1667171081
+## [1]      19296 1667238934
 ```
 
 ```r
@@ -1912,13 +2116,14 @@ unlist(list(now_ct,today))
 ```
 
 ```
-## [1] 1667171081      19295
+## [1] 1667238934      19296
 ```
 
 > unlist removes the attributes of the list.
 
 > *notes: if you ever need to work with dates and times in R, use the lubridate package.
 
+> To summarise: c() coerces types and strips time zones. Errors may have occurred in older R versions because of inappropriate method dispatch/immature methods. unlist() strips attributes.
 
 ## 3.6 Data frames and tibbles {#tibble}
 \index{data frames}
@@ -2617,7 +2822,7 @@ is.list(t(t(df)))
 ## [1] FALSE
 ```
 
-> the output is a matrix
+> the output of t(df) and t(t(df)) are matrices.
 
 4.  What does `as.matrix()` do when applied to a data frame with 
     columns of different types? How does it differ from `data.matrix()`?
@@ -2628,8 +2833,9 @@ is.list(t(t(df)))
 #?data.matrix()
 ```
 
-> as.matrix attempts to turn its argument into a matrix.
-> data.matrix() Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes.
+> `as.matrix` attempts to turn its argument into a matrix. The method for data frames will return a character matrix if there is only atomic columns and any non-(numeric/logical/complex) column.
+
+> `data.matrix()` Return the matrix obtained by converting all the variables in a data frame to numeric mode and then binding them together as the columns of a matrix. Factors and ordered factors are replaced by their internal codes. Character columns are first converted to factors and then to integers.
 
 
 ```r
