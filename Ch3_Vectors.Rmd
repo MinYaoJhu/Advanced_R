@@ -568,6 +568,11 @@ str(array(1:3, 3))         # "array" vector
 > here is how is setNames() implemented:
 
 ```{r}
+#View(setNames)
+```
+
+
+```{r}
 setNames
 ```
 
@@ -655,7 +660,7 @@ attributes(1:5)
     it? (Hint: try using help.)
     
 ```{r}
-#?comment
+?comment
 ?attributes() # These functions access an object's attributes. 
 #?attr() # Get or set specific attributes of an object.
 #?structure() # structure returns the given object with further attributes set.

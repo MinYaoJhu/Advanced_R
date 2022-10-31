@@ -520,10 +520,10 @@ z
 ```
 
 ```
-##  [1] -0.6193672-0.6805076i -0.1493491+1.0329827i  0.0816943+1.6331857i
-##  [4] -0.2743462+0.2111099i -0.6284611-0.3253443i -0.7619288-0.2161379i
-##  [7]  1.8218442+3.0940406i  1.9976523+0.3128574i -0.9472021+0.5648832i
-## [10] -0.0412568+0.5345046i
+##  [1]  0.2799452-0.4385593i  0.4307603-1.6026443i -0.9089264+0.9596777i
+##  [4] -0.0788432-1.0156469i -1.6351644+1.4991566i -0.3159388-0.0513756i
+##  [7]  0.7549405-0.3385600i -1.7687180+0.9445540i  0.1829089-0.2055786i
+## [10] -1.1338255-0.8637915i
 ```
 
 ```r
@@ -952,6 +952,12 @@ str(array(1:3, 3))         # "array" vector
 
 
 ```r
+#View(setNames)
+```
+
+
+
+```r
 setNames
 ```
 
@@ -961,7 +967,7 @@ setNames
 ##     names(object) <- nm
 ##     object
 ## }
-## <bytecode: 0x000002692b911ef0>
+## <bytecode: 0x0000024cfb94dd40>
 ## <environment: namespace:stats>
 ```
 
@@ -984,7 +990,7 @@ getAnywhere(setNames)
 ##     names(object) <- nm
 ##     object
 ## }
-## <bytecode: 0x000002692b911ef0>
+## <bytecode: 0x0000024cfb94dd40>
 ## <environment: namespace:stats>
 ```
 
@@ -1023,7 +1029,7 @@ getAnywhere(unname)
 ##         dimnames(obj) <- NULL
 ##     obj
 ## }
-## <bytecode: 0x000002692b633dc0>
+## <bytecode: 0x0000024cfb5d9b38>
 ## <environment: namespace:base>
 ```
 
@@ -1198,8 +1204,7 @@ attributes(1:5)
     
 
 ```r
-#?comment
-?attributes() # These functions access an object's attributes. 
+?comment
 ```
 
 ```
@@ -1207,6 +1212,7 @@ attributes(1:5)
 ```
 
 ```r
+?attributes() # These functions access an object's attributes. 
 #?attr() # Get or set specific attributes of an object.
 #?structure() # structure returns the given object with further attributes set.
 ```
@@ -1879,7 +1885,7 @@ lobstr::ref(1:2)
 ```
 
 ```
-## [1:0x26930457a90] <int>
+## [1:0x24c84100d90] <int>
 ```
 
 ```r
@@ -1895,9 +1901,9 @@ lobstr::ref(list(1:2, 2))
 ```
 
 ```
-## █ [1:0x26931732668] <list> 
-## ├─[2:0x2692fdcaef0] <int> 
-## └─[3:0x26931217560] <dbl>
+## █ [1:0x24c84dda658] <list> 
+## ├─[2:0x24c84484cb0] <int> 
+## └─[3:0x24c843adc60] <dbl>
 ```
 
 ```r
@@ -2038,7 +2044,7 @@ now_ct
 ```
 
 ```
-## [1] "2022-10-31 17:55:34 GMT"
+## [1] "2022-10-31 19:06:14 GMT"
 ```
 
 ```r
@@ -2072,7 +2078,7 @@ c(now_ct,today)
 ```
 
 ```
-## [1] "2022-10-31 17:55:34 GMT" "2022-10-31 00:00:00 GMT"
+## [1] "2022-10-31 19:06:14 GMT" "2022-10-31 00:00:00 GMT"
 ```
 
 > c() coerces all element types to the type of first element in the vector.
@@ -2087,7 +2093,7 @@ list(today,now_ct)
 ## [1] "2022-10-31"
 ## 
 ## [[2]]
-## [1] "2022-10-31 17:55:34 GMT"
+## [1] "2022-10-31 19:06:14 GMT"
 ```
 
 ```r
@@ -2096,7 +2102,7 @@ list(now_ct,today)
 
 ```
 ## [[1]]
-## [1] "2022-10-31 17:55:34 GMT"
+## [1] "2022-10-31 19:06:14 GMT"
 ## 
 ## [[2]]
 ## [1] "2022-10-31"
@@ -2108,7 +2114,7 @@ unlist(list(today,now_ct))
 ```
 
 ```
-## [1]      19296 1667238934
+## [1]      19296 1667243174
 ```
 
 ```r
@@ -2116,7 +2122,7 @@ unlist(list(now_ct,today))
 ```
 
 ```
-## [1] 1667238934      19296
+## [1] 1667243174      19296
 ```
 
 > unlist removes the attributes of the list.

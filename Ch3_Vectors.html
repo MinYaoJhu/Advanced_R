@@ -710,10 +710,10 @@ z</code></pre>
 <pre class="r"><code>## create a complex normal vector
 z &lt;- complex(real = stats::rnorm(10), imaginary = stats::rnorm(10))
 z</code></pre>
-<pre><code>##  [1] -0.6193672-0.6805076i -0.1493491+1.0329827i  0.0816943+1.6331857i
-##  [4] -0.2743462+0.2111099i -0.6284611-0.3253443i -0.7619288-0.2161379i
-##  [7]  1.8218442+3.0940406i  1.9976523+0.3128574i -0.9472021+0.5648832i
-## [10] -0.0412568+0.5345046i</code></pre>
+<pre><code>##  [1]  0.2799452-0.4385593i  0.4307603-1.6026443i -0.9089264+0.9596777i
+##  [4] -0.0788432-1.0156469i -1.6351644+1.4991566i -0.3159388-0.0513756i
+##  [7]  0.7549405-0.3385600i -1.7687180+0.9445540i  0.1829089-0.2055786i
+## [10] -1.1338255-0.8637915i</code></pre>
 <pre class="r"><code>## or also (less efficiently):
 z2 &lt;- 1:2 + 1i*(8:9)
 z2</code></pre>
@@ -1044,13 +1044,14 @@ know they exist in case you get strange output from a function
 <blockquote>
 <p>here is how is setNames() implemented:</p>
 </blockquote>
+<pre class="r"><code>#View(setNames)</code></pre>
 <pre class="r"><code>setNames</code></pre>
 <pre><code>## function (object = nm, nm) 
 ## {
 ##     names(object) &lt;- nm
 ##     object
 ## }
-## &lt;bytecode: 0x000002692b911ef0&gt;
+## &lt;bytecode: 0x0000024cfb94dd40&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>getAnywhere(setNames)</code></pre>
 <pre><code>## A single object matching &#39;setNames&#39; was found
@@ -1065,7 +1066,7 @@ know they exist in case you get strange output from a function
 ##     names(object) &lt;- nm
 ##     object
 ## }
-## &lt;bytecode: 0x000002692b911ef0&gt;
+## &lt;bytecode: 0x0000024cfb94dd40&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>x &lt;- setNames(1:3, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 str(x)</code></pre>
@@ -1092,7 +1093,7 @@ str(x)</code></pre>
 ##         dimnames(obj) &lt;- NULL
 ##     obj
 ## }
-## &lt;bytecode: 0x000002692b633dc0&gt;
+## &lt;bytecode: 0x0000024cfb5d9b38&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>unname(x) %&gt;% str()</code></pre>
 <pre><code>##  int [1:3] 1 2 3</code></pre>
@@ -1174,10 +1175,10 @@ z-dimension.</p>
 Why? Is the attribute missing, or is there something else special about
 it? (Hint: try using help.)</p></li>
 </ol>
-<pre class="r"><code>#?comment
-?attributes() # These functions access an object&#39;s attributes. </code></pre>
+<pre class="r"><code>?comment</code></pre>
 <pre><code>## starting httpd help server ... done</code></pre>
-<pre class="r"><code>#?attr() # Get or set specific attributes of an object.
+<pre class="r"><code>?attributes() # These functions access an object&#39;s attributes. 
+#?attr() # Get or set specific attributes of an object.
 #?structure() # structure returns the given object with further attributes set.</code></pre>
 <blockquote>
 <p>from <code>?comment</code> Contrary to other attributes, the comment
@@ -1604,13 +1605,13 @@ separate reference for each element. (This was described in the list
 sections of the vectors and the names and values chapters.)</p>
 </blockquote>
 <pre class="r"><code>lobstr::ref(1:2)</code></pre>
-<pre><code>## [1:0x26930457a90] &lt;int&gt;</code></pre>
+<pre><code>## [1:0x24c84100d90] &lt;int&gt;</code></pre>
 <pre class="r"><code>1:2</code></pre>
 <pre><code>## [1] 1 2</code></pre>
 <pre class="r"><code>lobstr::ref(list(1:2, 2))</code></pre>
-<pre><code>## █ [1:0x26931732668] &lt;list&gt; 
-## ├─[2:0x2692fdcaef0] &lt;int&gt; 
-## └─[3:0x26931217560] &lt;dbl&gt;</code></pre>
+<pre><code>## █ [1:0x24c84dda658] &lt;list&gt; 
+## ├─[2:0x24c84484cb0] &lt;int&gt; 
+## └─[3:0x24c843adc60] &lt;dbl&gt;</code></pre>
 <pre class="r"><code>list(1:2, 2)</code></pre>
 <pre><code>## [[1]]
 ## [1] 1 2
@@ -1678,7 +1679,7 @@ today</code></pre>
 ## [1] &quot;Date&quot;</code></pre>
 <pre class="r"><code>now_ct &lt;- Sys.time()
 now_ct</code></pre>
-<pre><code>## [1] &quot;2022-10-31 17:55:34 GMT&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31 19:06:14 GMT&quot;</code></pre>
 <pre class="r"><code>typeof(now_ct)</code></pre>
 <pre><code>## [1] &quot;double&quot;</code></pre>
 <pre class="r"><code>attributes(now_ct)</code></pre>
@@ -1687,7 +1688,7 @@ now_ct</code></pre>
 <pre class="r"><code>c(today,now_ct)</code></pre>
 <pre><code>## [1] &quot;2022-10-31&quot; &quot;2022-10-31&quot;</code></pre>
 <pre class="r"><code>c(now_ct,today)</code></pre>
-<pre><code>## [1] &quot;2022-10-31 17:55:34 GMT&quot; &quot;2022-10-31 00:00:00 GMT&quot;</code></pre>
+<pre><code>## [1] &quot;2022-10-31 19:06:14 GMT&quot; &quot;2022-10-31 00:00:00 GMT&quot;</code></pre>
 <blockquote>
 <p>c() coerces all element types to the type of first element in the
 vector.</p>
@@ -1697,17 +1698,17 @@ vector.</p>
 ## [1] &quot;2022-10-31&quot;
 ## 
 ## [[2]]
-## [1] &quot;2022-10-31 17:55:34 GMT&quot;</code></pre>
+## [1] &quot;2022-10-31 19:06:14 GMT&quot;</code></pre>
 <pre class="r"><code>list(now_ct,today)</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2022-10-31 17:55:34 GMT&quot;
+## [1] &quot;2022-10-31 19:06:14 GMT&quot;
 ## 
 ## [[2]]
 ## [1] &quot;2022-10-31&quot;</code></pre>
 <pre class="r"><code>unlist(list(today,now_ct))</code></pre>
-<pre><code>## [1]      19296 1667238934</code></pre>
+<pre><code>## [1]      19296 1667243174</code></pre>
 <pre class="r"><code>unlist(list(now_ct,today))</code></pre>
-<pre><code>## [1] 1667238934      19296</code></pre>
+<pre><code>## [1] 1667243174      19296</code></pre>
 <blockquote>
 <p>unlist removes the attributes of the list.</p>
 </blockquote>
