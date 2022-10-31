@@ -14,19 +14,19 @@ library(tidyverse)
 
 ```
 ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
-## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ```
 
 
-# Vectors {#vectors-chap}
+# 3 Vectors {#vectors-chap}
 
-## Introduction
+## 3.1 Introduction
 \index{vectors}
 \index{nodes}
 
@@ -53,23 +53,40 @@ Take this short quiz to determine if you need to read this chapter. If the answe
 
 > After reading: The four common types of atomic vectors: logical, integer, double, and character (which contains strings). There are two rare types: complex and raw.
 
-1. What are attributes? How do you get them and set them?
+2. What are attributes? How do you get them and set them?
 
 > Before reading: Attributes are a named list of arbitrary metadata. I can get them use str() or attr().
 
-1. How is a list different from an atomic vector? How is a matrix different
+> After reading: Attributes allow you to associate arbitrary additional metadata to
+    any object. You can get and set individual attributes with `attr(x, "y")`
+    and `attr(x, "y") <- value`; or you can get and set all attributes at once 
+    with `attributes()`.
+
+3. How is a list different from an atomic vector? How is a matrix different
    from a data frame?
    
 > Before reading: They differ in elements' types: for atomic vectors, all elements must have the same type; for lists, elements can have different types. For a matrix, all elements must have the same type. For a data frame, elements can have different types in different columns.
 
-1. Can you have a list that is a matrix? Can a data frame have a column 
+> After reading: The elements of a list can be any type (even a list); the elements of 
+    an atomic vector are all of the same type. Similarly, every element of 
+    a matrix must be the same type; in a data frame, different columns can have 
+    different types.
+
+4. Can you have a list that is a matrix? Can a data frame have a column 
    that is a matrix?
    
 > Before reading: Yes. No.
+
+> After reading: You can make a list-array by assigning dimensions to a list. You can
+    make a matrix a column of a data frame with `df$x <- matrix()`, or by
+    using `I()` when creating a new data frame `data.frame(x = I(matrix()))`.
    
-1. How do tibbles behave differently from data frames?
+5. How do tibbles behave differently from data frames?
 
 > Before reading: print differently?
+
+> After reading: Tibbles have an enhanced print method, never coerce strings to 
+    factors, and provide stricter subsetting methods.
 
 ### Outline {-}
 
@@ -95,7 +112,7 @@ Take this short quiz to determine if you need to read this chapter. If the answe
   of lists and matrices to make a structure ideally suited for the needs 
   of statistical data.
 
-## Atomic vectors
+## 3.2 Atomic vectors
 \index{atomic vectors} 
 \index{vectors!atomic|see {atomic vectors}}
 \index{logical vectors} 
@@ -110,7 +127,7 @@ There are four primary types of atomic vectors: logical, integer, double, and ch
 
 [^numeric]: This is a slight simplification as R does not use "numeric" consistently, which we'll come back to in Section \@ref(numeric-type).
 
-### Scalars
+### 3.2.1 Scalars
 \index{scalars}
 \indexc{NaN}
 \indexc{Inf} 
@@ -139,7 +156,7 @@ Each of the four primary types has a special syntax to create an individual valu
 
 [^scalar]: Technically, the R language does not possess scalars. Everything that looks like a scalar is actually a vector of length one. This is mostly a theoretical distinction, but it does mean that expressions like `1[1]` work.
 
-### Making longer vectors with `c()` {#atomic-constructing}
+### 3.2.2 Making longer vectors with `c()` {#atomic-constructing}
 \indexc{typeof()}
 \indexc{length()}
 \indexc{c()} 
@@ -238,7 +255,7 @@ length(chr_var)
 
 [^mode]: You may have heard of the related `mode()` and `storage.mode()` functions. Do not use them: they exist only for compatibility with S.
 
-### Missing values
+### 3.2.3 Missing values
 \indexc{NA}
 \indexc{is.na}
 \index{missing values|see {\texttt{NA}}}
@@ -322,7 +339,7 @@ is.na(x)
 
 NB: Technically there are four missing values, one for each of the atomic types: `NA` (logical), `NA_integer_` (integer), `NA_real_` (double), and `NA_character_` (character). This distinction is usually unimportant because `NA` will be automatically coerced to the correct type when needed.
 
-### Testing and coercion
+### 3.2.4 Testing and coercion
 \index{coercion}
 \indexc{is.vector()}
 \indexc{is.atomic()}
@@ -386,7 +403,7 @@ as.integer(c("1", "1.5", "a"))
 ## [1]  1  1 NA
 ```
 
-### Exercises
+### 3.2.5 Exercises
 
 1. How do you create raw and complex scalars? (See `?raw` and 
    `?complex`.)
@@ -430,7 +447,7 @@ str(z)
 ```
 
 
-1. Test your knowledge of the vector coercion rules by predicting the output of the following uses of `c()`:
+2. Test your knowledge of the vector coercion rules by predicting the output of the following uses of `c()`:
 
     
     ```r
@@ -445,7 +462,7 @@ str(z)
 
 > `c(TRUE, 1L)` -> 1 1
 
-1. Why is `1 == "1"` true? Why is `-1 < FALSE` true? Why is `"one" < 2` false?
+3. Why is `1 == "1"` true? Why is `-1 < FALSE` true? Why is `"one" < 2` false?
 
 
 ```r
@@ -481,12 +498,12 @@ str(z)
 
 > 2 is coerced to "2". Therefore, `"one" < "2"` is FALSE.
 
-1. Why is the default missing value, `NA`, a logical vector? What's special
+4. Why is the default missing value, `NA`, a logical vector? What's special
    about logical vectors? (Hint: think about `c(FALSE, NA_character_)`.)
 
 > Since the fixed order for coercing is character → double → integer → logical, having the default missing value, NA, a logical vector will not change the types of other values in the same vector.
 
-1. Precisely what do `is.atomic()`, `is.numeric()`, and `is.vector()` test for?
+5. Precisely what do `is.atomic()`, `is.numeric()`, and `is.vector()` test for?
 
 
 ```r
@@ -604,12 +621,12 @@ is.vector(b)
 
 > is.vector(x) returns TRUE if x is a vector of the specified mode having no attributes other than names.
 
-## Attributes {#attributes}
+## 3.3 Attributes {#attributes}
 \index{attributes}
 
 You might have noticed that the set of atomic vectors does not include a number of important data structures like matrices, arrays, factors, or date-times. These types are built on top of atomic vectors by adding attributes. In this section, you'll learn the basics of attributes, and how the dim attribute makes matrices and arrays. In the next section you'll learn how the class attribute is used to create S3 vectors, including factors, dates, and date-times.
 
-### Getting and setting
+### 3.3.1 Getting and setting
 \indexc{attr()}
 \index{attributes!attributes@\texttt{attributes()}}
 \indexc{structure()}
@@ -685,7 +702,7 @@ There are only two attributes that are routinely preserved:
 
 To preserve other attributes, you'll need to create your own S3 class, the topic of Chapter \@ref(s3).
 
-### Names {#attr-names}
+### 3.3.2 Names {#attr-names}
 \index{attributes!names}
 \indexc{names()}
 \indexc{setNames()}
@@ -717,7 +734,7 @@ However, names are so special and so important, that unless I'm trying specifica
 
 To be useful with character subsetting (e.g. Section \@ref(lookup-tables)) names should be unique, and non-missing, but this is not enforced by R. Depending on how the names are set, missing names may be either `""` or `NA_character_`. If all names are missing, `names()` will return `NULL`.
 
-### Dimensions {#attr-dims}
+### 3.3.3 Dimensions {#attr-dims}
 \index{arrays} 
 \index{matrices|see {arrays}}
 \index{attributes!dimensions}
@@ -818,7 +835,7 @@ str(array(1:3, 3))         # "array" vector
 ##  int [1:3(1d)] 1 2 3
 ```
 
-### Exercises
+### 3.3.4 Exercises
 
 1.  How is `setNames()` implemented? How is `unname()` implemented?
     Read the source code.
@@ -849,7 +866,7 @@ getAnywhere(setNames)
 ##     names(object) <- nm
 ##     object
 ## }
-## <bytecode: 0x000001c99153d8f8>
+## <bytecode: 0x0000018bb72809a8>
 ## <environment: namespace:stats>
 ```
 
@@ -888,7 +905,7 @@ getAnywhere(unname)
 ##         dimnames(obj) <- NULL
 ##     obj
 ## }
-## <bytecode: 0x000001c9918ef590>
+## <bytecode: 0x0000018bb6f9dfe8>
 ## <environment: namespace:base>
 ```
 
@@ -902,7 +919,7 @@ unname(x) %>% str()
 
 > remove their name by setting them to NULL
 
-1.  What does `dim()` return when applied to a 1-dimensional vector?
+2.  What does `dim()` return when applied to a 1-dimensional vector?
     When might you use `NROW()` or `NCOL()`?
     
 
@@ -963,7 +980,7 @@ ncol(vector)
 
 > nrow and ncol return the number of rows or columns present in x. NCOL and NROW do the same treating a vector as 1-column matrix, even a 0-length vector.
 
-1.  How would you describe the following three objects? What makes them
+3.  How would you describe the following three objects? What makes them
     different from `1:5`?
 
     
@@ -1042,7 +1059,7 @@ attributes(1:5)
 > All of them are 3d array. x1 has five elements in the x-dimension, x2 has five elements in the y-dimension, and x3 has five elements in the z-dimension.
 > `1:5` doen't have dim attributes.
 
-1.  An early draft used this code to illustrate `structure()`:
+4.  An early draft used this code to illustrate `structure()`:
 
     
     ```r
@@ -1080,7 +1097,7 @@ attributes(structure(1:5, comment = "my attribute"))
 ```
 
 
-## S3 atomic vectors
+## 3.4 S3 atomic vectors
 \index{attributes!S3}
 \index{S3!vectors}
 
@@ -1100,7 +1117,7 @@ In this section, we'll discuss four important S3 vectors used in base R:
 
 <img src="diagrams/vectors/summary-tree-s3-1.png" width="744" />
 
-### Factors
+### 3.4.1 Factors
 \indexc{factor}
 \indexc{stringsAsFactors}
  
@@ -1185,7 +1202,7 @@ biography_](http://simplystatistics.org/2015/07/24/stringsasfactors-an-unauthori
 
 While factors look like (and often behave like) character vectors, they are built on top of integers. So be careful when treating them like strings. Some string methods (like `gsub()` and `grepl()`) will automatically coerce factors to strings,  others (like `nchar()`) will throw an error, and still others will (like `c()`) use the underlying integer values. For this reason, it's usually best to explicitly convert factors to character vectors if you need string-like behaviour.
 
-### Dates
+### 3.4.2 Dates
 \indexc{Date}
 
 Date vectors are built on top of double vectors. They have class "Date" and no other attributes:
@@ -1224,7 +1241,7 @@ unclass(date)
 
 [^epoch]: This special date is known as the Unix Epoch.
 
-### Date-times
+### 3.4.3 Date-times
 \index{date-times|see {\texttt{POSIXct}}}
 \indexc{POSIXct}
 
@@ -1297,7 +1314,7 @@ structure(now_ct, tzone = "Europe/Paris")
 
 [^tidyverse-datetimes]: The tidyverse provides the lubridate [@lubridate] package for working with date-times. It provides a number of convenient helpers that work with the base POSIXct type.
 
-### Durations
+### 3.4.4 Durations
 \index{durations|see {difftime}}
 \indexc{difftime}
 
@@ -1362,7 +1379,7 @@ attributes(one_week_2)
 ## [1] "days"
 ```
 
-### Exercises
+### 3.4.5 Exercises
 
 1.  What sort of object does `table()` return? What is its type? What 
     attributes does it have? How does the dimensionality change as you
@@ -1439,7 +1456,7 @@ attributes(t)
 ```
 
 
-1.  What happens to a factor when you modify its levels? 
+2.  What happens to a factor when you modify its levels? 
     
     
     ```r
@@ -1469,7 +1486,7 @@ levels(f1)
 ```
 > The same number of level, but the order changed.
 
-1.  What does this code do? How do `f2` and `f3` differ from `f1`?
+3.  What does this code do? How do `f2` and `f3` differ from `f1`?
 
     
     ```r
@@ -1500,14 +1517,14 @@ levels(f3)
 ```
 > The order of the factor levels is reversed.
 
-## Lists
+## 3.5 Lists
 \index{lists} 
 \index{vectors!recursive|see {lists}}
 \index{vectors!generic|see {lists}}
 
 Lists are a step up in complexity from atomic vectors: each element can be any type, not just vectors. Technically speaking, each element of a list is actually the same type because, as you saw in Section \@ref(list-references), each element is really a _reference_ to another object, which can be any type.
 
-### Creating {#list-creating}
+### 3.5.1 Creating {#list-creating}
 \indexc{list()}
 
 You construct lists with `list()`: 
@@ -1610,7 +1627,7 @@ str(l5)
 ```
 <img src="diagrams/vectors/list-c.png" width="602" />
 
-### Testing and coercion {#list-types}
+### 3.5.2 Testing and coercion {#list-types}
 
 The `typeof()` a list is `list`. You can test for a list with `is.list()`, and coerce to a list with `as.list()`. 
 
@@ -1659,7 +1676,7 @@ is.list(as.list(1:3))
 
 You can turn a list into an atomic vector with `unlist()`. The rules for the resulting type are complex, not well documented, and not always equivalent to what you'd get with `c()`. 
 
-### Matrices and arrays {#list-array}
+### 3.5.3 Matrices and arrays {#list-array}
 \index{lists!list-arrays}
 \index{arrays!list-arrays} 
 
@@ -1688,7 +1705,7 @@ l[[1, 1]]
 
 These data structures are relatively esoteric but they can be useful if you want to arrange objects in a grid-like structure. For example, if you're running models on a spatio-temporal grid, it might be more intuitive to store the models in a 3D array that matches the grid structure. 
 
-### Exercises
+### 3.5.4 Exercises
 
 1.  List all the ways that a list differs from an atomic vector.
 
@@ -1696,7 +1713,7 @@ These data structures are relatively esoteric but they can be useful if you want
 
 > Because the elements of a list are references, creating a list does not involve copying the components into the list.
 
-1.  Why do you need to use `unlist()` to convert a list to an 
+2.  Why do you need to use `unlist()` to convert a list to an 
     atomic vector? Why doesn't `as.vector()` work?
     
 
@@ -1780,7 +1797,7 @@ is.vector(L2)
 
 > as.vector, a generic, attempts to coerce its argument into a vector of mode mode (the default is to coerce to whichever vector mode is most convenient): if the result is atomic (is.atomic), all attributes are removed.
 
-1.  Compare and contrast `c()` and `unlist()` when combining a 
+3.  Compare and contrast `c()` and `unlist()` when combining a 
     date and date-time into a single vector.
 
 
@@ -1790,7 +1807,7 @@ today
 ```
 
 ```
-## [1] "2022-09-12"
+## [1] "2022-10-30"
 ```
 
 ```r
@@ -1817,7 +1834,7 @@ now_ct
 ```
 
 ```
-## [1] "2022-09-12 19:41:01 BST"
+## [1] "2022-10-30 23:04:40 GMT"
 ```
 
 ```r
@@ -1843,7 +1860,7 @@ c(today,now_ct)
 ```
 
 ```
-## [1] "2022-09-12" "2022-09-12"
+## [1] "2022-10-30" "2022-10-30"
 ```
 
 ```r
@@ -1851,7 +1868,7 @@ c(now_ct,today)
 ```
 
 ```
-## [1] "2022-09-12 19:41:01 BST" "2022-09-12 00:00:00 BST"
+## [1] "2022-10-30 23:04:40 GMT" "2022-10-30 00:00:00 BST"
 ```
 
 > c() coerces all element types to the type of first element in the vector.
@@ -1863,10 +1880,10 @@ list(today,now_ct)
 
 ```
 ## [[1]]
-## [1] "2022-09-12"
+## [1] "2022-10-30"
 ## 
 ## [[2]]
-## [1] "2022-09-12 19:41:01 BST"
+## [1] "2022-10-30 23:04:40 GMT"
 ```
 
 ```r
@@ -1875,10 +1892,10 @@ list(now_ct,today)
 
 ```
 ## [[1]]
-## [1] "2022-09-12 19:41:01 BST"
+## [1] "2022-10-30 23:04:40 GMT"
 ## 
 ## [[2]]
-## [1] "2022-09-12"
+## [1] "2022-10-30"
 ```
 
 
@@ -1887,7 +1904,7 @@ unlist(list(today,now_ct))
 ```
 
 ```
-## [1]      19247 1663008062
+## [1]      19295 1667171081
 ```
 
 ```r
@@ -1895,7 +1912,7 @@ unlist(list(now_ct,today))
 ```
 
 ```
-## [1] 1663008062      19247
+## [1] 1667171081      19295
 ```
 
 > unlist removes the attributes of the list.
@@ -1903,7 +1920,7 @@ unlist(list(now_ct,today))
 > *notes: if you ever need to work with dates and times in R, use the lubridate package.
 
 
-## Data frames and tibbles {#tibble}
+## 3.6 Data frames and tibbles {#tibble}
 \index{data frames}
 \index{tibbles|see {data frames}}
 \indexc{row.names}
@@ -1984,7 +2001,7 @@ attributes(df2)
 ## [1] "x" "y"
 ```
 
-### Creating {#df-create}
+### 3.6.1 Creating {#df-create}
 \indexc{stringsAsFactors}
 \index{data frames!data.frame@\texttt{data.frame()}}
 
@@ -2137,7 +2154,7 @@ I'll draw them the same way as a named list, but arrange them to emphasise their
 
 <img src="diagrams/vectors/data-frame-2.png" width="259" />
 
-### Row names {#rownames}
+### 3.6.2 Row names {#rownames}
 \indexc{row.names}
 
 Data frames allow you to label each row with a name, a character vector containing only unique values:
@@ -2227,7 +2244,7 @@ as_tibble(df3, rownames = "name")
 ## 3 Sam      18 black
 ```
 
-### Printing 
+### 3.6.3 Printing 
 
 One of the most obvious differences between tibbles and data frames is how they print. I assume that you're already familiar with how data frames are printed, so here I'll highlight some of the biggest differences using an example dataset included in the dplyr package:
 
@@ -2267,7 +2284,7 @@ dplyr::starwars
 * When used in console environments that support it, colour is used judiciously 
   to highlight important information, and de-emphasise supplemental details.
 
-### Subsetting {#safe-subsetting}
+### 3.6.4 Subsetting {#safe-subsetting}
 As you will learn in Chapter \@ref(subsetting), you can subset a data frame or a tibble like a 1D structure (where it behaves like a list), or a 2D structure (where it behaves like a matrix). 
 
 In my opinion, data frames have two undesirable subsetting behaviours:
@@ -2315,7 +2332,7 @@ str(df2$x)
 
 A tibble's insistence on returning a data frame from `[` can cause problems with legacy code, which often uses `df[, "col"]` to extract a single column. If you want a single column, I recommend using `df[["col"]]`. This clearly communicates your intent, and works with both data frames and tibbles.
 
-### Testing and coercing {#df-test-coerce}
+### 3.6.5 Testing and coercing {#df-test-coerce}
 
 To check if an object is a data frame or tibble, use `is.data.frame()`:
 
@@ -2357,7 +2374,7 @@ is_tibble(df2)
 
 You can coerce an object to a data frame with `as.data.frame()` or to a tibble with `as_tibble()`.
 
-### List columns
+### 3.6.6 List columns
 \index{data frames!list-columns}
 \indexc{I()}
 
@@ -2406,7 +2423,7 @@ tibble(
 ## 3     3 <int [4]>
 ```
 
-### Matrix and data frame columns
+### 3.6.7 Matrix and data frame columns
 \index{data frames!matrix-columns}
 
 As long as the number of rows matches the data frame, it's also possible to have a matrix or array as a column of a data frame. (This requires a slight extension to our definition of a data frame: it's not the `length()` of each column that must be equal, but the `NROW()`.) As for list-columns, you must either add it after creation, or wrap it in `I()`.
@@ -2445,7 +2462,7 @@ dfm[1, ]
 ```
 
 
-### Exercises
+### 3.6.8 Exercises
 
 1.  Can you have a data frame with zero rows? What about zero columns?
 
@@ -2478,7 +2495,7 @@ ncol(df0)
 ```
 
 
-1.  What happens if you attempt to set rownames that are not unique?
+2.  What happens if you attempt to set rownames that are not unique?
 
 
 ```r
@@ -2487,7 +2504,7 @@ ncol(df0)
 
 > it will give me an error: Error in data.frame(row.names = c("a", "b", "b", "c")) : duplicate row.names: b
 
-1.  If `df` is a data frame, what can you say about `t(df)`, and `t(t(df))`? 
+3.  If `df` is a data frame, what can you say about `t(df)`, and `t(t(df))`? 
     Perform some experiments, making sure to try different column types.
     
 
@@ -2602,7 +2619,7 @@ is.list(t(t(df)))
 
 > the output is a matrix
 
-1.  What does `as.matrix()` do when applied to a data frame with 
+4.  What does `as.matrix()` do when applied to a data frame with 
     columns of different types? How does it differ from `data.matrix()`?
 
 
@@ -2649,7 +2666,7 @@ data.matrix(df)
 ```
 
 
-## `NULL`
+## 3.7  `NULL`
 \indexc{NULL}
 
 To finish up this chapter, I want to talk about one final important data structure that's closely related to vectors: `NULL`. `NULL` is special because it has a unique type, is always length zero, and can't have any attributes:
@@ -2714,24 +2731,4 @@ There are two common uses of `NULL`:
 
 If you're familiar with SQL, you'll know about relational `NULL` and might expect it to be the same as R's. However, the database `NULL` is actually equivalent to R's `NA`.
 
-## Quiz answers {#data-structure-answers}
 
-1.  The four common types of atomic vector are logical, integer, double 
-    and character. The two rarer types are complex and raw.
-    
-1.  Attributes allow you to associate arbitrary additional metadata to
-    any object. You can get and set individual attributes with `attr(x, "y")`
-    and `attr(x, "y") <- value`; or you can get and set all attributes at once 
-    with `attributes()`.
-
-1.  The elements of a list can be any type (even a list); the elements of 
-    an atomic vector are all of the same type. Similarly, every element of 
-    a matrix must be the same type; in a data frame, different columns can have 
-    different types.
-    
-1.  You can make a list-array by assigning dimensions to a list. You can
-    make a matrix a column of a data frame with `df$x <- matrix()`, or by
-    using `I()` when creating a new data frame `data.frame(x = I(matrix()))`.
-
-1.  Tibbles have an enhanced print method, never coerce strings to 
-    factors, and provide stricter subsetting methods.
