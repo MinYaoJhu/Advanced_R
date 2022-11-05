@@ -5,14 +5,14 @@ date: "2022-09-17"
 output: html_document
 ---
 
-# Subsetting {#subsetting}
+# 4 Subsetting {#subsetting}
 
 ```{r setup, include = FALSE}
 # source("common.R")
 # rownames(mtcars) <- NULL
 ```
 
-## Introduction
+## 4.1 Introduction
 \index{subsetting}
 
 R's subsetting operators are fast and powerful. Mastering them allows you to succinctly perform complex operations in a way that few other languages can match. Subsetting in R is easy to learn but hard to master because you need to internalise a number of interrelated concepts:
@@ -39,26 +39,26 @@ Take this short quiz to determine if you need to read this chapter. If the answe
 
 > After reading: Positive integers select elements at specific positions, negative integers drop elements; logical vectors keep elements at positions corresponding to `TRUE`; character vectors select elements with matching names.
 
-1.  What's the difference between `[`, `[[`, and `$` when applied to a list?
+2.  What's the difference between `[`, `[[`, and `$` when applied to a list?
 
 > Before reading: `$` means to select a specific element in a list. `[` subset a list and return a new list. I am not sure about `[[`.  I guess it means similar to `$`.
 
 > After reading: `[` selects sub-lists: it always returns a list. If you use it with a single positive integer, it returns a list of length one. `[[` selects an element within a list. `$` is a convenient shorthand: `x$y` is equivalent to `x[["y"]]`.
 
-1.  When should you use `drop = FALSE`?
+3.  When should you use `drop = FALSE`?
 
 > Before reading: I don't know. :)
 
 > After reading: Use `drop = FALSE` if you are subsetting a matrix, array, or data frame and you want to preserve the original dimensions. You should almost always use it when subsetting inside a function.
 
-1.  If `x` is a matrix, what does `x[] <- 0` do? How is it different from
+4.  If `x` is a matrix, what does `x[] <- 0` do? How is it different from
     `x <- 0`?
     
 > Before reading: If `x` is a matrix, `x <- 0` assign number 0 to be `x`. On the other hand, `x[] <- 0` assign the number 0 to each individual element inside the matrix. Therefore, the output is a matrix with the same dimensions but all elements in the matrix are 0s.
 
 > After reading: If `x` is a matrix, `x[] <- 0` will replace every element with 0, keeping the same number of rows and columns. In contrast, `x <- 0` completely replaces the matrix with the value 0.
 
-1.  How can you use a named vector to relabel categorical variables?
+5.  How can you use a named vector to relabel categorical variables?
 
 > Before reading: I don't know. :)
 
@@ -83,12 +83,12 @@ Take this short quiz to determine if you need to read this chapter. If the answe
   not obvious, applications of subsetting to solve problems that you
   often encounter in data analysis.
 
-## Selecting multiple elements {#subset-multiple}
+## 4.2 Selecting multiple elements {#subset-multiple}
 \indexc{[}
 
 Use `[` to select any number of elements from a vector. To illustrate, I'll apply `[` to 1D atomic vectors, and then show how this generalises to more complex objects and more dimensions.
 
-### Atomic vectors
+### 4.2.1 Atomic vectors
 \index{subsetting!atomic vectors} 
 \index{atomic vectors!subsetting} 
 
@@ -335,14 +335,24 @@ z[1, drop = TRUE]
 
 1.  Fix each of the following common data frame subsetting errors:
 
+```{r}
+str(mtcars)
+```
+
     ```{r, eval = FALSE}
-    mtcars[mtcars$cyl = 4, ]
-    mtcars[-1:4, ]
-    mtcars[mtcars$cyl <= 5]
-    mtcars[mtcars$cyl == 4 | 6, ]
+    #mtcars[mtcars$cyl = 4, ]
+    mtcars[mtcars$cyl == 4, ]
+    #mtcars[-1:4, ]
+    mtcars[-c(1:4), ]
+    #mtcars[mtcars$cyl <= 5]
+    mtcars[mtcars$cyl <= 5, ]
+    #mtcars[mtcars$cyl == 4 | 6, ]
+    mtcars[mtcars$cyl == 4 | mtcars$cyl == 6, ]
+    mtcars[mtcars$cyl %in% c(4, 6), ]
     ```
 
-1.  Why does the following code yield five missing values? (Hint: why is 
+
+2.  Why does the following code yield five missing values? (Hint: why is 
     it different from `x[NA_real_]`?)
     
     ```{r}
@@ -350,7 +360,9 @@ z[1, drop = TRUE]
     x[NA]
     ```
     
-1.  What does `upper.tri()` return? How does subsetting a matrix with it 
+    > NA has logical type and logical vectors are recycled to the same length as the vector being subset, i.e. x[NA] is recycled to x[NA, NA, NA, NA, NA].
+    
+3.  What does `upper.tri()` return? How does subsetting a matrix with it 
     work? Do we need any additional subsetting rules to describe its behaviour?
 
     ```{r, eval = FALSE}
@@ -358,21 +370,32 @@ z[1, drop = TRUE]
     x[upper.tri(x)]
     ```
 
-1.  Why does `mtcars[1:20]` return an error? How does it differ from the 
+4.  Why does `mtcars[1:20]` return an error? How does it differ from the 
     similar `mtcars[1:20, ]`?
 
-1.  Implement your own function that extracts the diagonal entries from a
+
+
+5.  Implement your own function that extracts the diagonal entries from a
     matrix (it should behave like `diag(x)` where `x` is a matrix).
 
-1.  What does `df[is.na(df)] <- 0` do? How does it work?
 
-## Selecting a single element {#subset-single}
+
+6.  What does `df[is.na(df)] <- 0` do? How does it work?
+
+```{r}
+df[is.na(df)] <- 0
+str(df)
+df
+```
+
+
+## 4.3 Selecting a single element {#subset-single}
 \index{subsetting!lists} 
 \index{lists!subsetting}
 
 There are two other subsetting operators: `[[` and `$`. `[[` is used for extracting single items, while `x$y` is a useful shorthand for `x[["y"]]`.
 
-### `[[`
+### 4.3.1 `[[`
 \indexc{[[} 
 
 `[[` is most important when working with lists because subsetting a list with `[` always returns a smaller list. To help make this easier to understand we can use a metaphor:
@@ -423,7 +446,7 @@ for (i in 2:length(x)) {
 
 Doing so reinforces the expectation that you are getting and setting individual values.
 
-### `$`
+### 4.3.2 `$`
 \indexc{\$}
 
 `$` is a shorthand operator: `x$y` is roughly equivalent to `x[["y"]]`.  It's often used to access variables in a data frame, as in `mtcars$cyl` or `diamonds$carat`. One common mistake with `$` is to use it when you have the name of a column stored in a variable:
@@ -459,7 +482,7 @@ x$a
 
 (For data frames, you can also avoid this problem by using tibbles, which never do partial matching.)
 
-### Missing and out-of-bounds indices {#subsetting-oob}
+### 4.3.3 Missing and out-of-bounds indices {#subsetting-oob}
 \index{subsetting!with NA \& NULL} 
 \index{subsetting!out of bounds}
 \indexc{pluck()}
@@ -507,22 +530,22 @@ purrr::pluck(x, "c", 1)
 purrr::pluck(x, "c", 1, .default = NA)
 ```
 
-### `@` and `slot()`
+### 4.3.4 `@` and `slot()`
 
 There are two additional subsetting operators, which are needed for S4 objects: `@` (equivalent to `$`), and `slot()` (equivalent to `[[`). `@` is more restrictive than `$` in that it will return an error if the slot does not exist. These are described in more detail in Chapter \@ref(s4).
 
-### Exercises
+### 4.3.5 Exercises
 
 1.  Brainstorm as many ways as possible to extract the third value from the
     `cyl` variable in the `mtcars` dataset.
 
-1.  Given a linear model, e.g., `mod <- lm(mpg ~ wt, data = mtcars)`, extract
+2.  Given a linear model, e.g., `mod <- lm(mpg ~ wt, data = mtcars)`, extract
     the residual degrees of freedom. Then extract the R squared from the model
     summary (`summary(mod)`)
 
 <!-- FIXME: more examples -->
 
-## Subsetting and assignment {#subassignment}
+## 4.4 Subsetting and assignment {#subassignment}
 \index{subsetting!subassignment} 
 \index{assignment!subassignment}
 \index{lists!removing an element}
@@ -563,7 +586,7 @@ is.data.frame(mtcars)
 rm(mtcars)
 ```
 
-## Applications {#applications}
+## 4.5 Applications {#applications}
 
 The principles described above have a wide variety of useful applications. Some of the most important are described below. While many of the basic principles of subsetting have already been incorporated into functions like `subset()`, `merge()`, and `dplyr::arrange()`, a deeper understanding of how those principles have been implemented will be valuable when you run into situations where the functions you need don't exist.
 
