@@ -676,40 +676,256 @@ str(mtcars)
     ## [1] NA NA NA NA NA
     ```
     
-    > NA has logical type and logical vectors are recycled to the same length as the vector being subset, i.e. x[NA] is recycled to x[NA, NA, NA, NA, NA].
+> NA has logical type and logical vectors are recycled to the same length as the vector being subset, i.e. x[NA] is recycled to x[NA, NA, NA, NA, NA].
+
+> Note that a missing value in the index always yields a missing value in the output
     
 3.  What does `upper.tri()` return? How does subsetting a matrix with it 
     work? Do we need any additional subsetting rules to describe its behaviour?
+    
+> Lower and Upper Triangular Part of a Matrix: Returns a matrix of logicals the same size of a given matrix with entries TRUE in the lower or upper triangle.
+    
+
+```r
+(m2 <- matrix(1:20, 4, 5))
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5]
+## [1,]    1    5    9   13   17
+## [2,]    2    6   10   14   18
+## [3,]    3    7   11   15   19
+## [4,]    4    8   12   16   20
+```
+
+```r
+lower.tri(m2)
+```
+
+```
+##       [,1]  [,2]  [,3]  [,4]  [,5]
+## [1,] FALSE FALSE FALSE FALSE FALSE
+## [2,]  TRUE FALSE FALSE FALSE FALSE
+## [3,]  TRUE  TRUE FALSE FALSE FALSE
+## [4,]  TRUE  TRUE  TRUE FALSE FALSE
+```
+
+```r
+m2[lower.tri(m2)] <- NA
+m2
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5]
+## [1,]    1    5    9   13   17
+## [2,]   NA    6   10   14   18
+## [3,]   NA   NA   11   15   19
+## [4,]   NA   NA   NA   16   20
+```
+
+> upper.tri(x) returns a logical matrix, which contains TRUE values above the diagonal and FALSE values everywhere else. In upper.tri() the positions for TRUE and FALSE values are determined by comparing x’s row and column indices via .row(dim(x)) < .col(dim(x)).
 
     
     ```r
     x <- outer(1:5, 1:5, FUN = "*")
-    x[upper.tri(x)]
+    x
+    upper.tri(x)
     ```
+    
+
+```r
+    x[upper.tri(x)]
+```
+
+```
+## integer(0)
+```
+    
+> When subsetting with logical matrices, all elements that correspond to TRUE will be selected. Matrices extend vectors with a dimension attribute, so the vector forms of subsetting can be used (including logical subsetting). We should take care, that the dimensions of the subsetting matrix match the object of interest — otherwise unintended selections due to vector recycling may occur. Please also note, that this form of subsetting returns a vector instead of a matrix, as the subsetting alters the dimensions of the object.
 
 4.  Why does `mtcars[1:20]` return an error? How does it differ from the 
     similar `mtcars[1:20, ]`?
 
 
+```r
+#mtcars[1:20]
+#Error in `[.data.frame`(mtcars, 1:20) : undefined columns selected
+
+mtcars[1:20, ]
+```
+
+```
+##                      mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+## Mazda RX4           21.0   6 160.0 110 3.90 2.620 16.46  0  1    4    4
+## Mazda RX4 Wag       21.0   6 160.0 110 3.90 2.875 17.02  0  1    4    4
+## Datsun 710          22.8   4 108.0  93 3.85 2.320 18.61  1  1    4    1
+## Hornet 4 Drive      21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
+## Hornet Sportabout   18.7   8 360.0 175 3.15 3.440 17.02  0  0    3    2
+## Valiant             18.1   6 225.0 105 2.76 3.460 20.22  1  0    3    1
+## Duster 360          14.3   8 360.0 245 3.21 3.570 15.84  0  0    3    4
+## Merc 240D           24.4   4 146.7  62 3.69 3.190 20.00  1  0    4    2
+## Merc 230            22.8   4 140.8  95 3.92 3.150 22.90  1  0    4    2
+## Merc 280            19.2   6 167.6 123 3.92 3.440 18.30  1  0    4    4
+## Merc 280C           17.8   6 167.6 123 3.92 3.440 18.90  1  0    4    4
+## Merc 450SE          16.4   8 275.8 180 3.07 4.070 17.40  0  0    3    3
+## Merc 450SL          17.3   8 275.8 180 3.07 3.730 17.60  0  0    3    3
+## Merc 450SLC         15.2   8 275.8 180 3.07 3.780 18.00  0  0    3    3
+## Cadillac Fleetwood  10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4
+## Lincoln Continental 10.4   8 460.0 215 3.00 5.424 17.82  0  0    3    4
+## Chrysler Imperial   14.7   8 440.0 230 3.23 5.345 17.42  0  0    3    4
+## Fiat 128            32.4   4  78.7  66 4.08 2.200 19.47  1  1    4    1
+## Honda Civic         30.4   4  75.7  52 4.93 1.615 18.52  1  1    4    2
+## Toyota Corolla      33.9   4  71.1  65 4.22 1.835 19.90  1  1    4    1
+```
+
+> When subsetting a data frame with a single vector, it behaves the same way as subsetting a list of columns. So, mtcars[1:20] would return a data frame containing the first 20 columns of the dataset. However, as mtcars has only 11 columns, the index will be out of bounds and an error is thrown. mtcars[1:20, ] is subsetted with two vectors, so 2d subsetting kicks in, and the first index refers to rows.
 
 5.  Implement your own function that extracts the diagonal entries from a
     matrix (it should behave like `diag(x)` where `x` is a matrix).
 
+> Matrix Diagonals: Extract or replace the diagonal of a matrix, or construct a diagonal matrix.
+
+
+```r
+diag
+```
+
+```
+## function (x = 1, nrow, ncol, names = TRUE) 
+## {
+##     if (is.matrix(x)) {
+##         if (nargs() > 1L && (nargs() > 2L || any(names(match.call()) %in% 
+##             c("nrow", "ncol")))) 
+##             stop("'nrow' or 'ncol' cannot be specified when 'x' is a matrix")
+##         if ((m <- min(dim(x))) == 0L) 
+##             return(vector(typeof(x), 0L))
+##         y <- x[1 + 0L:(m - 1L) * (dim(x)[1L] + 1)]
+##         if (names) {
+##             nms <- dimnames(x)
+##             if (is.list(nms) && !any(vapply(nms, is.null, NA)) && 
+##                 identical((nm <- nms[[1L]][seq_len(m)]), nms[[2L]][seq_len(m)])) 
+##                 names(y) <- nm
+##         }
+##         return(y)
+##     }
+##     if (is.array(x) && length(dim(x)) != 1L) 
+##         stop("'x' is an array, but not one-dimensional.")
+##     if (missing(x)) 
+##         n <- nrow
+##     else if (length(x) == 1L && nargs() == 1L) {
+##         n <- as.integer(x)
+##         x <- 1
+##     }
+##     else n <- length(x)
+##     if (!missing(nrow)) 
+##         n <- nrow
+##     if (missing(ncol)) 
+##         ncol <- n
+##     .Internal(diag(x, n, ncol))
+## }
+## <bytecode: 0x000001f68bb7cf18>
+## <environment: namespace:base>
+```
+
+
+```r
+M <- diag(3)
+M
+```
+
+```
+##      [,1] [,2] [,3]
+## [1,]    1    0    0
+## [2,]    0    1    0
+## [3,]    0    0    1
+```
+
+```r
+diag(M)
+```
+
+```
+## [1] 1 1 1
+```
+
+> The elements in the diagonal of a matrix have the same row- and column indices. This characteristic can be used to create a suitable numeric matrix used for subsetting.
+
+
+```r
+m <- cbind(1, 1:7) # the '1' (= shorter vector) is recycled
+m
+```
+
+```
+##      [,1] [,2]
+## [1,]    1    1
+## [2,]    1    2
+## [3,]    1    3
+## [4,]    1    4
+## [5,]    1    5
+## [6,]    1    6
+## [7,]    1    7
+```
+
+```r
+m <- cbind(m, 8:14)[, c(1, 3, 2)] # insert a column
+m
+```
+
+```
+##      [,1] [,2] [,3]
+## [1,]    1    8    1
+## [2,]    1    9    2
+## [3,]    1   10    3
+## [4,]    1   11    4
+## [5,]    1   12    5
+## [6,]    1   13    6
+## [7,]    1   14    7
+```
+
+> cbind: Combine R Objects by Rows or Columns: Take a sequence of vector, matrix or data-frame arguments and combine by columns or rows, respectively. These are generic functions with methods for other R classes.
+
+
+```r
+new_diag <- function(x) {
+  n <- min(nrow(x), ncol(x))
+  idx <- cbind(seq_len(n), seq_len(n))
+
+  x[idx]
+}
+
+# Let's check if it works
+(x <- matrix(1:25, 5, 5))
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5]
+## [1,]    1    6   11   16   21
+## [2,]    2    7   12   17   22
+## [3,]    3    8   13   18   23
+## [4,]    4    9   14   19   24
+## [5,]    5   10   15   20   25
+```
+
+```r
+diag(x)
+```
+
+```
+## [1]  1  7 13 19 25
+```
+
+```r
+new_diag(x)
+```
+
+```
+## [1]  1  7 13 19 25
+```
 
 
 6.  What does `df[is.na(df)] <- 0` do? How does it work?
 
-
-```r
-df[is.na(df)] <- 0
-str(df)
-```
-
-```
-## 'data.frame':	2 obs. of  2 variables:
-##  $ a: int  1 2
-##  $ b: int  1 2
-```
 
 ```r
 df
@@ -721,6 +937,38 @@ df
 ## 2 2 2
 ```
 
+```r
+str(df)
+```
+
+```
+## 'data.frame':	2 obs. of  2 variables:
+##  $ a: int  1 2
+##  $ b: int  1 2
+```
+
+```r
+df[is.na(df)] <- 0
+df
+```
+
+```
+##   a b
+## 1 1 1
+## 2 2 2
+```
+
+```r
+str(df)
+```
+
+```
+## 'data.frame':	2 obs. of  2 variables:
+##  $ a: int  1 2
+##  $ b: int  1 2
+```
+
+> This expression replaces the NAs in df with 0. Here is.na(df) returns a logical matrix that encodes the position of the missing values in df. Subsetting and assignment are then combined to replace only the missing values.
 
 ## 4.3 Selecting a single element {#subset-single}
 \index{subsetting!lists} 
@@ -1068,9 +1316,9 @@ df[sample(nrow(df)), ]
 
 ```
 ##   x y z
-## 2 2 4 b
 ## 1 1 5 a
 ## 3 3 3 c
+## 2 2 4 b
 ## 5 2 1 e
 ## 4 1 2 d
 ```
@@ -1082,9 +1330,9 @@ df[sample(nrow(df), 3), ]
 
 ```
 ##   x y z
-## 3 3 3 c
-## 2 2 4 b
 ## 5 2 1 e
+## 2 2 4 b
+## 3 3 3 c
 ```
 
 ```r
@@ -1094,12 +1342,12 @@ df[sample(nrow(df), 6, replace = TRUE), ]
 
 ```
 ##     x y z
-## 1   1 5 a
-## 2   2 4 b
 ## 5   2 1 e
-## 1.1 1 5 a
-## 3   3 3 c
+## 4   1 2 d
+## 2   2 4 b
 ## 5.1 2 1 e
+## 3   3 3 c
+## 4.1 1 2 d
 ```
 
 The arguments of `sample()` control the number of samples to extract, and also whether sampling is done with or without replacement.
@@ -1143,9 +1391,9 @@ df2
 
 ```
 ##   z y x
-## 2 b 4 2
 ## 1 a 5 1
 ## 4 d 2 1
+## 2 b 4 2
 ## 3 c 3 3
 ## 5 e 1 2
 ```
@@ -1169,9 +1417,9 @@ df2[, order(names(df2))]
 
 ```
 ##   x y z
-## 2 2 4 b
 ## 1 1 5 a
 ## 4 1 2 d
+## 2 2 4 b
 ## 3 3 3 c
 ## 5 2 1 e
 ```
@@ -1307,7 +1555,7 @@ which(x)
 ```
 
 ```
-## [1]  1  4 10
+## [1]  2  5 10
 ```
 
 ```r
@@ -1320,7 +1568,7 @@ unwhich(which(x), 10)
 ```
 
 ```
-##  [1]  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE
+##  [1] FALSE  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE  TRUE
 ```
 
 Let's create two logical vectors and their integer equivalents, and then explore the relationship between Boolean and set operations.
