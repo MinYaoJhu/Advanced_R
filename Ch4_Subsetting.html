@@ -370,6 +370,26 @@ pre code {
 </div>
 
 
+<pre class="r"><code>library(tibble)
+library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages
+## ───────────────────────────────────────
+## tidyverse 1.3.2 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tidyr   1.2.1     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <div id="subsetting" class="section level1">
 <h1>4 Subsetting</h1>
 <div id="introduction" class="section level2">
@@ -949,7 +969,7 @@ construct a diagonal matrix.</p>
 ##         ncol &lt;- n
 ##     .Internal(diag(x, n, ncol))
 ## }
-## &lt;bytecode: 0x000001fb71906908&gt;
+## &lt;bytecode: 0x00000270733361a0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>M &lt;- diag(3)
 M</code></pre>
@@ -1407,12 +1427,41 @@ two expressions. In the first, <code>mtcars</code> remains a data frame
 because you are only changing the contents of <code>mtcars</code>, not
 <code>mtcars</code> itself. In the second, <code>mtcars</code> becomes a
 list because you are changing the object it is bound to.</p>
-<pre class="r"><code>mtcars[] &lt;- lapply(mtcars, as.integer)
+<pre class="r"><code>#lapply: Apply a Function over a List or Vector
+#lapply returns a list of the same length as X, each element of which is the result of applying FUN to the corresponding element of X.
+
+mtcars[] &lt;- lapply(mtcars, as.integer)
 is.data.frame(mtcars)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>str(mtcars)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    32 obs. of  11 variables:
+##  $ mpg : int  21 21 22 21 18 18 14 24 22 19 ...
+##  $ cyl : int  6 6 4 6 8 6 8 4 4 6 ...
+##  $ disp: int  160 160 108 258 360 225 360 146 140 167 ...
+##  $ hp  : int  110 110 93 110 175 105 245 62 95 123 ...
+##  $ drat: int  3 3 3 3 3 2 3 3 3 3 ...
+##  $ wt  : int  2 2 2 3 3 3 3 3 3 3 ...
+##  $ qsec: int  16 17 18 19 17 20 15 20 22 18 ...
+##  $ vs  : int  0 0 1 1 0 1 0 1 1 1 ...
+##  $ am  : int  1 1 1 0 0 0 0 0 0 0 ...
+##  $ gear: int  4 4 4 3 3 3 3 4 4 4 ...
+##  $ carb: int  4 4 1 1 2 1 4 2 2 4 ...</code></pre>
 <pre class="r"><code>mtcars &lt;- lapply(mtcars, as.integer)
 is.data.frame(mtcars)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>str(mtcars)</code></pre>
+<pre><code>## List of 11
+##  $ mpg : int [1:32] 21 21 22 21 18 18 14 24 22 19 ...
+##  $ cyl : int [1:32] 6 6 4 6 8 6 8 4 4 6 ...
+##  $ disp: int [1:32] 160 160 108 258 360 225 360 146 140 167 ...
+##  $ hp  : int [1:32] 110 110 93 110 175 105 245 62 95 123 ...
+##  $ drat: int [1:32] 3 3 3 3 3 2 3 3 3 3 ...
+##  $ wt  : int [1:32] 2 2 2 3 3 3 3 3 3 3 ...
+##  $ qsec: int [1:32] 16 17 18 19 17 20 15 20 22 18 ...
+##  $ vs  : int [1:32] 0 0 1 1 0 1 0 1 1 1 ...
+##  $ am  : int [1:32] 1 1 1 0 0 0 0 0 0 0 ...
+##  $ gear: int [1:32] 4 4 4 3 3 3 3 4 4 4 ...
+##  $ carb: int [1:32] 4 4 1 1 2 1 4 2 2 4 ...</code></pre>
 </div>
 <div id="applications" class="section level2">
 <h2>4.5 Applications</h2>
@@ -1480,15 +1529,21 @@ or data frame. Just use <code>sample(n)</code> to generate a random
 permutation of <code>1:n</code>, and then use the results to subset the
 values:</p>
 <pre class="r"><code>df &lt;- data.frame(x = c(1, 2, 3, 1, 2), y = 5:1, z = letters[1:5])
-
-# Randomly reorder
+df</code></pre>
+<pre><code>##   x y z
+## 1 1 5 a
+## 2 2 4 b
+## 3 3 3 c
+## 4 1 2 d
+## 5 2 1 e</code></pre>
+<pre class="r"><code># Randomly reorder
 df[sample(nrow(df)), ]</code></pre>
 <pre><code>##   x y z
 ## 2 2 4 b
 ## 5 2 1 e
+## 3 3 3 c
 ## 4 1 2 d
-## 1 1 5 a
-## 3 3 3 c</code></pre>
+## 1 1 5 a</code></pre>
 <pre class="r"><code># Select 3 random rows
 df[sample(nrow(df), 3), ]</code></pre>
 <pre><code>##   x y z
@@ -1498,12 +1553,12 @@ df[sample(nrow(df), 3), ]</code></pre>
 <pre class="r"><code># Select 6 bootstrap replicates
 df[sample(nrow(df), 6, replace = TRUE), ]</code></pre>
 <pre><code>##     x y z
-## 2   2 4 b
+## 3   3 3 c
+## 1   1 5 a
+## 5   2 1 e
 ## 4   1 2 d
-## 4.1 1 2 d
-## 4.2 1 2 d
-## 2.1 2 4 b
-## 3   3 3 c</code></pre>
+## 5.1 2 1 e
+## 1.1 1 5 a</code></pre>
 <p>The arguments of <code>sample()</code> control the number of samples
 to extract, and also whether sampling is done with or without
 replacement.</p>
@@ -1532,8 +1587,8 @@ df2 &lt;- df[sample(nrow(df)), 3:1]
 df2</code></pre>
 <pre><code>##   z y x
 ## 2 b 4 2
-## 4 d 2 1
 ## 5 e 1 2
+## 4 d 2 1
 ## 1 a 5 1
 ## 3 c 3 3</code></pre>
 <pre class="r"><code>df2[order(df2$x), ]</code></pre>
@@ -1546,8 +1601,8 @@ df2</code></pre>
 <pre class="r"><code>df2[, order(names(df2))]</code></pre>
 <pre><code>##   x y z
 ## 2 2 4 b
-## 4 1 2 d
 ## 5 2 1 e
+## 4 1 2 d
 ## 1 1 5 a
 ## 3 3 3 c</code></pre>
 <p>You can sort vectors directly with <code>sort()</code>, or similarly
@@ -1563,7 +1618,9 @@ repeats <code>x[i]</code> <code>y[i]</code> times.</p>
 <pre class="r"><code>df &lt;- data.frame(x = c(2, 4, 1), y = c(9, 11, 6), n = c(3, 5, 1))
 rep(1:nrow(df), df$n)</code></pre>
 <pre><code>## [1] 1 1 1 2 2 2 2 2 3</code></pre>
-<pre class="r"><code>df[rep(1:nrow(df), df$n), ]</code></pre>
+<pre class="r"><code>#rep replicates the values in x. It is a generic function, and the (internal) default method is described here.
+
+df[rep(1:nrow(df), df$n), ]</code></pre>
 <pre><code>##     x  y n
 ## 1   2  9 3
 ## 1.1 2  9 3
@@ -1580,7 +1637,12 @@ rep(1:nrow(df), df$n)</code></pre>
 <p>There are two ways to remove columns from a data frame. You can set
 individual columns to <code>NULL</code>:</p>
 <pre class="r"><code>df &lt;- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
-df$z &lt;- NULL</code></pre>
+df$z &lt;- NULL
+df</code></pre>
+<pre><code>##   x y
+## 1 1 3
+## 2 2 2
+## 3 3 1</code></pre>
 <p>Or you can subset to return only the columns you want:</p>
 <pre class="r"><code>df &lt;- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
 df[c(&quot;x&quot;, &quot;y&quot;)]</code></pre>
@@ -1590,7 +1652,8 @@ df[c(&quot;x&quot;, &quot;y&quot;)]</code></pre>
 ## 3 3 1</code></pre>
 <p>If you only know the columns you don’t want, use set operations to
 work out which columns to keep:</p>
-<pre class="r"><code>df[setdiff(names(df), &quot;z&quot;)]</code></pre>
+<pre class="r"><code># Performs set union, intersection, (asymmetric!) difference, equality and membership on two vectors.
+df[setdiff(names(df), &quot;z&quot;)]</code></pre>
 <pre><code>##   x y
 ## 1 1 3
 ## 2 2 2
@@ -1641,15 +1704,17 @@ storage.</p></li>
 to an integer representation. There’s no reverse operation in base R but
 we can easily create one:</p>
 <pre class="r"><code>x &lt;- sample(10) &lt; 4
-which(x)</code></pre>
-<pre><code>## [1] 4 5 9</code></pre>
+x</code></pre>
+<pre><code>##  [1] FALSE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE  TRUE  TRUE</code></pre>
+<pre class="r"><code>which(x)</code></pre>
+<pre><code>## [1]  5  9 10</code></pre>
 <pre class="r"><code>unwhich &lt;- function(x, n) {
   out &lt;- rep_len(FALSE, n)
   out[x] &lt;- TRUE
   out
 }
 unwhich(which(x), 10)</code></pre>
-<pre><code>##  [1] FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE FALSE  TRUE FALSE</code></pre>
+<pre><code>##  [1] FALSE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE  TRUE  TRUE</code></pre>
 <p>Let’s create two logical vectors and their integer equivalents, and
 then explore the relationship between Boolean and set operations.</p>
 <pre class="r"><code>(x1 &lt;- 1:10 %% 2 == 0)</code></pre>
@@ -1698,6 +1763,25 @@ values.</p></li>
 <code>-integer(0)</code> is still <code>integer(0)</code>, so you’ll get
 no values, instead of all values.</p></li>
 </ul>
+<pre class="r"><code>which(x1)</code></pre>
+<pre><code>## [1]  2  4  6  8 10</code></pre>
+<pre class="r"><code>which(y1)</code></pre>
+<pre><code>## [1]  5 10</code></pre>
+<pre class="r"><code>x &lt;- 1:10
+
+!y1</code></pre>
+<pre><code>##  [1]  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE FALSE</code></pre>
+<pre class="r"><code>x[!y1]</code></pre>
+<pre><code>## [1] 1 2 3 4 6 7 8 9</code></pre>
+<pre class="r"><code>-which(y1)</code></pre>
+<pre><code>## [1]  -5 -10</code></pre>
+<pre class="r"><code>x[-which(y1)]</code></pre>
+<pre><code>## [1] 1 2 3 4 6 7 8 9</code></pre>
+<pre class="r"><code>y &lt;- rep(FALSE,10)
+x[!y]</code></pre>
+<pre><code>##  [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+<pre class="r"><code>x[-which(y)]</code></pre>
+<pre><code>## integer(0)</code></pre>
 <p>In general, avoid switching from logical to integer subsetting unless
 you want, for example, the first or last <code>TRUE</code> value.</p>
 </div>
@@ -1744,74 +1828,144 @@ mtcars</code></pre>
 ## Maserati Bora       15.0   8 301.0 335 3.54 3.570 14.60  0  1    5    8
 ## Volvo 142E          21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</code></pre>
 <pre class="r"><code>mtcars[sample(ncol(mtcars))]</code></pre>
-<pre><code>##                      qsec  mpg am drat vs gear  hp carb cyl    wt  disp
-## Mazda RX4           16.46 21.0  1 3.90  0    4 110    4   6 2.620 160.0
-## Mazda RX4 Wag       17.02 21.0  1 3.90  0    4 110    4   6 2.875 160.0
-## Datsun 710          18.61 22.8  1 3.85  1    4  93    1   4 2.320 108.0
-## Hornet 4 Drive      19.44 21.4  0 3.08  1    3 110    1   6 3.215 258.0
-## Hornet Sportabout   17.02 18.7  0 3.15  0    3 175    2   8 3.440 360.0
-## Valiant             20.22 18.1  0 2.76  1    3 105    1   6 3.460 225.0
-## Duster 360          15.84 14.3  0 3.21  0    3 245    4   8 3.570 360.0
-## Merc 240D           20.00 24.4  0 3.69  1    4  62    2   4 3.190 146.7
-## Merc 230            22.90 22.8  0 3.92  1    4  95    2   4 3.150 140.8
-## Merc 280            18.30 19.2  0 3.92  1    4 123    4   6 3.440 167.6
-## Merc 280C           18.90 17.8  0 3.92  1    4 123    4   6 3.440 167.6
-## Merc 450SE          17.40 16.4  0 3.07  0    3 180    3   8 4.070 275.8
-## Merc 450SL          17.60 17.3  0 3.07  0    3 180    3   8 3.730 275.8
-## Merc 450SLC         18.00 15.2  0 3.07  0    3 180    3   8 3.780 275.8
-## Cadillac Fleetwood  17.98 10.4  0 2.93  0    3 205    4   8 5.250 472.0
-## Lincoln Continental 17.82 10.4  0 3.00  0    3 215    4   8 5.424 460.0
-## Chrysler Imperial   17.42 14.7  0 3.23  0    3 230    4   8 5.345 440.0
-## Fiat 128            19.47 32.4  1 4.08  1    4  66    1   4 2.200  78.7
-## Honda Civic         18.52 30.4  1 4.93  1    4  52    2   4 1.615  75.7
-## Toyota Corolla      19.90 33.9  1 4.22  1    4  65    1   4 1.835  71.1
-## Toyota Corona       20.01 21.5  0 3.70  1    3  97    1   4 2.465 120.1
-## Dodge Challenger    16.87 15.5  0 2.76  0    3 150    2   8 3.520 318.0
-## AMC Javelin         17.30 15.2  0 3.15  0    3 150    2   8 3.435 304.0
-## Camaro Z28          15.41 13.3  0 3.73  0    3 245    4   8 3.840 350.0
-## Pontiac Firebird    17.05 19.2  0 3.08  0    3 175    2   8 3.845 400.0
-## Fiat X1-9           18.90 27.3  1 4.08  1    4  66    1   4 1.935  79.0
-## Porsche 914-2       16.70 26.0  1 4.43  0    5  91    2   4 2.140 120.3
-## Lotus Europa        16.90 30.4  1 3.77  1    5 113    2   4 1.513  95.1
-## Ford Pantera L      14.50 15.8  1 4.22  0    5 264    4   8 3.170 351.0
-## Ferrari Dino        15.50 19.7  1 3.62  0    5 175    6   6 2.770 145.0
-## Maserati Bora       14.60 15.0  1 3.54  0    5 335    8   8 3.570 301.0
-## Volvo 142E          18.60 21.4  1 4.11  1    4 109    2   4 2.780 121.0</code></pre>
+<pre><code>##                     gear  disp cyl  mpg vs    wt drat  qsec carb  hp am
+## Mazda RX4              4 160.0   6 21.0  0 2.620 3.90 16.46    4 110  1
+## Mazda RX4 Wag          4 160.0   6 21.0  0 2.875 3.90 17.02    4 110  1
+## Datsun 710             4 108.0   4 22.8  1 2.320 3.85 18.61    1  93  1
+## Hornet 4 Drive         3 258.0   6 21.4  1 3.215 3.08 19.44    1 110  0
+## Hornet Sportabout      3 360.0   8 18.7  0 3.440 3.15 17.02    2 175  0
+## Valiant                3 225.0   6 18.1  1 3.460 2.76 20.22    1 105  0
+## Duster 360             3 360.0   8 14.3  0 3.570 3.21 15.84    4 245  0
+## Merc 240D              4 146.7   4 24.4  1 3.190 3.69 20.00    2  62  0
+## Merc 230               4 140.8   4 22.8  1 3.150 3.92 22.90    2  95  0
+## Merc 280               4 167.6   6 19.2  1 3.440 3.92 18.30    4 123  0
+## Merc 280C              4 167.6   6 17.8  1 3.440 3.92 18.90    4 123  0
+## Merc 450SE             3 275.8   8 16.4  0 4.070 3.07 17.40    3 180  0
+## Merc 450SL             3 275.8   8 17.3  0 3.730 3.07 17.60    3 180  0
+## Merc 450SLC            3 275.8   8 15.2  0 3.780 3.07 18.00    3 180  0
+## Cadillac Fleetwood     3 472.0   8 10.4  0 5.250 2.93 17.98    4 205  0
+## Lincoln Continental    3 460.0   8 10.4  0 5.424 3.00 17.82    4 215  0
+## Chrysler Imperial      3 440.0   8 14.7  0 5.345 3.23 17.42    4 230  0
+## Fiat 128               4  78.7   4 32.4  1 2.200 4.08 19.47    1  66  1
+## Honda Civic            4  75.7   4 30.4  1 1.615 4.93 18.52    2  52  1
+## Toyota Corolla         4  71.1   4 33.9  1 1.835 4.22 19.90    1  65  1
+## Toyota Corona          3 120.1   4 21.5  1 2.465 3.70 20.01    1  97  0
+## Dodge Challenger       3 318.0   8 15.5  0 3.520 2.76 16.87    2 150  0
+## AMC Javelin            3 304.0   8 15.2  0 3.435 3.15 17.30    2 150  0
+## Camaro Z28             3 350.0   8 13.3  0 3.840 3.73 15.41    4 245  0
+## Pontiac Firebird       3 400.0   8 19.2  0 3.845 3.08 17.05    2 175  0
+## Fiat X1-9              4  79.0   4 27.3  1 1.935 4.08 18.90    1  66  1
+## Porsche 914-2          5 120.3   4 26.0  0 2.140 4.43 16.70    2  91  1
+## Lotus Europa           5  95.1   4 30.4  1 1.513 3.77 16.90    2 113  1
+## Ford Pantera L         5 351.0   8 15.8  0 3.170 4.22 14.50    4 264  1
+## Ferrari Dino           5 145.0   6 19.7  0 2.770 3.62 15.50    6 175  1
+## Maserati Bora          5 301.0   8 15.0  0 3.570 3.54 14.60    8 335  1
+## Volvo 142E             4 121.0   4 21.4  1 2.780 4.11 18.60    2 109  1</code></pre>
+<pre class="r"><code>mtcars %&gt;% select(sample(ncol(mtcars)))</code></pre>
+<pre><code>##                     drat am  hp  disp vs  mpg cyl carb    wt gear  qsec
+## Mazda RX4           3.90  1 110 160.0  0 21.0   6    4 2.620    4 16.46
+## Mazda RX4 Wag       3.90  1 110 160.0  0 21.0   6    4 2.875    4 17.02
+## Datsun 710          3.85  1  93 108.0  1 22.8   4    1 2.320    4 18.61
+## Hornet 4 Drive      3.08  0 110 258.0  1 21.4   6    1 3.215    3 19.44
+## Hornet Sportabout   3.15  0 175 360.0  0 18.7   8    2 3.440    3 17.02
+## Valiant             2.76  0 105 225.0  1 18.1   6    1 3.460    3 20.22
+## Duster 360          3.21  0 245 360.0  0 14.3   8    4 3.570    3 15.84
+## Merc 240D           3.69  0  62 146.7  1 24.4   4    2 3.190    4 20.00
+## Merc 230            3.92  0  95 140.8  1 22.8   4    2 3.150    4 22.90
+## Merc 280            3.92  0 123 167.6  1 19.2   6    4 3.440    4 18.30
+## Merc 280C           3.92  0 123 167.6  1 17.8   6    4 3.440    4 18.90
+## Merc 450SE          3.07  0 180 275.8  0 16.4   8    3 4.070    3 17.40
+## Merc 450SL          3.07  0 180 275.8  0 17.3   8    3 3.730    3 17.60
+## Merc 450SLC         3.07  0 180 275.8  0 15.2   8    3 3.780    3 18.00
+## Cadillac Fleetwood  2.93  0 205 472.0  0 10.4   8    4 5.250    3 17.98
+## Lincoln Continental 3.00  0 215 460.0  0 10.4   8    4 5.424    3 17.82
+## Chrysler Imperial   3.23  0 230 440.0  0 14.7   8    4 5.345    3 17.42
+## Fiat 128            4.08  1  66  78.7  1 32.4   4    1 2.200    4 19.47
+## Honda Civic         4.93  1  52  75.7  1 30.4   4    2 1.615    4 18.52
+## Toyota Corolla      4.22  1  65  71.1  1 33.9   4    1 1.835    4 19.90
+## Toyota Corona       3.70  0  97 120.1  1 21.5   4    1 2.465    3 20.01
+## Dodge Challenger    2.76  0 150 318.0  0 15.5   8    2 3.520    3 16.87
+## AMC Javelin         3.15  0 150 304.0  0 15.2   8    2 3.435    3 17.30
+## Camaro Z28          3.73  0 245 350.0  0 13.3   8    4 3.840    3 15.41
+## Pontiac Firebird    3.08  0 175 400.0  0 19.2   8    2 3.845    3 17.05
+## Fiat X1-9           4.08  1  66  79.0  1 27.3   4    1 1.935    4 18.90
+## Porsche 914-2       4.43  1  91 120.3  0 26.0   4    2 2.140    5 16.70
+## Lotus Europa        3.77  1 113  95.1  1 30.4   4    2 1.513    5 16.90
+## Ford Pantera L      4.22  1 264 351.0  0 15.8   8    4 3.170    5 14.50
+## Ferrari Dino        3.62  1 175 145.0  0 19.7   6    6 2.770    5 15.50
+## Maserati Bora       3.54  1 335 301.0  0 15.0   8    8 3.570    5 14.60
+## Volvo 142E          4.11  1 109 121.0  1 21.4   4    2 2.780    4 18.60</code></pre>
 <pre class="r"><code># simultaneously permute the rows and columns in one step
 mtcars[sample(nrow(mtcars)), sample(ncol(mtcars))]</code></pre>
-<pre><code>##                     drat  hp cyl carb gear  qsec  mpg  disp    wt vs am
-## Mazda RX4           3.90 110   6    4    4 16.46 21.0 160.0 2.620  0  1
-## Ford Pantera L      4.22 264   8    4    5 14.50 15.8 351.0 3.170  0  1
-## Duster 360          3.21 245   8    4    3 15.84 14.3 360.0 3.570  0  0
-## Merc 280            3.92 123   6    4    4 18.30 19.2 167.6 3.440  1  0
-## Lincoln Continental 3.00 215   8    4    3 17.82 10.4 460.0 5.424  0  0
-## Toyota Corona       3.70  97   4    1    3 20.01 21.5 120.1 2.465  1  0
-## Chrysler Imperial   3.23 230   8    4    3 17.42 14.7 440.0 5.345  0  0
-## Camaro Z28          3.73 245   8    4    3 15.41 13.3 350.0 3.840  0  0
-## Toyota Corolla      4.22  65   4    1    4 19.90 33.9  71.1 1.835  1  1
-## Datsun 710          3.85  93   4    1    4 18.61 22.8 108.0 2.320  1  1
-## Merc 240D           3.69  62   4    2    4 20.00 24.4 146.7 3.190  1  0
-## Ferrari Dino        3.62 175   6    6    5 15.50 19.7 145.0 2.770  0  1
-## Fiat X1-9           4.08  66   4    1    4 18.90 27.3  79.0 1.935  1  1
-## Merc 450SLC         3.07 180   8    3    3 18.00 15.2 275.8 3.780  0  0
-## Valiant             2.76 105   6    1    3 20.22 18.1 225.0 3.460  1  0
-## Merc 230            3.92  95   4    2    4 22.90 22.8 140.8 3.150  1  0
-## AMC Javelin         3.15 150   8    2    3 17.30 15.2 304.0 3.435  0  0
-## Mazda RX4 Wag       3.90 110   6    4    4 17.02 21.0 160.0 2.875  0  1
-## Merc 450SE          3.07 180   8    3    3 17.40 16.4 275.8 4.070  0  0
-## Merc 280C           3.92 123   6    4    4 18.90 17.8 167.6 3.440  1  0
-## Hornet 4 Drive      3.08 110   6    1    3 19.44 21.4 258.0 3.215  1  0
-## Fiat 128            4.08  66   4    1    4 19.47 32.4  78.7 2.200  1  1
-## Maserati Bora       3.54 335   8    8    5 14.60 15.0 301.0 3.570  0  1
-## Porsche 914-2       4.43  91   4    2    5 16.70 26.0 120.3 2.140  0  1
-## Cadillac Fleetwood  2.93 205   8    4    3 17.98 10.4 472.0 5.250  0  0
-## Hornet Sportabout   3.15 175   8    2    3 17.02 18.7 360.0 3.440  0  0
-## Lotus Europa        3.77 113   4    2    5 16.90 30.4  95.1 1.513  1  1
-## Volvo 142E          4.11 109   4    2    4 18.60 21.4 121.0 2.780  1  1
-## Pontiac Firebird    3.08 175   8    2    3 17.05 19.2 400.0 3.845  0  0
-## Merc 450SL          3.07 180   8    3    3 17.60 17.3 275.8 3.730  0  0
-## Honda Civic         4.93  52   4    2    4 18.52 30.4  75.7 1.615  1  1
-## Dodge Challenger    2.76 150   8    2    3 16.87 15.5 318.0 3.520  0  0</code></pre>
+<pre><code>##                      disp drat gear  hp carb    wt am vs cyl  qsec  mpg
+## Camaro Z28          350.0 3.73    3 245    4 3.840  0  0   8 15.41 13.3
+## Porsche 914-2       120.3 4.43    5  91    2 2.140  1  0   4 16.70 26.0
+## Toyota Corolla       71.1 4.22    4  65    1 1.835  1  1   4 19.90 33.9
+## Merc 230            140.8 3.92    4  95    2 3.150  0  1   4 22.90 22.8
+## Ferrari Dino        145.0 3.62    5 175    6 2.770  1  0   6 15.50 19.7
+## Maserati Bora       301.0 3.54    5 335    8 3.570  1  0   8 14.60 15.0
+## Merc 280C           167.6 3.92    4 123    4 3.440  0  1   6 18.90 17.8
+## Merc 450SLC         275.8 3.07    3 180    3 3.780  0  0   8 18.00 15.2
+## Hornet 4 Drive      258.0 3.08    3 110    1 3.215  0  1   6 19.44 21.4
+## Datsun 710          108.0 3.85    4  93    1 2.320  1  1   4 18.61 22.8
+## Duster 360          360.0 3.21    3 245    4 3.570  0  0   8 15.84 14.3
+## Chrysler Imperial   440.0 3.23    3 230    4 5.345  0  0   8 17.42 14.7
+## Mazda RX4 Wag       160.0 3.90    4 110    4 2.875  1  0   6 17.02 21.0
+## Ford Pantera L      351.0 4.22    5 264    4 3.170  1  0   8 14.50 15.8
+## Merc 450SE          275.8 3.07    3 180    3 4.070  0  0   8 17.40 16.4
+## Cadillac Fleetwood  472.0 2.93    3 205    4 5.250  0  0   8 17.98 10.4
+## Hornet Sportabout   360.0 3.15    3 175    2 3.440  0  0   8 17.02 18.7
+## Lincoln Continental 460.0 3.00    3 215    4 5.424  0  0   8 17.82 10.4
+## Mazda RX4           160.0 3.90    4 110    4 2.620  1  0   6 16.46 21.0
+## Merc 280            167.6 3.92    4 123    4 3.440  0  1   6 18.30 19.2
+## Merc 240D           146.7 3.69    4  62    2 3.190  0  1   4 20.00 24.4
+## Toyota Corona       120.1 3.70    3  97    1 2.465  0  1   4 20.01 21.5
+## Fiat X1-9            79.0 4.08    4  66    1 1.935  1  1   4 18.90 27.3
+## Pontiac Firebird    400.0 3.08    3 175    2 3.845  0  0   8 17.05 19.2
+## Lotus Europa         95.1 3.77    5 113    2 1.513  1  1   4 16.90 30.4
+## Merc 450SL          275.8 3.07    3 180    3 3.730  0  0   8 17.60 17.3
+## Fiat 128             78.7 4.08    4  66    1 2.200  1  1   4 19.47 32.4
+## Dodge Challenger    318.0 2.76    3 150    2 3.520  0  0   8 16.87 15.5
+## Volvo 142E          121.0 4.11    4 109    2 2.780  1  1   4 18.60 21.4
+## Honda Civic          75.7 4.93    4  52    2 1.615  1  1   4 18.52 30.4
+## AMC Javelin         304.0 3.15    3 150    2 3.435  0  0   8 17.30 15.2
+## Valiant             225.0 2.76    3 105    1 3.460  0  1   6 20.22 18.1</code></pre>
+<pre class="r"><code>mtcars %&gt;% 
+  select(sample(ncol(mtcars))) %&gt;% 
+  arrange(sample(nrow(mtcars)))</code></pre>
+<pre><code>##                      disp  hp am gear    wt drat  qsec  mpg vs cyl carb
+## Merc 240D           146.7  62  0    4 3.190 3.69 20.00 24.4  1   4    2
+## Ford Pantera L      351.0 264  1    5 3.170 4.22 14.50 15.8  0   8    4
+## Porsche 914-2       120.3  91  1    5 2.140 4.43 16.70 26.0  0   4    2
+## Honda Civic          75.7  52  1    4 1.615 4.93 18.52 30.4  1   4    2
+## Ferrari Dino        145.0 175  1    5 2.770 3.62 15.50 19.7  0   6    6
+## Toyota Corolla       71.1  65  1    4 1.835 4.22 19.90 33.9  1   4    1
+## Camaro Z28          350.0 245  0    3 3.840 3.73 15.41 13.3  0   8    4
+## Hornet Sportabout   360.0 175  0    3 3.440 3.15 17.02 18.7  0   8    2
+## Merc 450SLC         275.8 180  0    3 3.780 3.07 18.00 15.2  0   8    3
+## Mazda RX4 Wag       160.0 110  1    4 2.875 3.90 17.02 21.0  0   6    4
+## Lotus Europa         95.1 113  1    5 1.513 3.77 16.90 30.4  1   4    2
+## Datsun 710          108.0  93  1    4 2.320 3.85 18.61 22.8  1   4    1
+## Volvo 142E          121.0 109  1    4 2.780 4.11 18.60 21.4  1   4    2
+## Duster 360          360.0 245  0    3 3.570 3.21 15.84 14.3  0   8    4
+## Merc 230            140.8  95  0    4 3.150 3.92 22.90 22.8  1   4    2
+## Fiat 128             78.7  66  1    4 2.200 4.08 19.47 32.4  1   4    1
+## Fiat X1-9            79.0  66  1    4 1.935 4.08 18.90 27.3  1   4    1
+## Chrysler Imperial   440.0 230  0    3 5.345 3.23 17.42 14.7  0   8    4
+## Cadillac Fleetwood  472.0 205  0    3 5.250 2.93 17.98 10.4  0   8    4
+## Merc 280            167.6 123  0    4 3.440 3.92 18.30 19.2  1   6    4
+## Merc 450SE          275.8 180  0    3 4.070 3.07 17.40 16.4  0   8    3
+## Merc 280C           167.6 123  0    4 3.440 3.92 18.90 17.8  1   6    4
+## Mazda RX4           160.0 110  1    4 2.620 3.90 16.46 21.0  0   6    4
+## Hornet 4 Drive      258.0 110  0    3 3.215 3.08 19.44 21.4  1   6    1
+## Dodge Challenger    318.0 150  0    3 3.520 2.76 16.87 15.5  0   8    2
+## Pontiac Firebird    400.0 175  0    3 3.845 3.08 17.05 19.2  0   8    2
+## Maserati Bora       301.0 335  1    5 3.570 3.54 14.60 15.0  0   8    8
+## Toyota Corona       120.1  97  0    3 2.465 3.70 20.01 21.5  1   4    1
+## Merc 450SL          275.8 180  0    3 3.730 3.07 17.60 17.3  0   8    3
+## Lincoln Continental 460.0 215  0    3 5.424 3.00 17.82 10.4  0   8    4
+## Valiant             225.0 105  0    3 3.460 2.76 20.22 18.1  1   6    1
+## AMC Javelin         304.0 150  0    3 3.435 3.15 17.30 15.2  0   8    2</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>How would you select a random sample of <code>m</code> rows from a
 data frame? What if the sample had to be contiguous (i.e., with an
@@ -1820,21 +1974,35 @@ initial row, a final row, and every row in between)?</li>
 <pre class="r"><code># select a random sample of m rows from a data frame
 m &lt;- 5
 mtcars[sample(nrow(mtcars), m), ]</code></pre>
-<pre><code>##                     mpg cyl  disp  hp drat    wt  qsec vs am gear carb
-## Cadillac Fleetwood 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4
-## Hornet 4 Drive     21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
-## Pontiac Firebird   19.2   8 400.0 175 3.08 3.845 17.05  0  0    3    2
-## Porsche 914-2      26.0   4 120.3  91 4.43 2.140 16.70  0  1    5    2
-## Volvo 142E         21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</code></pre>
+<pre><code>##                      mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+## Lincoln Continental 10.4   8 460.0 215 3.00 5.424 17.82  0  0    3    4
+## Merc 230            22.8   4 140.8  95 3.92 3.150 22.90  1  0    4    2
+## Merc 240D           24.4   4 146.7  62 3.69 3.190 20.00  1  0    4    2
+## Ford Pantera L      15.8   8 351.0 264 4.22 3.170 14.50  0  1    5    4
+## Toyota Corona       21.5   4 120.1  97 3.70 2.465 20.01  1  0    3    1</code></pre>
+<pre class="r"><code>mtcars %&gt;% sample_n(m)</code></pre>
+<pre><code>##                    mpg cyl  disp  hp drat   wt  qsec vs am gear carb
+## Hornet Sportabout 18.7   8 360.0 175 3.15 3.44 17.02  0  0    3    2
+## Merc 280          19.2   6 167.6 123 3.92 3.44 18.30  1  0    4    4
+## Ferrari Dino      19.7   6 145.0 175 3.62 2.77 15.50  0  1    5    6
+## Ford Pantera L    15.8   8 351.0 264 4.22 3.17 14.50  0  1    5    4
+## Camaro Z28        13.3   8 350.0 245 3.73 3.84 15.41  0  0    3    4</code></pre>
 <pre class="r"><code>start &lt;- sample(nrow(mtcars) - m + 1, 1)
 end &lt;- start + m - 1
 mtcars[start:end, , drop = FALSE]</code></pre>
-<pre><code>##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
-## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
-## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
-## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
-## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
-## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2</code></pre>
+<pre><code>##             mpg cyl  disp  hp drat   wt  qsec vs am gear carb
+## Duster 360 14.3   8 360.0 245 3.21 3.57 15.84  0  0    3    4
+## Merc 240D  24.4   4 146.7  62 3.69 3.19 20.00  1  0    4    2
+## Merc 230   22.8   4 140.8  95 3.92 3.15 22.90  1  0    4    2
+## Merc 280   19.2   6 167.6 123 3.92 3.44 18.30  1  0    4    4
+## Merc 280C  17.8   6 167.6 123 3.92 3.44 18.90  1  0    4    4</code></pre>
+<pre class="r"><code>mtcars %&gt;% slice(start:end)</code></pre>
+<pre><code>##             mpg cyl  disp  hp drat   wt  qsec vs am gear carb
+## Duster 360 14.3   8 360.0 245 3.21 3.57 15.84  0  0    3    4
+## Merc 240D  24.4   4 146.7  62 3.69 3.19 20.00  1  0    4    2
+## Merc 230   22.8   4 140.8  95 3.92 3.15 22.90  1  0    4    2
+## Merc 280   19.2   6 167.6 123 3.92 3.44 18.30  1  0    4    4
+## Merc 280C  17.8   6 167.6 123 3.92 3.44 18.90  1  0    4    4</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>How could you put the columns in a data frame in alphabetical
 order?</li>
@@ -1941,7 +2109,41 @@ order?</li>
 ## Ferrari Dino         1    6   6 145.0 3.62    5 175 19.7 15.50  0 2.770
 ## Maserati Bora        1    8   8 301.0 3.54    5 335 15.0 14.60  0 3.570
 ## Volvo 142E           1    2   4 121.0 4.11    4 109 21.4 18.60  1 2.780</code></pre>
-<pre class="r"><code>library(tibble)
+<pre class="r"><code>mtcars %&gt;% select(order(names(mtcars)))</code></pre>
+<pre><code>##                     am carb cyl  disp drat gear  hp  mpg  qsec vs    wt
+## Mazda RX4            1    4   6 160.0 3.90    4 110 21.0 16.46  0 2.620
+## Mazda RX4 Wag        1    4   6 160.0 3.90    4 110 21.0 17.02  0 2.875
+## Datsun 710           1    1   4 108.0 3.85    4  93 22.8 18.61  1 2.320
+## Hornet 4 Drive       0    1   6 258.0 3.08    3 110 21.4 19.44  1 3.215
+## Hornet Sportabout    0    2   8 360.0 3.15    3 175 18.7 17.02  0 3.440
+## Valiant              0    1   6 225.0 2.76    3 105 18.1 20.22  1 3.460
+## Duster 360           0    4   8 360.0 3.21    3 245 14.3 15.84  0 3.570
+## Merc 240D            0    2   4 146.7 3.69    4  62 24.4 20.00  1 3.190
+## Merc 230             0    2   4 140.8 3.92    4  95 22.8 22.90  1 3.150
+## Merc 280             0    4   6 167.6 3.92    4 123 19.2 18.30  1 3.440
+## Merc 280C            0    4   6 167.6 3.92    4 123 17.8 18.90  1 3.440
+## Merc 450SE           0    3   8 275.8 3.07    3 180 16.4 17.40  0 4.070
+## Merc 450SL           0    3   8 275.8 3.07    3 180 17.3 17.60  0 3.730
+## Merc 450SLC          0    3   8 275.8 3.07    3 180 15.2 18.00  0 3.780
+## Cadillac Fleetwood   0    4   8 472.0 2.93    3 205 10.4 17.98  0 5.250
+## Lincoln Continental  0    4   8 460.0 3.00    3 215 10.4 17.82  0 5.424
+## Chrysler Imperial    0    4   8 440.0 3.23    3 230 14.7 17.42  0 5.345
+## Fiat 128             1    1   4  78.7 4.08    4  66 32.4 19.47  1 2.200
+## Honda Civic          1    2   4  75.7 4.93    4  52 30.4 18.52  1 1.615
+## Toyota Corolla       1    1   4  71.1 4.22    4  65 33.9 19.90  1 1.835
+## Toyota Corona        0    1   4 120.1 3.70    3  97 21.5 20.01  1 2.465
+## Dodge Challenger     0    2   8 318.0 2.76    3 150 15.5 16.87  0 3.520
+## AMC Javelin          0    2   8 304.0 3.15    3 150 15.2 17.30  0 3.435
+## Camaro Z28           0    4   8 350.0 3.73    3 245 13.3 15.41  0 3.840
+## Pontiac Firebird     0    2   8 400.0 3.08    3 175 19.2 17.05  0 3.845
+## Fiat X1-9            1    1   4  79.0 4.08    4  66 27.3 18.90  1 1.935
+## Porsche 914-2        1    2   4 120.3 4.43    5  91 26.0 16.70  0 2.140
+## Lotus Europa         1    2   4  95.1 3.77    5 113 30.4 16.90  1 1.513
+## Ford Pantera L       1    4   8 351.0 4.22    5 264 15.8 14.50  0 3.170
+## Ferrari Dino         1    6   6 145.0 3.62    5 175 19.7 15.50  0 2.770
+## Maserati Bora        1    8   8 301.0 3.54    5 335 15.0 14.60  0 3.570
+## Volvo 142E           1    2   4 121.0 4.11    4 109 21.4 18.60  1 2.780</code></pre>
+<pre class="r"><code>#library(tibble)
 mtcars_2 &lt;- tibble::rownames_to_column(mtcars, &quot;rownames&quot;)
 mtcars_2</code></pre>
 <pre><code>##               rownames  mpg cyl  disp  hp drat    wt  qsec vs am gear carb
@@ -1977,16 +2179,8 @@ mtcars_2</code></pre>
 ## 30        Ferrari Dino 19.7   6 145.0 175 3.62 2.770 15.50  0  1    5    6
 ## 31       Maserati Bora 15.0   8 301.0 335 3.54 3.570 14.60  0  1    5    8
 ## 32          Volvo 142E 21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</code></pre>
-<pre class="r"><code>library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>dplyr::arrange(mtcars_2,rownames)</code></pre>
+<pre class="r"><code>#library(dplyr)
+dplyr::arrange(mtcars_2,rownames)</code></pre>
 <pre><code>##               rownames  mpg cyl  disp  hp drat    wt  qsec vs am gear carb
 ## 1          AMC Javelin 15.2   8 304.0 150 3.15 3.435 17.30  0  0    3    2
 ## 2   Cadillac Fleetwood 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4

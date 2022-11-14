@@ -23,7 +23,7 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 
 > Before reading: if Statement: use it to execute a block of code, if a specified condition is true. ifelse() Function: use it when to check the condition for every element of a vector
 
-> After reading: if works with scalars; ifelse() works with vectors.
+> After reading: if works with scalars (if only works with a single TRUE or FALSE); ifelse() works with vectors (ifelse(): a vectorised function with test, yes, and no vectors (that will be recycled to the same length)).
 
 *   In the following code, what will the value of `y` be if `x` is `TRUE`?
     What if `x` is `FALSE`? What if `x` is `NA`?
@@ -490,16 +490,16 @@ out
 
 ```
 ## [[1]]
-##  [1]  3.0482064  2.1835311  0.1258693  2.5734059  2.1716638  0.7553392
-##  [7]  1.0570649  0.8910207 -0.7558702  0.4391950
+##  [1]  0.47683037  0.93008559  0.73409542  2.30515491  2.21538604  1.61696801
+##  [7]  0.06281118  0.50673596 -0.30025341  1.33426237
 ## 
 ## [[2]]
-##  [1] 48.55409 49.99352 49.05060 50.14044 51.04282 49.48901 49.01373 49.14844
-##  [9] 50.55860 49.60042
+##  [1] 48.72950 50.51500 50.09761 48.49359 51.54102 50.11748 48.49262 51.21464
+##  [9] 50.31470 49.94888
 ## 
 ## [[3]]
-##  [1] 19.97127 20.45190 19.08423 19.91359 20.17511 20.80305 21.12661 21.30782
-##  [9] 19.12547 19.64098
+##  [1] 21.75247 19.29432 20.89423 20.45387 20.56187 19.97086 19.14048 18.03191
+##  [9] 18.65333 18.72658
 ```
 
 ```r
@@ -508,9 +508,9 @@ str(out)
 
 ```
 ## List of 3
-##  $ : num [1:10] 3.048 2.184 0.126 2.573 2.172 ...
-##  $ : num [1:10] 48.6 50 49.1 50.1 51 ...
-##  $ : num [1:10] 20 20.5 19.1 19.9 20.2 ...
+##  $ : num [1:10] 0.477 0.93 0.734 2.305 2.215 ...
+##  $ : num [1:10] 48.7 50.5 50.1 48.5 51.5 ...
+##  $ : num [1:10] 21.8 19.3 20.9 20.5 20.6 ...
 ```
 
 

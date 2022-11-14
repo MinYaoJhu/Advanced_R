@@ -7,6 +7,13 @@ output:
     keep_md: yes
 ---
 
+```{r}
+library(tibble)
+library(dplyr)
+library(tidyverse)
+```
+
+
 # 4 Subsetting {#subsetting}
 
 ```{r setup, include = FALSE}
@@ -698,11 +705,16 @@ str(y)
 Subsetting with nothing can be useful with assignment because it preserves the structure of the original object. Compare the following two expressions. In the first, `mtcars` remains a data frame because you are only changing the contents of `mtcars`, not `mtcars` itself. In the second, `mtcars` becomes a list because you are changing the object it is bound to.
 
 ```{r, mtcars}
+#lapply: Apply a Function over a List or Vector
+#lapply returns a list of the same length as X, each element of which is the result of applying FUN to the corresponding element of X.
+
 mtcars[] <- lapply(mtcars, as.integer)
 is.data.frame(mtcars)
+str(mtcars)
 
 mtcars <- lapply(mtcars, as.integer)
 is.data.frame(mtcars)
+str(mtcars)
 ```
 
 ```{r, dependson = "mtcars", include = FALSE}
@@ -764,6 +776,7 @@ You can use integer indices to randomly sample or bootstrap a vector or data fra
 
 ```{r}
 df <- data.frame(x = c(1, 2, 3, 1, 2), y = 5:1, z = letters[1:5])
+df
 
 # Randomly reorder
 df[sample(nrow(df)), ]
@@ -813,6 +826,7 @@ Sometimes you get a data frame where identical rows have been collapsed into one
 ```{r}
 df <- data.frame(x = c(2, 4, 1), y = c(9, 11, 6), n = c(3, 5, 1))
 rep(1:nrow(df), df$n)
+#rep replicates the values in x. It is a generic function, and the (internal) default method is described here.
 
 df[rep(1:nrow(df), df$n), ]
 ```
@@ -825,6 +839,7 @@ There are two ways to remove columns from a data frame. You can set individual c
 ```{r}
 df <- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
 df$z <- NULL
+df
 ```
 
 Or you can subset to return only the columns you want:
@@ -837,6 +852,7 @@ df[c("x", "y")]
 If you only know the columns you don't want, use set operations to work out which columns to keep:
 
 ```{r}
+# Performs set union, intersection, (asymmetric!) difference, equality and membership on two vectors.
 df[setdiff(names(df), "z")]
 ```
 
@@ -875,6 +891,7 @@ It's useful to be aware of the natural equivalence between set operations (integ
 
 ```{r}
 x <- sample(10) < 4
+x
 which(x)
 
 unwhich <- function(x, n) {
@@ -921,6 +938,27 @@ When first learning subsetting, a common mistake is to use `x[which(y)]` instead
   `which(y)` will be `integer(0)` and `-integer(0)` is still `integer(0)`, so
   you'll get no values, instead of all values. 
   
+```{r}
+
+which(x1)
+which(y1)
+
+
+x <- 1:10
+
+!y1
+x[!y1]
+
+-which(y1)
+x[-which(y1)]
+
+y <- rep(FALSE,10)
+x[!y]
+x[-which(y)]
+
+```
+
+  
 In general, avoid switching from logical to integer subsetting unless you want, for example, the first or last `TRUE` value.
 
 ### 4.5.9 Exercises
@@ -936,10 +974,21 @@ mtcars[sample(ncol(mtcars))]
 ```
 
 ```{r}
+mtcars %>% select(sample(ncol(mtcars)))
+```
+
+
+```{r}
 # simultaneously permute the rows and columns in one step
 mtcars[sample(nrow(mtcars)), sample(ncol(mtcars))]
 ```
 
+```{r}
+mtcars %>% 
+  select(sample(ncol(mtcars))) %>% 
+  arrange(sample(nrow(mtcars)))
+
+```
 
 2.  How would you select a random sample of `m` rows from a data frame? 
     What if the sample had to be contiguous (i.e., with an initial row, a 
@@ -952,12 +1001,21 @@ mtcars[sample(nrow(mtcars), m), ]
 ```
 
 ```{r}
+mtcars %>% sample_n(m)
+```
+
+
+```{r}
 start <- sample(nrow(mtcars) - m + 1, 1)
 end <- start + m - 1
 mtcars[start:end, , drop = FALSE]
 ```
 
-    
+```{r}
+mtcars %>% slice(start:end)
+```
+
+
 3.  How could you put the columns in a data frame in alphabetical order?
 
 ```{r}
@@ -965,14 +1023,16 @@ mtcars
 
 mtcars[order(names(mtcars))]
 mtcars[sort(names(mtcars))]
+
+mtcars %>% select(order(names(mtcars)))
 ```
 
 ```{r}
-library(tibble)
+#library(tibble)
 mtcars_2 <- tibble::rownames_to_column(mtcars, "rownames")
 mtcars_2
 
-library(dplyr)
+#library(dplyr)
 dplyr::arrange(mtcars_2,rownames)
 ```
 
