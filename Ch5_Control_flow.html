@@ -371,9 +371,9 @@ pre code {
 
 
 <div id="control-flow" class="section level1">
-<h1>Control flow</h1>
+<h1>5 Control flow</h1>
 <div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<h2>5.1 Introduction</h2>
 <p>There are two primary tools of control flow: choices and loops.
 Choices, like <code>if</code> statements and <code>switch()</code>
 calls, allow you to run different code depending on the input. Loops,
@@ -399,6 +399,10 @@ below. Find the answers at the end of the chapter in Section
 specified condition is true. ifelse() Function: use it when to check the
 condition for every element of a vector</p>
 </blockquote>
+<blockquote>
+<p>After reading: if works with scalars; ifelse() works with
+vectors.</p>
+</blockquote>
 <ul>
 <li><p>In the following code, what will the value of <code>y</code> be
 if <code>x</code> is <code>TRUE</code>? What if <code>x</code> is
@@ -410,11 +414,32 @@ if <code>x</code> is <code>TRUE</code>? What if <code>x</code> is
 <code>x</code> is <code>FALSE</code>, y = NULL. If <code>x</code> is
 <code>NA</code>, y = NULL.</p>
 </blockquote>
+<blockquote>
+<p>After reading: When x is TRUE, y will be 3; when FALSE, y will be
+NULL; when NA the if statement will throw an error.</p>
+</blockquote>
+<pre class="r"><code>x &lt;- TRUE
+y &lt;- if (x) 3
+y</code></pre>
+<pre><code>## [1] 3</code></pre>
+<pre class="r"><code>x &lt;- FALSE
+y &lt;- if (x) 3
+y</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>x &lt;- NA
+y &lt;- if (x) 3
+y</code></pre>
 <ul>
 <li>What does <code>switch(&quot;x&quot;, x = , y = 2, z = 3)</code> return?</li>
 </ul>
+<pre class="r"><code>switch(&quot;x&quot;, x = , y = 2, z = 3)</code></pre>
+<pre><code>## [1] 2</code></pre>
 <blockquote>
 <p>Before reading: NULL.</p>
+</blockquote>
+<blockquote>
+<p>After reading: This switch() statement makes use of fall-through so
+it will return 2. See details in Section 5.2.3.</p>
 </blockquote>
 </div>
 <div id="outline" class="section level3 unnumbered">
@@ -431,7 +456,7 @@ statements.</p></li>
 </div>
 </div>
 <div id="choices" class="section level2">
-<h2>Choices</h2>
+<h2>5.2 Choices</h2>
 <p>The basic form of an if statement in R is as follows:</p>
 <pre class="r"><code># if (condition) true_action
 # if (condition) true_action else false_action</code></pre>
@@ -479,7 +504,7 @@ greet(&quot;Maria&quot;, FALSE)</code></pre>
 <pre class="r"><code>greet(&quot;Jaime&quot;, TRUE)</code></pre>
 <pre><code>## [1] &quot;Hi Jaime and HAPPY BIRTHDAY&quot;</code></pre>
 <div id="invalid-inputs" class="section level3">
-<h3>Invalid inputs</h3>
+<h3>5.2.1 Invalid inputs</h3>
 <p>The <code>condition</code> should evaluate to a single
 <code>TRUE</code> or <code>FALSE</code>. Most other inputs will generate
 an error:</p>
@@ -501,7 +526,7 @@ variable:</p>
 might otherwise miss if it were only shown as a warning.</p>
 </div>
 <div id="vectorised-if" class="section level3">
-<h3>Vectorised if</h3>
+<h3>5.2.2 Vectorised if</h3>
 <p>Given that <code>if</code> only works with a single <code>TRUE</code>
 or <code>FALSE</code>, you might wonder what to do if you have a vector
 of logical values. Handling vectors of values is the job of
@@ -531,7 +556,7 @@ number of condition-vector pairs:</p>
 <pre><code>##  [1] &quot;1&quot;    &quot;2&quot;    &quot;3&quot;    &quot;4&quot;    &quot;fizz&quot; &quot;6&quot;    &quot;buzz&quot; &quot;8&quot;    &quot;9&quot;    &quot;fizz&quot;</code></pre>
 </div>
 <div id="switch" class="section level3">
-<h3><code>switch()</code> statement</h3>
+<h3>5.2.3 <code>switch()</code> statement</h3>
 <p>Closely related to <code>if</code> is the
 <code>switch()</code>-statement. It’s a compact, special purpose
 equivalent that lets you replace code like:</p>
@@ -585,7 +610,7 @@ if <code>x</code> is a not a whole number. I recommend using
 <code>switch()</code> only with character inputs.</p>
 </div>
 <div id="exercises" class="section level3">
-<h3>Exercises</h3>
+<h3>5.2.4 Exercises</h3>
 <ol style="list-style-type: decimal">
 <li><p>What type of vector does each of the following calls to
 <code>ifelse()</code> return?</p>
@@ -631,7 +656,7 @@ length(x)</code></pre>
 </div>
 </div>
 <div id="loops" class="section level2">
-<h2>Loops</h2>
+<h2>5.3 Loops</h2>
 <p> </p>
 <p><code>for</code> loops are used to iterate over items in a vector.
 They have the following basic form:</p>
@@ -671,7 +696,7 @@ i</code></pre>
 ## [1] 4
 ## [1] 5</code></pre>
 <div id="common-pitfalls" class="section level3">
-<h3>Common pitfalls</h3>
+<h3>5.3.1 Common pitfalls</h3>
 <p></p>
 <p>There are three common pitfalls to watch out for when using
 <code>for</code>. First, if you’re generating data, make sure to
@@ -685,21 +710,21 @@ for (i in 1:length(means)) {
 }</code></pre>
 <pre class="r"><code>out</code></pre>
 <pre><code>## [[1]]
-##  [1]  2.4284845  1.9128725  1.3129844  2.9573309  1.4514717 -0.2908716
-##  [7]  2.2004391  0.9520764  1.0200341 -0.1485138
+##  [1]  3.0482064  2.1835311  0.1258693  2.5734059  2.1716638  0.7553392
+##  [7]  1.0570649  0.8910207 -0.7558702  0.4391950
 ## 
 ## [[2]]
-##  [1] 50.73985 50.34476 50.38466 51.00398 51.02892 47.45632 50.87889 50.22018
-##  [9] 49.81989 48.69516
+##  [1] 48.55409 49.99352 49.05060 50.14044 51.04282 49.48901 49.01373 49.14844
+##  [9] 50.55860 49.60042
 ## 
 ## [[3]]
-##  [1] 19.85118 20.96091 20.33881 20.78995 18.45145 18.86207 19.63382 20.83893
-##  [9] 19.94425 19.89340</code></pre>
+##  [1] 19.97127 20.45190 19.08423 19.91359 20.17511 20.80305 21.12661 21.30782
+##  [9] 19.12547 19.64098</code></pre>
 <pre class="r"><code>str(out)</code></pre>
 <pre><code>## List of 3
-##  $ : num [1:10] 2.43 1.91 1.31 2.96 1.45 ...
-##  $ : num [1:10] 50.7 50.3 50.4 51 51 ...
-##  $ : num [1:10] 19.9 21 20.3 20.8 18.5 ...</code></pre>
+##  $ : num [1:10] 3.048 2.184 0.126 2.573 2.172 ...
+##  $ : num [1:10] 48.6 50 49.1 50.1 51 ...
+##  $ : num [1:10] 20 20.5 19.1 19.9 20.2 ...</code></pre>
 <p>Next, beware of iterating over <code>1:length(x)</code>, which will
 fail in unhelpful ways if <code>x</code> has length 0:</p>
 <pre class="r"><code>means &lt;- c()
@@ -739,7 +764,7 @@ for (x in xs) {
 ## [1] &quot;2010-01-01&quot;</code></pre>
 </div>
 <div id="for-family" class="section level3">
-<h3>Related tools</h3>
+<h3>5.3.2 Related tools</h3>
 <p><code>for</code> loops are useful if you know in advance the set of
 values that you want to iterate over. If you don’t know, there are two
 related tools with more flexible specifications:</p>
@@ -766,7 +791,7 @@ already provide less flexible solutions to most problems. You’ll learn
 more in Chapter @ref(functionals).</p>
 </div>
 <div id="exercises-1" class="section level3">
-<h3>Exercises</h3>
+<h3>5.3.3 Exercises</h3>
 <ol style="list-style-type: decimal">
 <li><p>Why does this code succeed without errors or warnings?</p>
 <pre class="r"><code>x &lt;- numeric()
@@ -786,7 +811,7 @@ generate an NA. The second iteration x[0] will return numeric(0), which
 will assign a 0-length vector to a 0-length subset. It works but doesn’t
 change the object.</p>
 </blockquote>
-<ol style="list-style-type: decimal">
+<ol start="2" style="list-style-type: decimal">
 <li><p>When the following code is evaluated, what can you say about the
 vector being iterated?</p>
 <pre class="r"><code>xs &lt;- c(1, 2, 3)
@@ -799,7 +824,7 @@ xs</code></pre>
 <blockquote>
 <p>the inputs are evaluated just once in the beginning of the loop</p>
 </blockquote>
-<ol style="list-style-type: decimal">
+<ol start="3" style="list-style-type: decimal">
 <li><p>What does the following code tell you about when the index is
 updated?</p>
 <pre class="r"><code>for (i in 1:3) {

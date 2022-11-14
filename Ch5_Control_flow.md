@@ -7,9 +7,9 @@ output:
     keep_md: yes
 ---
 
-# Control flow
+# 5 Control flow
 
-## Introduction
+## 5.1 Introduction
 
 There are two primary tools of control flow: choices and loops. Choices, like `if` statements and `switch()` calls, allow you to run different code depending on the input. Loops, like `for` and `while`, allow you to repeatedly run code, typically with changing options. I'd expect that you're already familiar with the basics of these functions so I'll briefly cover some technical details and then introduce some useful, but lesser known, features.
 
@@ -23,6 +23,8 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 
 > Before reading: if Statement: use it to execute a block of code, if a specified condition is true. ifelse() Function: use it when to check the condition for every element of a vector
 
+> After reading: if works with scalars; ifelse() works with vectors.
+
 *   In the following code, what will the value of `y` be if `x` is `TRUE`?
     What if `x` is `FALSE`? What if `x` is `NA`?
   
@@ -33,9 +35,52 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 
 > Before reading: If `x` is `TRUE`, y = 3. If `x` is `FALSE`, y = NULL. If `x` is `NA`, y = NULL.
 
+> After reading: When x is TRUE, y will be 3; when FALSE, y will be NULL; when NA the if statement will throw an error.
+
+
+```r
+x <- TRUE
+y <- if (x) 3
+y
+```
+
+```
+## [1] 3
+```
+
+
+```r
+x <- FALSE
+y <- if (x) 3
+y
+```
+
+```
+## NULL
+```
+
+
+```r
+x <- NA
+y <- if (x) 3
+y
+```
+
 *   What does `switch("x", x = , y = 2, z = 3)` return?
 
+
+```r
+switch("x", x = , y = 2, z = 3)
+```
+
+```
+## [1] 2
+```
+
+
 > Before reading: NULL.
+
+> After reading: This switch() statement makes use of fall-through so it will return 2. See details in Section 5.2.3.
 
 ### Outline {-}
 
@@ -46,7 +91,7 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
   of the for loop in R, discusses some common pitfalls, and then talks
   about the related `while` and `repeat` statements.
 
-## Choices
+## 5.2 Choices
 \indexc{if}
 
 The basic form of an if statement in R is as follows:
@@ -117,7 +162,7 @@ greet("Jaime", TRUE)
 ## [1] "Hi Jaime and HAPPY BIRTHDAY"
 ```
 
-### Invalid inputs
+### 5.2.1 Invalid inputs
 
 The `condition` should evaluate to a single `TRUE` or `FALSE`. Most other inputs will generate an error:
 
@@ -149,7 +194,7 @@ Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 I think this is good practice as it reveals a clear mistake that you might otherwise miss if it were only shown as a warning.
 
-### Vectorised if
+### 5.2.2 Vectorised if
 \indexc{ifelse()}
 
 Given that `if` only works with a single `TRUE` or `FALSE`, you might wonder what to do if you have a vector of logical values. Handling vectors of values is the job of `ifelse()`: a vectorised function with `test`, `yes`, and `no` vectors (that will be recycled to the same length):
@@ -193,7 +238,7 @@ dplyr::case_when(
 ##  [1] "1"    "2"    "3"    "4"    "fizz" "6"    "buzz" "8"    "9"    "fizz"
 ```
 
-### `switch()` statement {#switch}
+### 5.2.3 `switch()` statement {#switch}
 \indexc{switch()}
 
 Closely related to `if` is the `switch()`-statement. It's a compact, special purpose equivalent that lets you replace code like:
@@ -270,7 +315,7 @@ legs("dog")
 
 It is also possible to use `switch()` with a numeric `x`, but is harder to read, and has undesirable failure modes if `x` is a not a whole number. I recommend using `switch()` only with character inputs.
 
-### Exercises
+### 5.2.4 Exercises
 
 1.  What type of vector does each of the following calls to `ifelse()`
     return?
@@ -356,7 +401,7 @@ utils::str(ifelse(NA, 1, "no"))
 
 > 0 is treated as FALSE and all other numbers are treated as TRUE.
 
-## Loops
+## 5.3 Loops
 \index{loops}
 \index{loops!for@\texttt{for}}
 \indexc{for}
@@ -424,7 +469,7 @@ for (i in 1:10) {
 ## [1] 5
 ```
 
-### Common pitfalls
+### 5.3.1 Common pitfalls
 \index{loops!common pitfalls}
 
 There are three common pitfalls to watch out for when using `for`. First, if you're generating data, make sure to preallocate the output container. Otherwise the loop will be very slow; see Sections \@ref(memory-profiling) and \@ref(avoid-copies) for more details. The `vector()` function is helpful here.
@@ -445,16 +490,16 @@ out
 
 ```
 ## [[1]]
-##  [1]  2.4284845  1.9128725  1.3129844  2.9573309  1.4514717 -0.2908716
-##  [7]  2.2004391  0.9520764  1.0200341 -0.1485138
+##  [1]  3.0482064  2.1835311  0.1258693  2.5734059  2.1716638  0.7553392
+##  [7]  1.0570649  0.8910207 -0.7558702  0.4391950
 ## 
 ## [[2]]
-##  [1] 50.73985 50.34476 50.38466 51.00398 51.02892 47.45632 50.87889 50.22018
-##  [9] 49.81989 48.69516
+##  [1] 48.55409 49.99352 49.05060 50.14044 51.04282 49.48901 49.01373 49.14844
+##  [9] 50.55860 49.60042
 ## 
 ## [[3]]
-##  [1] 19.85118 20.96091 20.33881 20.78995 18.45145 18.86207 19.63382 20.83893
-##  [9] 19.94425 19.89340
+##  [1] 19.97127 20.45190 19.08423 19.91359 20.17511 20.80305 21.12661 21.30782
+##  [9] 19.12547 19.64098
 ```
 
 ```r
@@ -463,9 +508,9 @@ str(out)
 
 ```
 ## List of 3
-##  $ : num [1:10] 2.43 1.91 1.31 2.96 1.45 ...
-##  $ : num [1:10] 50.7 50.3 50.4 51 51 ...
-##  $ : num [1:10] 19.9 21 20.3 20.8 18.5 ...
+##  $ : num [1:10] 3.048 2.184 0.126 2.573 2.172 ...
+##  $ : num [1:10] 48.6 50 49.1 50.1 51 ...
+##  $ : num [1:10] 20 20.5 19.1 19.9 20.2 ...
 ```
 
 
@@ -546,7 +591,7 @@ for (i in seq_along(xs)) {
 ## [1] "2010-01-01"
 ```
 
-### Related tools {#for-family}
+### 5.3.2 Related tools {#for-family}
 \indexc{while}
 \indexc{repeat}
 
@@ -562,7 +607,7 @@ You can rewrite any `for` loop to use `while` instead, and you can rewrite any `
 
 Generally speaking you shouldn't need to use `for` loops for data analysis tasks, as `map()` and `apply()` already provide less flexible solutions to most problems. You'll learn more in Chapter \@ref(functionals).
 
-### Exercises
+### 5.3.3 Exercises
 
 1.  Why does this code succeed without errors or warnings? 
     
@@ -583,7 +628,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
 > 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
 
 
-1.  When the following code is evaluated, what can you say about the 
+2.  When the following code is evaluated, what can you say about the 
     vector being iterated?
 
     
@@ -601,7 +646,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
 
 > the inputs are evaluated just once in the beginning of the loop
 
-1.  What does the following code tell you about when the index is updated?
+3.  What does the following code tell you about when the index is updated?
 
     
     ```r
