@@ -348,7 +348,8 @@ str(mtcars)
     mtcars[-c(1:4), ]
     #mtcars[mtcars$cyl <= 5]
     mtcars[mtcars$cyl <= 5, ]
-    #mtcars[mtcars$cyl == 4 | 6, ]
+    mtcars[mtcars$cyl == 4 || 6, ]
+    #mtcars[mtcars$cyl == (4 : 6), ]
     mtcars[mtcars$cyl == 4 | mtcars$cyl == 6, ]
     mtcars[mtcars$cyl %in% c(4, 6), ]
     ```
@@ -609,12 +610,63 @@ There are two additional subsetting operators, which are needed for S4 objects: 
 
 1.  Brainstorm as many ways as possible to extract the third value from the
     `cyl` variable in the `mtcars` dataset.
+    
+```{r}
+str(mtcars)
+
+#1
+mtcars$cyl[[3]]
+
+#2
+mtcars[ , "cyl"][[3]]
+
+#3
+mtcars[["cyl"]][[3]]
+
+#4
+mtcars[3, ]$cyl
+
+#5
+mtcars[3, "cyl"]
+
+#6
+mtcars[3, ][ , "cyl"]
+
+#7
+mtcars[3, ][["cyl"]]
+
+#8
+mtcars[3, 2]
+
+
+```
+
 
 2.  Given a linear model, e.g., `mod <- lm(mpg ~ wt, data = mtcars)`, extract
     the residual degrees of freedom. Then extract the R squared from the model
     summary (`summary(mod)`)
 
-<!-- FIXME: more examples -->
+```{r}
+mod <- lm(mpg ~ wt, data = mtcars)
+summary(mod)
+str(mod)
+```
+
+```{r}
+#1
+mod$df.residual
+
+#2
+mod[["df.residual"]]
+
+#3
+str(summary(mod))
+summary(mod)$df
+
+```
+
+
+
 
 ## 4.4 Subsetting and assignment {#subassignment}
 \index{subsetting!subassignment} 
@@ -661,7 +713,7 @@ rm(mtcars)
 
 The principles described above have a wide variety of useful applications. Some of the most important are described below. While many of the basic principles of subsetting have already been incorporated into functions like `subset()`, `merge()`, and `dplyr::arrange()`, a deeper understanding of how those principles have been implemented will be valuable when you run into situations where the functions you need don't exist.
 
-### Lookup tables (character subsetting) {#lookup-tables}
+### 4.5.1 Lookup tables (character subsetting) {#lookup-tables}
 \index{lookup tables}
 
 Character matching is a powerful way to create lookup tables. Say you want to convert abbreviations: 
@@ -678,7 +730,7 @@ Note that if you don't want names in the result, use `unname()` to remove them.
 unname(lookup[x])
 ```
 
-### Matching and merging by hand (integer subsetting) {#matching-merging}
+### 4.5.2 Matching and merging by hand (integer subsetting) {#matching-merging}
 \index{matching and merging}
 \indexc{match()}
 
@@ -704,7 +756,7 @@ info[id, ]
 
 If you're matching on multiple columns, you'll need to first collapse them into a single column (with e.g. `interaction()`). Typically, however, you're better off switching to a function designed specifically for joining multiple tables like `merge()`, or `dplyr::left_join()`.
 
-### Random samples and bootstraps (integer subsetting)
+### 4.5.3 Random samples and bootstraps (integer subsetting)
 \index{sampling} 
 \index{bootstrapping}
 
@@ -725,7 +777,7 @@ df[sample(nrow(df), 6, replace = TRUE), ]
 
 The arguments of `sample()` control the number of samples to extract, and also whether sampling is done with or without replacement.
 
-### Ordering (integer subsetting)
+### 4.5.4 Ordering (integer subsetting)
 \indexc{order()} 
 \index{sorting}
  
@@ -754,7 +806,7 @@ df2[, order(names(df2))]
 
 You can sort vectors directly with `sort()`, or similarly `dplyr::arrange()`, to sort a data frame.
 
-### Expanding aggregated counts (integer subsetting)
+### 4.5.5 Expanding aggregated counts (integer subsetting)
 
 Sometimes you get a data frame where identical rows have been collapsed into one and a count column has been added. `rep()` and integer subsetting make it easy to uncollapse, because we can take advantage of `rep()`s vectorisation: `rep(x, y)` repeats `x[i]` `y[i]` times.
 
@@ -766,7 +818,7 @@ df[rep(1:nrow(df), df$n), ]
 ```
 
 
-### Removing columns from data frames (character \mbox{subsetting})
+### 4.5.6 Removing columns from data frames (character \mbox{subsetting})
 
 There are two ways to remove columns from a data frame. You can set individual columns to `NULL`: 
 
@@ -788,7 +840,7 @@ If you only know the columns you don't want, use set operations to work out whic
 df[setdiff(names(df), "z")]
 ```
 
-### Selecting rows based on a condition (logical subsetting)
+### 4.5.7 Selecting rows based on a condition (logical subsetting)
 \index{subsetting!with logical vectors}
 \indexc{subset()}
  
@@ -807,7 +859,7 @@ Remember to use the vector boolean operators `&` and `|`, not the short-circuiti
 
 For example, `!(X & !(Y | Z))` simplifies to `!X | !!(Y|Z)`, and then to `!X | Y | Z`.
 
-### Boolean algebra versus sets (logical and integer \mbox{subsetting})
+### 4.5.8 Boolean algebra versus sets (logical and integer \mbox{subsetting})
 \index{Boolean algebra} 
 \index{set algebra}
 \indexc{which()}
@@ -871,16 +923,58 @@ When first learning subsetting, a common mistake is to use `x[which(y)]` instead
   
 In general, avoid switching from logical to integer subsetting unless you want, for example, the first or last `TRUE` value.
 
-### Exercises
+### 4.5.9 Exercises
 
 1.  How would you randomly permute the columns of a data frame? (This is an
     important technique in random forests.) Can you simultaneously permute 
     the rows and columns in one step?
 
-1.  How would you select a random sample of `m` rows from a data frame? 
+```{r}
+# randomly permute the columns of a data frame
+mtcars
+mtcars[sample(ncol(mtcars))]
+```
+
+```{r}
+# simultaneously permute the rows and columns in one step
+mtcars[sample(nrow(mtcars)), sample(ncol(mtcars))]
+```
+
+
+2.  How would you select a random sample of `m` rows from a data frame? 
     What if the sample had to be contiguous (i.e., with an initial row, a 
     final row, and every row in between)?
     
-1.  How could you put the columns in a data frame in alphabetical order?
+```{r}
+# select a random sample of m rows from a data frame
+m <- 5
+mtcars[sample(nrow(mtcars), m), ]
+```
+
+```{r}
+start <- sample(nrow(mtcars) - m + 1, 1)
+end <- start + m - 1
+mtcars[start:end, , drop = FALSE]
+```
+
+    
+3.  How could you put the columns in a data frame in alphabetical order?
+
+```{r}
+mtcars
+
+mtcars[order(names(mtcars))]
+mtcars[sort(names(mtcars))]
+```
+
+```{r}
+library(tibble)
+mtcars_2 <- tibble::rownames_to_column(mtcars, "rownames")
+mtcars_2
+
+library(dplyr)
+dplyr::arrange(mtcars_2,rownames)
+```
+
 
 [demorgans]: http://en.wikipedia.org/wiki/De_Morgan's_laws

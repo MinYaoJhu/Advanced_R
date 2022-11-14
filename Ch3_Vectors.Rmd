@@ -1002,7 +1002,7 @@ list(1:2, 2)
     
 ```{r}
 #?unlist()
-#?as.vector()
+?as.vector()
 ```
 
 > A list is already a vector, though not an atomic one!
