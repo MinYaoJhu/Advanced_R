@@ -254,6 +254,8 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
     ifelse(NA, 1, "no")
     ```
 
+> The arguments of ifelse() are named test, yes and no. ifelse() returns the entry for yes when test is TRUE, the entry for no when test is FALSE, and NA when test is NA. Therefore, the expressions above return vectors of type double (1), character ("no") and logical (NA).
+
     Read the documentation and write down the rules in your own words.
     
 ```{r}
@@ -270,7 +272,7 @@ utils::str(ifelse(NA, 1, "no"))
 
 > `ifelse(NA, 1, "no")` logical vector
 
-1.  Why does the following code work?
+2.  Why does the following code work?
 
     ```{r}
     x <- 1:10
@@ -433,8 +435,14 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     out
     ```
 
-> 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
 
+
+
+> As x has length 0, 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
+
+> During the first iteration x[1] will generate an NA (out-of-bounds indexing for atomics). The resulting NA (from squaring) will be assigned to the empty length-1 list out[1] (out-of-bounds indexing for lists).
+
+> The next iteration, x[0] will return numeric(0) (zero indexing for atomics). Again, squaring doesn’t change the value and numeric(0) is assigned to out[0] (zero indexing for lists). Assigning a 0-length vector to a 0-length subset works but doesn’t change the object.
 
 2.  When the following code is evaluated, what can you say about the 
     vector being iterated?
@@ -447,7 +455,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     xs
     ```
 
-> the inputs are evaluated just once in the beginning of the loop
+> the inputs are evaluated just once in the beginning of the loop. Otherwise, we would run into an infinite loop.
 
 3.  What does the following code tell you about when the index is updated?
 
@@ -458,7 +466,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     }
     ```
 
-> the index is updated in the beginning of each iteration
+> the index is updated in the beginning of each iteration. Therefore, reassigning the index symbol during one iteration doesn’t affect the following iterations. (Again, we would otherwise run into an infinite loop.)
 
 ## Quiz answers {#control-flow-answers}
 

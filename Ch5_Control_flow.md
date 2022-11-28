@@ -327,6 +327,8 @@ It is also possible to use `switch()` with a numeric `x`, but is harder to read,
     ifelse(NA, 1, "no")
     ```
 
+> The arguments of ifelse() are named test, yes and no. ifelse() returns the entry for yes when test is TRUE, the entry for no when test is FALSE, and NA when test is NA. Therefore, the expressions above return vectors of type double (1), character ("no") and logical (NA).
+
     Read the documentation and write down the rules in your own words.
     
 
@@ -362,7 +364,7 @@ utils::str(ifelse(NA, 1, "no"))
 
 > `ifelse(NA, 1, "no")` logical vector
 
-1.  Why does the following code work?
+2.  Why does the following code work?
 
     
     ```r
@@ -490,16 +492,16 @@ out
 
 ```
 ## [[1]]
-##  [1]  0.47683037  0.93008559  0.73409542  2.30515491  2.21538604  1.61696801
-##  [7]  0.06281118  0.50673596 -0.30025341  1.33426237
+##  [1]  2.273095269  1.114740208  1.097374308 -0.132010140  1.658537898
+##  [6]  1.675372166  1.968531513  2.798526992  0.002700037  0.434845761
 ## 
 ## [[2]]
-##  [1] 48.72950 50.51500 50.09761 48.49359 51.54102 50.11748 48.49262 51.21464
-##  [9] 50.31470 49.94888
+##  [1] 47.71532 50.24373 49.37676 49.94933 49.53847 47.00357 50.49425 48.83755
+##  [9] 48.89843 49.14021
 ## 
 ## [[3]]
-##  [1] 21.75247 19.29432 20.89423 20.45387 20.56187 19.97086 19.14048 18.03191
-##  [9] 18.65333 18.72658
+##  [1] 19.70867 20.85021 19.71076 19.82436 20.27944 19.51235 20.80037 20.86945
+##  [9] 19.86296 19.91965
 ```
 
 ```r
@@ -508,9 +510,9 @@ str(out)
 
 ```
 ## List of 3
-##  $ : num [1:10] 0.477 0.93 0.734 2.305 2.215 ...
-##  $ : num [1:10] 48.7 50.5 50.1 48.5 51.5 ...
-##  $ : num [1:10] 21.8 19.3 20.9 20.5 20.6 ...
+##  $ : num [1:10] 2.273 1.115 1.097 -0.132 1.659 ...
+##  $ : num [1:10] 47.7 50.2 49.4 49.9 49.5 ...
+##  $ : num [1:10] 19.7 20.9 19.7 19.8 20.3 ...
 ```
 
 
@@ -625,8 +627,14 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     out
     ```
 
-> 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
 
+
+
+> As x has length 0, 1:length(x) counts down from 1 to 0. The first iteration x[1] will generate an NA. The second iteration x[0] will return numeric(0), which will assign a 0-length vector to a 0-length subset. It works but doesn’t change the object.
+
+> During the first iteration x[1] will generate an NA (out-of-bounds indexing for atomics). The resulting NA (from squaring) will be assigned to the empty length-1 list out[1] (out-of-bounds indexing for lists).
+
+> The next iteration, x[0] will return numeric(0) (zero indexing for atomics). Again, squaring doesn’t change the value and numeric(0) is assigned to out[0] (zero indexing for lists). Assigning a 0-length vector to a 0-length subset works but doesn’t change the object.
 
 2.  When the following code is evaluated, what can you say about the 
     vector being iterated?
@@ -644,7 +652,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ## [1] 1 2 3 2 4 6
     ```
 
-> the inputs are evaluated just once in the beginning of the loop
+> the inputs are evaluated just once in the beginning of the loop. Otherwise, we would run into an infinite loop.
 
 3.  What does the following code tell you about when the index is updated?
 
@@ -662,7 +670,7 @@ Generally speaking you shouldn't need to use `for` loops for data analysis tasks
     ## [1] 6
     ```
 
-> the index is updated in the beginning of each iteration
+> the index is updated in the beginning of each iteration. Therefore, reassigning the index symbol during one iteration doesn’t affect the following iterations. (Again, we would otherwise run into an infinite loop.)
 
 ## Quiz answers {#control-flow-answers}
 
