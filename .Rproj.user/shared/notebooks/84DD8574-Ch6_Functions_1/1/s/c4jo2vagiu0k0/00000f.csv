@@ -1,2 +1,0 @@
-"0","square <- function(x) x^2"
-"0","deviation <- function(x) x - mean(x)"

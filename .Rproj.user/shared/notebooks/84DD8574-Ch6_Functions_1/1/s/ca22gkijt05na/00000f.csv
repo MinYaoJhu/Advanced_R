@@ -1,3 +1,0 @@
-"0","function1 <- function(x) 3()"
-"0","#function1()"
-"0","#Error in function1() : attempt to apply non-function"

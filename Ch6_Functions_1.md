@@ -14,10 +14,29 @@ library(tidyverse)
 
 ```
 ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
 ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
-## ✔ readr   2.1.2      ✔ forcats 0.5.2 
+## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
+## ✔ readr   2.1.3      ✔ forcats 0.5.2
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 4.2.2
+```
+
+```
+## Warning: package 'readr' was built under R version 4.2.2
+```
+
+```
+## Warning: package 'purrr' was built under R version 4.2.2
+```
+
+```
+## Warning: package 'stringr' was built under R version 4.2.2
+```
+
+```
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
@@ -42,7 +61,7 @@ Answer the following questions to see if you can safely skip this chapter. You c
 
 > After reading: The three components of a function are its body, arguments, and environment.
 
-1.  What does the following code return?
+2.  What does the following code return?
 
     
     ```r
@@ -59,7 +78,7 @@ Answer the following questions to see if you can safely skip this chapter. You c
 
 > After reading: correct! 11!
 
-1.  How would you usually write this code?
+3.  How would you usually write this code?
 
     
     ```r
@@ -70,7 +89,7 @@ Answer the following questions to see if you can safely skip this chapter. You c
 
 > After reading: Correct! You’d normally write it in infix style: 1 + (2 * 3).
 
-1.  How could you make this call easier to read?
+4.  How could you make this call easier to read?
 
     
     ```r
@@ -90,7 +109,7 @@ mean(x, na.rm = TRUE)
 ```
 > After reading: Correct! Rewriting the call to `mean(c(1:10, NA), na.rm = TRUE)` is easier to understand.
 
-1.  Does the following code throw an error when executed? Why or why not?
+5.  Does the following code throw an error when executed? Why or why not?
 
     
     ```r
@@ -105,19 +124,33 @@ mean(x, na.rm = TRUE)
 > After reading: Correct! It does not throw an error because the second argument is never used so it’s never evaluated.
 
 
-1.  What is an infix function? How do you write it? What's a replacement 
+6.  What is an infix function? How do you write it? What's a replacement 
     function? How do you write it?
     
 > Before reading: In R, most of the functions are “prefix” - meaning that the function name comes before the arguments, which are put between parentheses : `function(a, b)`. With infix functions, the name comes between the arguments: `a function b`. I don't know what's a replacement function.
 
 > After reading: See Sections \@ref(infix-functions) and \@ref(replacement-functions).
 
-1.  How do you ensure that cleanup action occurs regardless of how a function 
+> Infix functions get their name from the fact the function name comes inbetween its arguments, and hence have two arguments. R comes with a number of built-in infix operators: `:, ::, :::, $, @, ^, *, /, +, -, >, >=, <, <=, ==, !=, !, &, &&, |, ||, ~, <-, and <<-. You can also create your own infix functions that start and end with %. Base R uses this pattern to define %%, %*%, %/%, %in%, %o%, and %x%.`
+
+> Replacement functions act like they modify their arguments in place, and have the special name xxx<-. They must have arguments named x and value, and must return the modified object. For example, the following function modifies the second element of a vector:
+
+
+```r
+`second<-` <- function(x, value) {
+  x[2] <- value
+  x
+}
+```
+
+7.  How do you ensure that cleanup action occurs regardless of how a function 
     exits?
     
 > Before reading: on.exit()?
 
 > After reading: correct! You use `on.exit()`; see Section \@ref(on-exit) for details.
+
+> To ensure that these changes are undone and that the global state is restored no matter how a function exits, use on.exit() to set up an exit handler. The following simple example shows that the exit handler is run regardless of whether the function exits normally or with an error.
 
 ### Outline {-}
 
@@ -239,8 +272,8 @@ onePlusTen
 ## function() {
 ##         x + 10
 ##       }
-## <bytecode: 0x000001e38dd8bcf0>
-## <environment: 0x000001e38e032a60>
+## <bytecode: 0x0000021b4029e558>
+## <environment: 0x0000021b40145770>
 ```
 
 ```r
@@ -251,8 +284,8 @@ tenPlusTen
 ## function() {
 ##         x + 10
 ##       }
-## <bytecode: 0x000001e38dd8bcf0>
-## <environment: 0x000001e38dd1e540>
+## <bytecode: 0x0000021b4029e558>
+## <environment: 0x0000021b402f3c20>
 ```
 
 
@@ -427,7 +460,7 @@ We'll come back to this idea in Section \@ref(tidy-dots).
 ## starting httpd help server ... done
 ```
 
-> Extract a Function Specified by Name
+> Extract a Function Specified by Name.
 Description: When called inside functions that take a function as argument, extract the desired function object while avoiding undesired matching to objects of other types.
 
 
@@ -438,11 +471,79 @@ match.fun(mean)
 ```
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001e38a7c6700>
+## <bytecode: 0x0000021b3a0a96a0>
 ## <environment: namespace:base>
 ```
 
 > A function can have more than one name.
+
+> In R there is no one-to-one mapping between functions and names. A name always points to a single object, but an object may have zero, one or many names.
+
+> Besides that, there are obviously ways to search for function names. However, to be sure to find the right one(s), you should not only compare the code (body) but also the arguments (formals) and the creation environment. As formals(), body() and environment() all return NULL for primitive functions, the easiest way to check if two functions are exactly equal is just to use identical().
+
+
+```r
+match.fun(anova)
+```
+
+```
+## function (object, ...) 
+## UseMethod("anova")
+## <bytecode: 0x0000021b386f8c68>
+## <environment: namespace:stats>
+```
+
+
+```r
+library(car)
+```
+
+```
+## Warning: package 'car' was built under R version 4.2.2
+```
+
+```
+## Loading required package: carData
+```
+
+```
+## 
+## Attaching package: 'car'
+```
+
+```
+## The following object is masked from 'package:dplyr':
+## 
+##     recode
+```
+
+```
+## The following object is masked from 'package:purrr':
+## 
+##     some
+```
+
+```r
+match.fun(Anova)
+```
+
+```
+## function (mod, ...) 
+## {
+##     UseMethod("Anova", mod)
+## }
+## <bytecode: 0x0000021b429df9e8>
+## <environment: namespace:car>
+```
+
+
+```r
+identical(anova, Anova)
+```
+
+```
+## [1] FALSE
+```
 
 
 2.  It's possible (although typically not useful) to call an anonymous function.
@@ -465,14 +566,16 @@ match.fun(mean)
     ## [1] 3
     ```
 
+> `(function(x) 3)()` is correct.
+
+> The anonymous function function(x) 3 is surrounded by a pair of parentheses before it is called by (). These extra parentheses separate the function call from the anonymous function’s body. Without them a function with the invalid body 3() is returned, which throws an error when we call it. This is easier to see if we name the function:
+
 
 ```r
 function1 <- function(x) 3()
 #function1()
-#Error in function1() : attempt to apply non-function
+# Error in function1() : attempt to apply non-function
 ```
-
-> `(function(x) 3)()` is correct.
 
 3. A good rule of thumb is that an anonymous function should fit on one line 
    and shouldn't need to use `{}`. Review your code. Where could you have 
@@ -487,6 +590,8 @@ sapply(1:2, function(x) x + 1L)
 ```
 ## [1] 2 3
 ```
+> The use of anonymous functions allows concise and elegant code in certain situations. However, they miss a descriptive name and when re-reading the code, it can take a while to figure out what they do. That’s why it’s helpful to give long and complex functions a descriptive name.
+
 
 
 4.  What function allows you to tell if an object is a function? What function
@@ -502,12 +607,16 @@ sapply(1:2, function(x) x + 1L)
 
 > Use is.primitive(x): Checks whether its argument is a primitive function.
 
+> There is one exception to the rule that a function has three components. Primitive functions, like sum() and [, call C code directly. These functions exist primarily in C, not R, so their formals(), body(), and environment() are all NULL. Primitive functions are only found in the base package. While they have certain performance advantages, this benefit comes at a price: they are harder to write. For this reason, R-core generally avoids creating them unless there is no other option. 6.2.2
+
+
+
 5.  This code makes a list of all functions in the base package. 
     
     
     ```r
     objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    funs <- Filter(is.function, objs)
+    funs <- Filter(is.function, objs) #
     
     ?mget
     ```
@@ -625,7 +734,6 @@ str(funs)
 ##  $ .rowSums                          :function (x, m, n, na.rm = FALSE)  
 ##   [list output truncated]
 ```
-
     Use it to answer the following questions:
 
     a. Which base function has the most arguments?
@@ -634,6 +742,7 @@ str(funs)
 ```r
 library(purrr)
 
+?map
 ?map_int
 
 n_args <- funs %>% 
@@ -666,6 +775,19 @@ n_args %>%
 ## 1056
 ```
 
+other method:
+
+
+```r
+fun.args <- sapply(funs, function(x) length(formals(x))) 
+
+names(funs)[which.max(fun.args)] 
+```
+
+```
+## [1] "scan"
+```
+
 
 
     b. How many base functions have no arguments? What's special about those
@@ -679,6 +801,8 @@ sum(n_args == 0)
 ```
 ## [1] 253
 ```
+> However, this over counts because formals() returns NULL for primitive functions, and length(NULL) is 0. To fix this, we can first remove the primitive functions:
+
 
 
 ```r
@@ -694,8 +818,9 @@ sum(n_args2 == 0)
 ## [1] 49
 ```
 
+> most of the functions with no arguments are actually primitive functions.
        
-    a. How could you adapt the code to find all primitive functions?
+    c. How could you adapt the code to find all primitive functions?
     
 
 ```r
@@ -827,6 +952,8 @@ sum(n_args2 == 0)
 
 > 2. When the function is defined in the global environment.
 
+> Primitive functions and functions created in the global environment do not print their environment.
+
 ## 6.3 Function composition {#function-composition}
 \index{functions!composition}
 \indexc{\%>\%}
@@ -851,7 +978,7 @@ sqrt(mean(square(deviation(x))))
 ```
 
 ```
-## [1] 0.2895154
+## [1] 0.2863583
 ```
 
 Or you save the intermediate results as variables:
@@ -866,7 +993,7 @@ out
 ```
 
 ```
-## [1] 0.2895154
+## [1] 0.2863583
 ```
 
 The magrittr package [@magrittr] provides a third option: the binary operator `%>%`, which is called the pipe and is pronounced as "and then".
@@ -902,7 +1029,7 @@ x %>%
 ```
 
 ```
-## [1] 0.2895154
+## [1] 0.2863583
 ```
 
 `x %>% f()` is equivalent to `f(x)`; `x %>% f(y)` is equivalent to `f(x, y)`. The pipe allows you to focus on the high-level composition of functions rather than the low-level flow of data; the focus is on what's being done (the verbs), rather than on what's being modified (the nouns). This style is common in Haskell and F#, the main inspiration for magrittr, and is the default style in stack based programming languages like Forth and Factor. 
@@ -1323,7 +1450,6 @@ env <- ls()
 h05(env)
 ```
 
-???
 
 ### 6.5.3 Missing arguments
 \index{missing arguments!missing@\texttt{missing()}}
@@ -1436,6 +1562,16 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
 
 
 ```r
+FALSE & NA
+```
+
+```
+## [1] FALSE
+```
+
+
+
+```r
 ?`&&`
 ```
 
@@ -1471,7 +1607,12 @@ Because of lazy evaluation, you don't need to worry about unnecessary computatio
     ```
     ## [1] FALSE FALSE FALSE
     ```
-    
+
+ `&` evaluate only first one, `&&` evaluate both
+ However, False > NA > True
+ 
+ the second version is not
+
 
 ```r
 length(NULL) == 1
@@ -1501,7 +1642,7 @@ NULL > 0
     f2()
     ```
 
-> 100. Lazy evaluation, Default arguments.
+> 100. Lazy evaluation, Default arguments. `x = z`can be supplied inside the function
 
 3.  What does this function return? Why? Which principle does it illustrate?
   
@@ -1584,6 +1725,22 @@ hist(x, breaks = "Sturges",
      axes = TRUE, plot = TRUE, labels = FALSE,
      nclass = NULL, warn.unused = TRUE, ...)
 
+breaks = "Sturges" get the number
+
+
+nclass {grDevices}
+
+Compute the Number of Classes for a Histogram
+
+Description
+Compute the number of classes for a histogram, notably hist().
+
+Usage
+nclass.Sturges(x)
+nclass.scott(x)
+nclass.FD(x, digits = 5)
+
+
 5.  Explain why this function works. Why is it confusing?
 
     
@@ -1596,7 +1753,7 @@ hist(x, breaks = "Sturges",
     ```
     
     ```
-    ## [1] "2022-10-10 09:44:16 BST"
+    ## [1] "2022-12-12 09:25:52 GMT"
     ```
 
 
@@ -1605,7 +1762,7 @@ print(Sys.time())
 ```
 
 ```
-## [1] "2022-10-10 09:44:16 BST"
+## [1] "2022-12-12 09:25:52 GMT"
 ```
 
 
@@ -1673,4 +1830,12 @@ length(formals(library))
 ## [1] 13
 ```
 
-> 13
+> 0
+
+> library() doesn’t require any arguments. 
+
+
+```r
+#print.libraryIQR()
+```
+
