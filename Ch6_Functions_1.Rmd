@@ -386,7 +386,7 @@ sapply(1:2, function(x) x + 1L)
     objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
     funs <- Filter(is.function, objs) #
     
-    ?mget
+    #?mget
     ```
     
 > Search by name for an object (get) or zero or more objects (mget).
@@ -401,8 +401,8 @@ str(funs)
 ```{r}
 library(purrr)
 
-?map
-?map_int
+#?map
+#?map_int
 
 n_args <- funs %>% 
   map(formals) %>%
