@@ -5,6 +5,10 @@ date: "2022-11-06"
 output: html_document
 ---
 
+```{r setup}
+library(rlang)
+```
+
 ## 8.5 Custom conditions {#custom-conditions}
 \index{conditions!custom}
 \indexc{abort()}
