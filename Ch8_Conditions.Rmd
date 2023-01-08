@@ -51,15 +51,11 @@ Want to skip this chapter? Go for it, if you can answer the questions below. Fin
 
 3. What's the main difference between `tryCatch()` and `withCallingHandlers()`?
 
-> After reading: `tryCatch()` creates exiting handlers which will terminate the execution
-   of wrapped code; `withCallingHandlers()` creates calling handlers which 
-   don't affect the execution of wrapped code.
+> After reading: `tryCatch()` creates exiting handlers which will terminate the execution of wrapped code; `withCallingHandlers()` creates calling handlers which don't affect the execution of wrapped code.
 
 4. Why might you want to create a custom error object?
 
-> After reading: Because you can then capture specific types of error with `tryCatch()`,
-   rather than relying on the comparison of error strings, which is risky,
-   especially when messages are translated.
+> After reading: Because you can then capture specific types of error with `tryCatch()`, rather than relying on the comparison of error strings, which is risky, especially when messages are translated.
 
 ### Outline {-}
 
