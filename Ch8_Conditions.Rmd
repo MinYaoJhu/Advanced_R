@@ -806,7 +806,7 @@ catch_cnd
 5.  How could you rewrite `show_condition()` to use a single handler?
 
 ```{r}
-show_condition
+# show_condition
 ```
 
 > I am not sure what to do...
