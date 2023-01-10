@@ -146,6 +146,7 @@ These structured condition objects are much easier to program with. The first pl
 library(testthat)
 
 err <- catch_cnd(my_log("a"))
+str(err)
 expect_s3_class(err, "error_bad_argument")
 expect_equal(err$arg, "x")
 expect_equal(err$not, "character")
@@ -178,11 +179,30 @@ tryCatch(
     installed (with `requireNamespace("pkg", quietly = FALSE))` and if not,
     throws a custom condition that includes the package name in the metadata.
     
+```{r, error = TRUE}
+check_pkg_installed <- function(package) {
+  if (!requireNamespace(package, quietly = FALSE)) {
+    abort(
+      "error_pkg_not_found",
+      message = paste0("package '", package, "' not installed."),
+      package = package
+    )
+  }
+  else TRUE
+}
+
+check_pkg_installed("rlang")
+check_pkg_installed("pandas")
+```
+
+    
 2.  Inside a package you often need to stop with an error when something
     is not right. Other packages that depend on your package might be
     tempted to check these errors in their unit tests. How could you help
     these packages to avoid relying on the error message which is part of
     the user interface rather than the API and might change without notice?
+
+> Working with the text of the error message is error prone. We can create custom conditions that can contain additional metadata. This takes advantage of R’s flexible argument matching so that the name of the type of error comes first, followed by the user-facing text, followed by custom metadata. Then, other packages could check for the class of the condition, rather than inspecting the message.
 
 ## 8.6 Applications {#condition-applications}
 

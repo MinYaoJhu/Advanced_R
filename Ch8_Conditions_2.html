@@ -505,7 +505,51 @@ and then asserts it has the structure that we expect.</p>
 <pre class="r"><code>library(testthat)
 
 err &lt;- catch_cnd(my_log(&quot;a&quot;))
-expect_s3_class(err, &quot;error_bad_argument&quot;)
+str(err)</code></pre>
+<pre><code>## List of 7
+##  $ message: &#39;glue&#39; chr &quot;`x` must be numeric; not character.&quot;
+##  $ trace  :Classes &#39;rlang_trace&#39;, &#39;rlib_trace&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:  10 obs. of  7 variables:
+##   ..$ call       :List of 10
+##   .. ..$ : language catch_cnd(my_log(&quot;a&quot;))
+##   .. ..$ : language eval_bare(rlang::expr(tryCatch(!!!handlers, {     force(expr) ...
+##   .. ..$ : language tryCatch(condition = `&lt;fn&gt;`, {     force(expr) ...
+##   .. ..$ : language tryCatchList(expr, classes, parentenv, handlers)
+##   .. ..$ : language tryCatchOne(expr, names, parentenv, handlers[[1L]])
+##   .. ..$ : language doTryCatch(return(expr), name, parentenv, handler)
+##   .. ..$ : language force(expr)
+##   .. ..$ : language my_log(&quot;a&quot;)
+##   .. ..$ : language abort_bad_argument(arg = &quot;x&quot;, must = &quot;be numeric&quot;, not = x)
+##   .. .. ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 3 5 3 57 5 57 3 3
+##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001deaeb04680&gt; 
+##   .. ..$ : language abort(&quot;error_bad_argument&quot;, message = msg, arg = arg, must = must, not = not)
+##   .. .. ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 8 3 13 3 3 3 8 13
+##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001deae86fd10&gt; 
+##   ..$ parent     : int [1:10] 0 1 1 3 4 5 1 0 8 9
+##   ..$ visible    : logi [1:10] TRUE TRUE TRUE TRUE TRUE TRUE ...
+##   ..$ namespace  : chr [1:10] &quot;rlang&quot; &quot;rlang&quot; &quot;base&quot; &quot;base&quot; ...
+##   ..$ scope      : chr [1:10] &quot;::&quot; &quot;::&quot; &quot;::&quot; &quot;local&quot; ...
+##   ..$ error_frame: logi [1:10] FALSE FALSE FALSE FALSE FALSE FALSE ...
+##   ..$ error_arg  :List of 10
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : chr &quot;x&quot;
+##   .. ..$ : NULL
+##   ..- attr(*, &quot;version&quot;)= int 2
+##  $ parent : NULL
+##  $ arg    : chr &quot;x&quot;
+##  $ must   : chr &quot;be numeric&quot;
+##  $ not    : chr &quot;character&quot;
+##  $ call   : language abort_bad_argument(&quot;x&quot;, must = &quot;be numeric&quot;, not = x)
+##   ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 3 5 3 57 5 57 3 3
+##   .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001deaeb04680&gt; 
+##  - attr(*, &quot;class&quot;)= chr [1:4] &quot;error_bad_argument&quot; &quot;rlang_error&quot; &quot;error&quot; &quot;condition&quot;</code></pre>
+<pre class="r"><code>expect_s3_class(err, &quot;error_bad_argument&quot;)
 expect_equal(err$arg, &quot;x&quot;)
 expect_equal(err$not, &quot;character&quot;)</code></pre>
 <p>We can also use the class (<code>error_bad_argument</code>) in
@@ -531,19 +575,46 @@ not do what you might hope:</p>
 <div id="exercises" class="section level3">
 <h3>8.5.4 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Inside a package, it’s occasionally useful to check that a
-package is installed before using it. Write a function that checks if a
-package is installed (with
+<li>Inside a package, it’s occasionally useful to check that a package
+is installed before using it. Write a function that checks if a package
+is installed (with
 <code>requireNamespace(&quot;pkg&quot;, quietly = FALSE))</code> and if not,
 throws a custom condition that includes the package name in the
-metadata.</p></li>
-<li><p>Inside a package you often need to stop with an error when
-something is not right. Other packages that depend on your package might
-be tempted to check these errors in their unit tests. How could you help
+metadata.</li>
+</ol>
+<pre class="r"><code>check_pkg_installed &lt;- function(package) {
+  if (!requireNamespace(package, quietly = FALSE)) {
+    abort(
+      &quot;error_pkg_not_found&quot;,
+      message = paste0(&quot;package &#39;&quot;, package, &quot;&#39; not installed.&quot;),
+      package = package
+    )
+  }
+  else TRUE
+}
+
+check_pkg_installed(&quot;rlang&quot;)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>check_pkg_installed(&quot;pandas&quot;)</code></pre>
+<pre><code>## Loading required namespace: pandas</code></pre>
+<pre><code>## Error in `check_pkg_installed()`:
+## ! package &#39;pandas&#39; not installed.</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Inside a package you often need to stop with an error when something
+is not right. Other packages that depend on your package might be
+tempted to check these errors in their unit tests. How could you help
 these packages to avoid relying on the error message which is part of
 the user interface rather than the API and might change without
-notice?</p></li>
+notice?</li>
 </ol>
+<blockquote>
+<p>Working with the text of the error message is error prone. We can
+create custom conditions that can contain additional metadata. This
+takes advantage of R’s flexible argument matching so that the name of
+the type of error comes first, followed by the user-facing text,
+followed by custom metadata. Then, other packages could check for the
+class of the condition, rather than inspecting the message.</p>
+</blockquote>
 </div>
 </div>
 <div id="condition-applications" class="section level2">
