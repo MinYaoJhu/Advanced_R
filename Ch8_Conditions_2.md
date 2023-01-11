@@ -7,7 +7,8 @@ output:
     keep_md: yes
 ---
 
-```{r setup}
+
+```r
 library(rlang)
 ```
 
@@ -21,12 +22,18 @@ Fortunately R has a powerful, but little used feature: the ability to create cus
 
 The following example shows the basic pattern. I recommend using the following call structure for custom conditions. This takes advantage of R's flexible argument matching so that the name of the type of error comes first, followed by the user-facing text, followed by custom metadata.
 
-```{r, error = TRUE}
+
+```r
 abort(
   "error_not_found",
   message = "Path `blah.csv` not found", 
   path = "blah.csv"
 )
+```
+
+```
+## Error:
+## ! Path `blah.csv` not found
 ```
 
 Custom conditions work just like regular conditions when used interactively, but allow handlers to do much more.
@@ -35,14 +42,27 @@ Custom conditions work just like regular conditions when used interactively, but
 
 To explore these ideas in more depth, let's take `base::log()`. It does the minimum when throwing errors  caused by invalid arguments:
 
-```{r, error = TRUE}
+
+```r
 log(letters)
+```
+
+```
+## Error in log(letters): non-numeric argument to mathematical function
+```
+
+```r
 log(1:10, base = letters)
+```
+
+```
+## Error in log(1:10, base = letters): non-numeric argument to mathematical function
 ```
 
 I think we can do better by being explicit about which argument is the problem (i.e. `x` or `base`), and saying what the problematic input is (not just what it isn't).
 
-```{r}
+
+```r
 my_log <- function(x, base = exp(1)) {
   if (!is.numeric(x)) {
     abort(paste0(
@@ -61,9 +81,23 @@ my_log <- function(x, base = exp(1)) {
 
 This gives us:
 
-```{r, error = TRUE}
+
+```r
 my_log(letters)
+```
+
+```
+## Error in `my_log()`:
+## ! `x` must be a numeric vector; not character.
+```
+
+```r
 my_log(1:10, base = letters)
+```
+
+```
+## Error in `my_log()`:
+## ! `base` must be a numeric vector; not character.
 ```
 
 This is an improvement for interactive usage as the error messages are more likely to guide the user towards a correct fix. However, they're no better if you want to programmatically handle the errors: all the useful metadata about the error is jammed into a single string.
@@ -73,7 +107,8 @@ This is an improvement for interactive usage as the error messages are more like
 
 Let's build some infrastructure to improve this situation, We'll start by providing a custom `abort()` function for bad arguments. This is a little over-generalised for the example at hand, but it reflects common patterns that I've seen across other functions. The pattern is fairly simple. We create a nice error message for the user, using `glue::glue()`, and store metadata in the condition call for the developer. 
 
-```{r}
+
+```r
 abort_bad_argument <- function(arg, must, not = NULL) {
   msg <- glue::glue("`{arg}` must {must}")
   if (!is.null(not)) {
@@ -95,7 +130,8 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 
 If you want to throw a custom error without adding a dependency on rlang, you can create a condition object "by hand" and then pass it to `stop()`:
 
-```{r, eval = FALSE}
+
+```r
 stop_custom <- function(.subclass, message, call = NULL, ...) {
   err <- structure(
     list(
@@ -119,7 +155,8 @@ err$x
 
 We can now rewrite `my_log()` to use this new helper:
 
-```{r}
+
+```r
 my_log <- function(x, base = exp(1)) {
   if (!is.numeric(x)) {
     abort_bad_argument("x", must = "be numeric", not = x)
@@ -134,9 +171,23 @@ my_log <- function(x, base = exp(1)) {
 
 `my_log()` itself is not much shorter, but is a little more meangingful, and it ensures that error messages for bad arguments are consistent across functions. It yields the same interactive error messages as before:
 
-```{r, error = TRUE}
+
+```r
 my_log(letters)
+```
+
+```
+## Error in `abort_bad_argument()`:
+## ! `x` must be numeric; not character.
+```
+
+```r
 my_log(1:10, base = letters)
+```
+
+```
+## Error in `abort_bad_argument()`:
+## ! `base` must be numeric; not character.
 ```
 
 ### 8.5.3 Handling
@@ -144,11 +195,61 @@ my_log(1:10, base = letters)
 
 These structured condition objects are much easier to program with. The first place you might want to use this capability is when testing your function. Unit testing is not a subject of this book (see [R packages](http://r-pkgs.had.co.nz/) for details), but the basics are easy to understand. The following code captures the error, and then asserts it has the structure that we expect.
 
-```{r, message = FALSE}
+
+```r
 library(testthat)
 
 err <- catch_cnd(my_log("a"))
 str(err)
+```
+
+```
+## List of 7
+##  $ message: 'glue' chr "`x` must be numeric; not character."
+##  $ trace  :Classes 'rlang_trace', 'rlib_trace', 'tbl' and 'data.frame':	10 obs. of  7 variables:
+##   ..$ call       :List of 10
+##   .. ..$ : language catch_cnd(my_log("a"))
+##   .. ..$ : language eval_bare(rlang::expr(tryCatch(!!!handlers, {     force(expr) ...
+##   .. ..$ : language tryCatch(condition = `<fn>`, {     force(expr) ...
+##   .. ..$ : language tryCatchList(expr, classes, parentenv, handlers)
+##   .. ..$ : language tryCatchOne(expr, names, parentenv, handlers[[1L]])
+##   .. ..$ : language doTryCatch(return(expr), name, parentenv, handler)
+##   .. ..$ : language force(expr)
+##   .. ..$ : language my_log("a")
+##   .. ..$ : language abort_bad_argument(arg = "x", must = "be numeric", not = x)
+##   .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 3 5 3 57 5 57 3 3
+##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65d0e520> 
+##   .. ..$ : language abort("error_bad_argument", message = msg, arg = arg, must = must, not = not)
+##   .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 8 3 13 3 3 3 8 13
+##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65aa7570> 
+##   ..$ parent     : int [1:10] 0 1 1 3 4 5 1 0 8 9
+##   ..$ visible    : logi [1:10] TRUE TRUE TRUE TRUE TRUE TRUE ...
+##   ..$ namespace  : chr [1:10] "rlang" "rlang" "base" "base" ...
+##   ..$ scope      : chr [1:10] "::" "::" "::" "local" ...
+##   ..$ error_frame: logi [1:10] FALSE FALSE FALSE FALSE FALSE FALSE ...
+##   ..$ error_arg  :List of 10
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : NULL
+##   .. ..$ : chr "x"
+##   .. ..$ : NULL
+##   ..- attr(*, "version")= int 2
+##  $ parent : NULL
+##  $ arg    : chr "x"
+##  $ must   : chr "be numeric"
+##  $ not    : chr "character"
+##  $ call   : language abort_bad_argument("x", must = "be numeric", not = x)
+##   ..- attr(*, "srcref")= 'srcref' int [1:8] 3 5 3 57 5 57 3 3
+##   .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65d0e520> 
+##  - attr(*, "class")= chr [1:4] "error_bad_argument" "rlang_error" "error" "condition"
+```
+
+```r
 expect_s3_class(err, "error_bad_argument")
 expect_equal(err$arg, "x")
 expect_equal(err$not, "character")
@@ -156,7 +257,8 @@ expect_equal(err$not, "character")
 
 We can also use the class (`error_bad_argument`) in `tryCatch()` to only handle that specific error:
 
-```{r}
+
+```r
 tryCatch(
   error_bad_argument = function(cnd) "bad_argument",
   error = function(cnd) "other error",
@@ -164,14 +266,23 @@ tryCatch(
 )
 ```
 
+```
+## [1] "bad_argument"
+```
+
 When using `tryCatch()` with multiple handlers and custom classes, the first handler to match any class in the signal's class vector is called, not the best match. For this reason, you need to make sure to put the most specific handlers first. The following code does not do what you might hope:
 
-```{r}
+
+```r
 tryCatch(
   error = function(cnd) "other error",
   error_bad_argument = function(cnd) "bad_argument",
   my_log("a")
 )
+```
+
+```
+## [1] "other error"
 ```
 
 ### 8.5.4 Exercises
@@ -181,7 +292,8 @@ tryCatch(
     installed (with `requireNamespace("pkg", quietly = FALSE))` and if not,
     throws a custom condition that includes the package name in the metadata.
     
-```{r, error = TRUE}
+
+```r
 check_pkg_installed <- function(package) {
   if (!requireNamespace(package, quietly = FALSE)) {
     abort(
@@ -194,7 +306,23 @@ check_pkg_installed <- function(package) {
 }
 
 check_pkg_installed("rlang")
+```
+
+```
+## [1] "package 'rlang' installed."
+```
+
+```r
 check_pkg_installed("pandas")
+```
+
+```
+## Loading required namespace: pandas
+```
+
+```
+## Error in `check_pkg_installed()`:
+## ! package 'pandas' not installed.
 ```
 
     
@@ -215,7 +343,8 @@ Now that you've learned the basic tools of R's condition system, it's time to di
 
 There are a few simple, but useful, `tryCatch()` patterns based on returning a value from the error handler. The simplest case is a wrapper to return a default value if an error occurs:
 
-```{r}
+
+```r
 fail_with <- function(expr, value = NULL) {
   tryCatch(
     error = function(cnd) value,
@@ -224,12 +353,24 @@ fail_with <- function(expr, value = NULL) {
 }
 
 fail_with(log(10), NA_real_)
+```
+
+```
+## [1] 2.302585
+```
+
+```r
 fail_with(log("x"), NA_real_)
+```
+
+```
+## [1] NA
 ```
 
 A more sophisticated application is `base::try()`. Below, `try2()` extracts the essence of `base::try()`; the real function is more complicated in order to make the error message look more like what you'd see if `tryCatch()` wasn't used. 
 
-```{r}
+
+```r
 try2 <- function(expr, silent = FALSE) {
   tryCatch(
     error = function(cnd) {
@@ -244,15 +385,42 @@ try2 <- function(expr, silent = FALSE) {
 }
 
 try2(1)
+```
+
+```
+## [1] 1
+```
+
+```r
 try2(stop("Hi"))
+```
+
+```
+## Error: Hi
+```
+
+```
+## [1] "Hi"
+## attr(,"class")
+## [1] "try-error"
+```
+
+```r
 try2(stop("Hi"), silent = TRUE)
+```
+
+```
+## [1] "Hi"
+## attr(,"class")
+## [1] "try-error"
 ```
 
 ### 8.6.2 Success and failure values {#try-success-failure}
 
 We can extend this pattern to return one value if the code evaluates successfully (`success_val`), and another if it fails (`error_val`). This pattern just requires one small trick: evaluating the user supplied code, then `success_val`. If the code throws an error, we'll never get to `success_val` and will instead return `error_val`.
 
-```{r}
+
+```r
 foo <- function(expr) {
   tryCatch(
     error = function(cnd) error_val,
@@ -266,7 +434,8 @@ foo <- function(expr) {
 
 We can use this to determine if an expression fails:
 
-```{r}
+
+```r
 does_error <- function(expr) {
   tryCatch(
     error = function(cnd) TRUE,
@@ -280,7 +449,8 @@ does_error <- function(expr) {
 
 Or to capture any condition, like just `rlang::catch_cnd()`:
 
-```{r, eval = FALSE}
+
+```r
 catch_cnd <- function(expr) {
   tryCatch(
     condition = function(cnd) cnd, 
@@ -294,7 +464,8 @@ catch_cnd <- function(expr) {
 
 We can also use this pattern to create a `try()` variant. One challenge with `try()` is that it's slightly challenging to determine if the code succeeded or failed. Rather than returning an object with a special class, I think it's slightly nicer to return a list with two components `result` and `error`.
 
-```{r}
+
+```r
 safety <- function(expr) {
   tryCatch(
     error = function(cnd) {
@@ -305,7 +476,25 @@ safety <- function(expr) {
 }
 
 str(safety(1 + 10))
+```
+
+```
+## List of 2
+##  $ result: num 11
+##  $ error : NULL
+```
+
+```r
 str(safety(stop("Error!")))
+```
+
+```
+## List of 2
+##  $ result: NULL
+##  $ error :List of 2
+##   ..$ message: chr "Error!"
+##   ..$ call   : language doTryCatch(return(expr), name, parentenv, handler)
+##   ..- attr(*, "class")= chr [1:3] "simpleError" "error" "condition"
 ```
 
 (This is closely related to `purrr::safely()`, a function operator, which we'll come back to in Section \@ref(safely).)
@@ -315,7 +504,8 @@ str(safety(stop("Error!")))
 
 As well as returning default values when a condition is signalled, handlers can be used to make more informative error messages. One simple application is to make a function that works like `options(warn = 2)` for a single block of code. The idea is simple: we handle warnings by throwing an error:
 
-```{r}
+
+```r
 warning2error <- function(expr) {
   withCallingHandlers(
     warning = function(cnd) abort(conditionMessage(cnd)),
@@ -324,11 +514,17 @@ warning2error <- function(expr) {
 }
 ```
 
-```{r, error = TRUE}
+
+```r
 warning2error({
   x <- 2 ^ 4
   warn("Hello")
 })
+```
+
+```
+## Error:
+## ! Hello
 ```
 
 You could write a similar function if you were trying to find the source of an annoying message. More on this in Section \@ref(non-error-failures).
@@ -336,7 +532,8 @@ You could write a similar function if you were trying to find the source of an a
 <!-- 
 Another common place where it's useful to add additional context dependent information. For example, you might have a function to download data from a remote website:
 
-```{r}
+
+```r
 download_data <- function(name) {
   src <- paste0("http://awesomedata.com/", name, ".csv")
   dst <- paste0("data/", name, ".csv")
@@ -367,7 +564,8 @@ There are two important ideas here:
 
 Another common pattern is to record conditions for later investigation. The new challenge here is that calling handlers are called only for their side-effects so we can't return values, but instead need to modify some object in place.
 
-```{r}
+
+```r
 catch_cnds <- function(expr) {
   conds <- list()
   add_cond <- function(cnd) {
@@ -391,9 +589,27 @@ catch_cnds({
 })
 ```
 
+```
+## [[1]]
+## <message/rlang_message>
+## Message:
+## a
+## 
+## [[2]]
+## <warning/rlang_warning>
+## Warning:
+## b
+## 
+## [[3]]
+## <message/rlang_message>
+## Message:
+## c
+```
+
 What if you also want to capture errors? You'll need to wrap the `withCallingHandlers()` in a `tryCatch()`. If an error occurs, it will be the last condition.
 
-```{r}
+
+```r
 catch_cnds <- function(expr) {
   conds <- list()
   add_cond <- function(cnd) {
@@ -422,6 +638,25 @@ catch_cnds({
 })
 ```
 
+```
+## [[1]]
+## <message/rlang_message>
+## Message:
+## a
+## 
+## [[2]]
+## <warning/rlang_warning>
+## Warning:
+## b
+## 
+## [[3]]
+## <error/rlang_error>
+## Error:
+## ! C
+## ---
+## Backtrace:
+```
+
 This is the key idea underlying the evaluate package [@evaluate] which powers knitr: it captures every output into a special data structure so that it can be later replayed. As a whole, the evaluate package is quite a lot more complicated than the code here because it also needs to handle plots and text output.
 
 ### 8.6.5 No default behaviour
@@ -430,7 +665,8 @@ This is the key idea underlying the evaluate package [@evaluate] which powers kn
 
 A final useful pattern is to signal a condition that doesn't inherit from `message`, `warning` or `error`. Because there is no default behaviour, this means the condition has no effect unless the user specifically requests it. For example, you could imagine a logging system based on conditions:
 
-```{r}
+
+```r
 log <- function(message, level = c("info", "error", "fatal")) {
   level <- match.arg(level)
   signal(message, "log", level = level)
@@ -439,13 +675,15 @@ log <- function(message, level = c("info", "error", "fatal")) {
 
 When you call `log()` a condition is signalled, but nothing happens because it has no default handler:
 
-```{r}
+
+```r
 log("This code was run")
 ```
 
 To activate logging you need a handler that does something with the `log` condition. Below I define a `record_log()` function that will record all logging messages to a file:
 
-```{r}
+
+```r
 record_log <- function(expr, path = stdout()) {
   withCallingHandlers(
     log = function(cnd) {
@@ -461,9 +699,14 @@ record_log <- function(expr, path = stdout()) {
 record_log(log("Hello"))
 ```
 
+```
+## [info] Hello
+```
+
 You could even imagine layering with another function that allows you to selectively suppress some logging levels.
 
-```{r}
+
+```r
 ignore_log_levels <- function(expr, levels) {
   withCallingHandlers(
     log = function(cnd) {
@@ -493,12 +736,14 @@ Restarts are currently beyond the scope of the book, but I suspect will be inclu
 
 1.  Create `suppressConditions()` that works like `suppressMessages()` and `suppressWarnings()` but suppresses everything. Think carefully about how you should handle errors.
 
-```{r, eval = FALSE}
+
+```r
 View(suppressMessages)
 View(suppressWarnings)
 ```
 
-```{r}
+
+```r
 suppressErrors <- function(expr) {
   tryCatch(
     error = function(cnd) 
@@ -511,17 +756,20 @@ suppressErrors <- function(expr) {
 }
 ```
 
-```{r}
+
+```r
 suppressErrors(abort("error"))
 ```
 
-```{r}
+
+```r
 suppressConditions <- function(expr) {
   suppressErrors(suppressWarnings(suppressMessages(expr)))
 }
 ```
 
-```{r}
+
+```r
 suppressConditions(message("message"))
 suppressConditions(warning("warning"))
 suppressConditions(abort("error"))
@@ -537,7 +785,8 @@ suppressConditions({
 
 > tryCatch() creates exiting handlers which will terminate the execution of wrapped code; withCallingHandlers() creates calling handlers which don’t affect the execution of wrapped code.
 
-```{r}
+
+```r
     message2error <- function(code) {
       withCallingHandlers(code, message = function(e) stop(e))
     }
@@ -546,44 +795,95 @@ suppressConditions({
     }
 ```
 
-```{r}
+
+```r
     message2error_calling <- function(code) {
       withCallingHandlers(code, message = function(e) stop(e))
     }
 ```
 
 
-```{r, error = TRUE}
+
+```r
 message2error_calling(message("message"))
+```
+
+```
+## message
+```
+
+```r
 traceback()
 ```
 
-```{r, error = TRUE}
+```
+## No traceback available
+```
+
+
+```r
 message2error_calling(stop("error"))
+```
+
+```
+## Error in withCallingHandlers(code, message = function(e) stop(e)): error
+```
+
+```r
 traceback()
 ```
 
-```{r}
+```
+## No traceback available
+```
+
+
+```r
     message2error_exiting <- function(code) {
       tryCatch(code, message = function(e) stop(e))
     }
 ```
 
-```{r, error = TRUE}
+
+```r
 message2error_exiting(message("message"))
+```
+
+```
+## message
+```
+
+```r
 traceback()
 ```
 
-```{r, error = TRUE}
+```
+## No traceback available
+```
+
+
+```r
 message2error_exiting(stop("error"))
+```
+
+```
+## Error in doTryCatch(return(expr), name, parentenv, handler): error
+```
+
+```r
 traceback()
+```
+
+```
+## No traceback available
 ```
 
 3.  How would you modify the `catch_cnds()` definition if you wanted to recreate the original intermingling of warnings and messages?
 
 > I am not sure how does this different from 8.6.4??
 
-```{r}
+
+```r
 new_catch_cnds <- function(expr) {
   conds <- list()
   add_cond <- function(cnd) {
@@ -608,10 +908,30 @@ new_catch_cnds({
 })
 ```
 
+```
+## [[1]]
+## <message/rlang_message>
+## Message:
+## a
+## 
+## [[2]]
+## <warning/rlang_warning>
+## Warning:
+## b
+## 
+## [[3]]
+## <simpleMessage in message("c"): c
+## >
+## 
+## [[4]]
+## <simpleWarning in withCallingHandlers(message = add_cond, warning = add_cond, expr): warning>
+```
+
 
 4.  Why is catching interrupts dangerous? Run this code to find out.
 
-    ```{r, eval = FALSE}
+    
+    ```r
     bottles_of_beer <- function(i = 99) {
       message(
         "There are ", i, " bottles of beer on the wall, ", 
@@ -638,7 +958,8 @@ new_catch_cnds({
     }
     ```
 
-```{r}
+
+```r
 # bottles_of_beer(5)
 ```
 > It's hard to break out of the function because we’re capturing the interruption.
