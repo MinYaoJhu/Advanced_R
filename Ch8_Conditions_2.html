@@ -520,10 +520,10 @@ str(err)</code></pre>
 ##   .. ..$ : language my_log(&quot;a&quot;)
 ##   .. ..$ : language abort_bad_argument(arg = &quot;x&quot;, must = &quot;be numeric&quot;, not = x)
 ##   .. .. ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 3 5 3 57 5 57 3 3
-##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000002be65d0e520&gt; 
+##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001721bc9bfa8&gt; 
 ##   .. ..$ : language abort(&quot;error_bad_argument&quot;, message = msg, arg = arg, must = must, not = not)
 ##   .. .. ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 8 3 13 3 3 3 8 13
-##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000002be65aa7570&gt; 
+##   .. .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001721ba54fc8&gt; 
 ##   ..$ parent     : int [1:10] 0 1 1 3 4 5 1 0 8 9
 ##   ..$ visible    : logi [1:10] TRUE TRUE TRUE TRUE TRUE TRUE ...
 ##   ..$ namespace  : chr [1:10] &quot;rlang&quot; &quot;rlang&quot; &quot;base&quot; &quot;base&quot; ...
@@ -547,7 +547,7 @@ str(err)</code></pre>
 ##  $ not    : chr &quot;character&quot;
 ##  $ call   : language abort_bad_argument(&quot;x&quot;, must = &quot;be numeric&quot;, not = x)
 ##   ..- attr(*, &quot;srcref&quot;)= &#39;srcref&#39; int [1:8] 3 5 3 57 5 57 3 3
-##   .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000002be65d0e520&gt; 
+##   .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x000001721bc9bfa8&gt; 
 ##  - attr(*, &quot;class&quot;)= chr [1:4] &quot;error_bad_argument&quot; &quot;rlang_error&quot; &quot;error&quot; &quot;condition&quot;</code></pre>
 <pre class="r"><code>expect_s3_class(err, &quot;error_bad_argument&quot;)
 expect_equal(err$arg, &quot;x&quot;)
@@ -585,20 +585,20 @@ metadata.</li>
 <pre class="r"><code>check_pkg_installed &lt;- function(package) {
   if (!requireNamespace(package, quietly = FALSE)) {
     abort(
-      &quot;error_pkg_not_found&quot;,
-      message = paste0(&quot;package &#39;&quot;, package, &quot;&#39; not installed.&quot;),
+      &quot;Error: package not found!&quot;,
+      message = paste0(&quot;Package &#39;&quot;, package, &quot;&#39; not installed.&quot;),
       package = package
     )
   }
-  else paste0(&quot;package &#39;&quot;, package, &quot;&#39; installed.&quot;)
+  else paste0(&quot;Package &#39;&quot;, package, &quot;&#39; installed.&quot;)
 }
 
 check_pkg_installed(&quot;rlang&quot;)</code></pre>
-<pre><code>## [1] &quot;package &#39;rlang&#39; installed.&quot;</code></pre>
+<pre><code>## [1] &quot;Package &#39;rlang&#39; installed.&quot;</code></pre>
 <pre class="r"><code>check_pkg_installed(&quot;pandas&quot;)</code></pre>
 <pre><code>## Loading required namespace: pandas</code></pre>
 <pre><code>## Error in `check_pkg_installed()`:
-## ! package &#39;pandas&#39; not installed.</code></pre>
+## ! Package &#39;pandas&#39; not installed.</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>Inside a package you often need to stop with an error when something
 is not right. Other packages that depend on your package might be
@@ -1089,6 +1089,9 @@ out.</p>
 <blockquote>
 <p>It’s hard to break out of the function because we’re capturing the
 interruption.</p>
+</blockquote>
+<blockquote>
+<p>might be usful</p>
 </blockquote>
 </div>
 </div>

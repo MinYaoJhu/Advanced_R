@@ -218,10 +218,10 @@ str(err)
 ##   .. ..$ : language my_log("a")
 ##   .. ..$ : language abort_bad_argument(arg = "x", must = "be numeric", not = x)
 ##   .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 3 5 3 57 5 57 3 3
-##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65d0e520> 
+##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000001721bc9bfa8> 
 ##   .. ..$ : language abort("error_bad_argument", message = msg, arg = arg, must = must, not = not)
 ##   .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 8 3 13 3 3 3 8 13
-##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65aa7570> 
+##   .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000001721ba54fc8> 
 ##   ..$ parent     : int [1:10] 0 1 1 3 4 5 1 0 8 9
 ##   ..$ visible    : logi [1:10] TRUE TRUE TRUE TRUE TRUE TRUE ...
 ##   ..$ namespace  : chr [1:10] "rlang" "rlang" "base" "base" ...
@@ -245,7 +245,7 @@ str(err)
 ##  $ not    : chr "character"
 ##  $ call   : language abort_bad_argument("x", must = "be numeric", not = x)
 ##   ..- attr(*, "srcref")= 'srcref' int [1:8] 3 5 3 57 5 57 3 3
-##   .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000002be65d0e520> 
+##   .. ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0x000001721bc9bfa8> 
 ##  - attr(*, "class")= chr [1:4] "error_bad_argument" "rlang_error" "error" "condition"
 ```
 
@@ -297,19 +297,19 @@ tryCatch(
 check_pkg_installed <- function(package) {
   if (!requireNamespace(package, quietly = FALSE)) {
     abort(
-      "error_pkg_not_found",
-      message = paste0("package '", package, "' not installed."),
+      "Error: package not found!",
+      message = paste0("Package '", package, "' not installed."),
       package = package
     )
   }
-  else paste0("package '", package, "' installed.")
+  else paste0("Package '", package, "' installed.")
 }
 
 check_pkg_installed("rlang")
 ```
 
 ```
-## [1] "package 'rlang' installed."
+## [1] "Package 'rlang' installed."
 ```
 
 ```r
@@ -322,7 +322,7 @@ check_pkg_installed("pandas")
 
 ```
 ## Error in `check_pkg_installed()`:
-## ! package 'pandas' not installed.
+## ! Package 'pandas' not installed.
 ```
 
     
@@ -963,3 +963,5 @@ new_catch_cnds({
 # bottles_of_beer(5)
 ```
 > It's hard to break out of the function because we’re capturing the interruption.
+
+> might be usful 

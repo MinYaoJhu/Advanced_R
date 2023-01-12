@@ -185,12 +185,12 @@ tryCatch(
 check_pkg_installed <- function(package) {
   if (!requireNamespace(package, quietly = FALSE)) {
     abort(
-      "error_pkg_not_found",
-      message = paste0("package '", package, "' not installed."),
+      "Error: package not found!",
+      message = paste0("Package '", package, "' not installed."),
       package = package
     )
   }
-  else paste0("package '", package, "' installed.")
+  else paste0("Package '", package, "' installed.")
 }
 
 check_pkg_installed("rlang")
@@ -642,3 +642,5 @@ new_catch_cnds({
 # bottles_of_beer(5)
 ```
 > It's hard to break out of the function because we’re capturing the interruption.
+
+> might be usful 
