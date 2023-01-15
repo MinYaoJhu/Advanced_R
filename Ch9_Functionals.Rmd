@@ -2,28 +2,12 @@
 title: "Ch9_Functionals"
 author: "Min-Yao"
 date: "2023-01-14"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 # 9 Functionals {#functionals}
-
-```{r, include = FALSE}
-source("common.R")
-source("emoji.R")
-
-cols <- function(x, n = 4) {
-  pal <- scales::gradient_n_pal(c("white", x))
-  col <- pal(seq(0, 1, length = n + 1)[-1])
-  scales::show_col(col)
-  col
-}
-
-print.rlang_lambda_function <- function(x, ...) {
-  print(unclass(x))
-}
-cols("#FF9300")
-cols("#8DD3FB")
-```
 
 ## 9.1 Introduction
 \index{functionals}
@@ -101,7 +85,7 @@ knitr::include_graphics("diagrams/functionals/map.png")
 ```
 
 ::: sidebar
-You might wonder why this function is called `map()`. What does it have to do with depicting physical features of land or sea `r emoji("world_map")`? In fact, the meaning comes from mathematics where _map_ refers to "an operation that associates each element of a given set with one or more elements of a second set". This makes sense here because `map()` defines a mapping from one vector to another. (_"Map"_ also has the nice property of being short, which is useful for such a fundamental building block.)
+You might wonder why this function is called `map()`. What does it have to do with depicting physical features of land or sea `emoji("world_map")`? In fact, the meaning comes from mathematics where _map_ refers to "an operation that associates each element of a given set with one or more elements of a second set". This makes sense here because `map()` defines a mapping from one vector to another. (_"Map"_ also has the nice property of being short, which is useful for such a fundamental building block.)
 :::
 
 [^Map]: Not to be confused with `base::Map()`, which is considerably more complex. I'll discuss `Map()` in Section \@ref(pmap).
@@ -369,25 +353,169 @@ You'll see one more alternative in Section \@ref(pmap).
     the integer, character, and list helpers. What helper allows you to 
     extract attributes? Read the documentation to find out.
 
+> as_mapper is the powerhouse behind the varied function specifications that most purrr functions allow. It is an S3 generic. The default method forwards its arguments to rlang::as_function().
+
+> Usage
+    
+```{r eval=FALSE}
+as_mapper(.f, ...)
+
+# S3 method for character
+as_mapper(.f, ..., .null, .default = NULL)
+
+# S3 method for numeric
+as_mapper(.f, ..., .null, .default = NULL)
+
+# S3 method for list
+as_mapper(.f, ..., .null, .default = NULL)
+```
+.f
+A function, formula, or vector (not necessarily atomic).
+
+If a function, it is used as is.
+
+If a formula, e.g. ~ .x + 2, it is converted to a function. There are three ways to refer to the arguments:
+
+For a single argument function, use .
+
+For a two argument function, use .x and .y
+
+For more arguments, use ..1, ..2, ..3 etc
+
+This syntax allows you to create very compact anonymous functions. Note that formula functions conceptually take dots (that's why you can use ..1 etc). They silently ignore additional arguments that are not used in the formula expression.
+
+If character vector, numeric vector, or list, it is converted to an extractor function. Character vectors index by name and numeric vectors index by position; use a list to index by position and name at different levels. If a component is not present, the value of .default will be returned.
+
+
+```{r}
+as_mapper(1)
+```
+
+> equivalent to function(x) x[[1]]
+
+```{r}
+as_mapper(c("a", "b", "c"))
+```
+
+> equivalent to function(x) x[["a"]][["b"]][["c"]]
+
+```{r}
+as_mapper(list(1, "a", 2))
+```
+
+> equivalent to function(x) x[[1]][["a"]][[2]]
+
+```{r}
+as_mapper(list(1, attr_getter("a")))
+```
+
+> equivalent to function(x) attr(x[[1]], "a")
+
+> attr_getter() generates an attribute accessor function; i.e., it generates a function for extracting an attribute with a given name. Unlike the base R attr() function with default options, it doesn't use partial matching.
+
 2.  `map(1:3, ~ runif(2))` is a useful pattern for generating random
     numbers, but `map(1:3, runif(2))` is not. Why not? Can you explain why 
     it returns the result that it does?
+    
+```{r}
+map(1:3, ~ runif(2))
+```
+
+> This creates three different pairs of random numbers because `~ runif(2)` is converted into an anonymous function. 
+
+```{r}
+as_mapper(~ runif(2))
+```
+
+
+```{r}
+map(1:3, runif(2))
+```
+
+> This doesn't work because `runif(2)` is only evaluated once.
+
+```{r}
+as_mapper(runif(2))
+```
+
+> This leads to three `NULL`s because these indexes cannot be found.
 
 3.  Use the appropriate `map()` function to:
-    
+
     a) Compute the standard deviation of every column in a numeric data frame.
+
+> I will use the example in the book. mtcars
+
+```{r}
+mtcars
+str(mtcars)
+```
+
+```{r}
+map_dbl(mtcars, sd, na.rm = TRUE)
+```
+
+    b) Compute the standard deviation of every numeric column in a mixed data frame. (Hint: you'll need to do it in two steps.)
     
-    a) Compute the standard deviation of every numeric column in a mixed data
-       frame. (Hint: you'll need to do it in two steps.)
-       
-    a) Compute the number of levels for every factor in a data frame.
+> Carbon Dioxide Uptake in Grass Plants
+
+Description
+The CO2 data frame has 84 rows and 5 columns of data from an experiment on the cold tolerance of the grass species Echinochloa crus-galli.
+
+```{r}
+# library(help = "datasets")
+CO2
+str(CO2)
+```
+
+```{r}
+CO2_numeric <- map_lgl(CO2, is.numeric)
+CO2_numeric
+```
+
+```{r}
+map_dbl(CO2[CO2_numeric], sd, na.rm = TRUE)
+```
+
+    c) Compute the number of levels for every factor in a data frame.
+
+```{r}
+CO2_factor <- map_lgl(CO2, is.factor)
+CO2_factor
+```
+
+```{r}
+map_int(CO2[CO2_factor], ~ length(unique(.x)))
+```
 
 4.  The following code simulates the performance of a t-test for non-normal 
     data. Extract the p-value from each test, then visualise.
 
-    ```{r}
-    trials <- map(1:100, ~ t.test(rpois(10, 10), rpois(7, 10)))
-    ```
+> The Poisson Distribution
+
+Description
+Density, distribution function, quantile function and random generation for the Poisson distribution with parameter lambda.
+
+```{r}
+trials <- map(1:100, ~ t.test(rpois(10, 10), rpois(7, 10)))
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+trials_p_value <- data.frame(p_value = map_dbl(trials, "p.value"))
+trials_p_value
+str(trials_p_value)
+```
+
+```{r}
+trials_p_value %>% 
+  ggplot(aes(x = p_value, fill = p_value < 0.05))+
+  geom_histogram(binwidth = 0.01)
+```
+
 
 5.  The following code uses a map nested inside another map to apply a
     function to every element of a nested list. Why does it fail, and 
@@ -403,29 +531,63 @@ You'll see one more alternative in Section \@ref(pmap).
     map(x, map, .f = triple)
     ```
 
-6.  Use `map()` to fit linear models to the `mtcars` dataset using the formulas
-    stored in this list:
+> This call fails because `.f = triple`is used as the .f argument for the outer `map()`. Therefore, the inner `map()` is used as an argument of `triple()`.
 
-    ```{r}
+```{r}
+map(x, map, triple)
+```
+
+```{r}
+map(x, ~ map(.x, triple))
+```
+
+6.  Use `map()` to fit linear models to the `mtcars` dataset using the formulas stored in this list:
+
+```{r}
     formulas <- list(
       mpg ~ disp,
       mpg ~ I(1 / disp),
       mpg ~ disp + wt,
       mpg ~ I(1 / disp) + wt
     )
-    ```
+```
 
-7.  Fit the model `mpg ~ disp` to each of the bootstrap replicates of `mtcars` 
-    in the list below, then extract the $R^2$ of the model fit (Hint: you can
-    compute the $R^2$ with `summary()`.)
+```{r}
+str(mtcars)
+```
 
-    ```{r}
-    bootstrap <- function(df) {
-      df[sample(nrow(df), replace = TRUE), , drop = FALSE]
-    }
-    
-    bootstraps <- map(1:10, ~ bootstrap(mtcars))
-    ```
+```{r}
+models <- map(formulas, lm, data = mtcars)
+models
+```
+
+
+7.  Fit the model `mpg ~ disp` to each of the bootstrap replicates of `mtcars` in the list below, then extract the $R^2$ of the model fit (Hint: you can compute the $R^2$ with `summary()`.)
+
+```{r}
+bootstrap <- function(df) {
+  df[sample(nrow(df), replace = TRUE), , drop = FALSE]
+}
+
+bootstraps <- map(1:10, ~ bootstrap(mtcars))
+summary(bootstraps)
+```
+
+```{r}
+bootstraps_models <- map(bootstraps, ~ lm(mpg ~ disp, data = .x)) 
+summary(bootstraps_models)
+```
+
+```{r}
+map(bootstraps_models, summary) %>% str()
+```
+
+```{r}
+model_summarys <- map(bootstraps_models, summary)
+
+data.frame(R_squared = map_dbl(model_summarys, "r.squared"), row.names = c(1:10))
+```
+
 
 ## 9.3 Purrr style
 \indexc{\%>\%}
@@ -434,6 +596,7 @@ Before we go on to explore more map variants, let's take a quick look at how you
 
 ```{r}
 by_cyl <- split(mtcars, mtcars$cyl)
+summary(by_cyl)
 ```
 
 This creates a list of three data frames: the cars with 4, 6, and 8 cylinders respectively.
@@ -765,34 +928,107 @@ There are two base equivalents to the `pmap()` family: `Map()` and `mapply()`. B
 
 1.  Explain the results of `modify(mtcars, 1)`.
 
+```{r}
+mtcars
+str(mtcars)
+```
+
+
+```{r}
+modify(mtcars, 1)
+modify(mtcars, 1) %>% str()
+```
+
+> Similar to `map`, `modify(mtcars, 1)` extracts the first row of data. Because `modify()` always returns the same type of output as the input, it forces the first row of data to be repeated 31 times to fill the table.  
+
+
+
 2.  Rewrite the following code to use `iwalk()` instead of `walk2()`. What
     are the advantages and disadvantages?
     
-    ```{r, eval = FALSE}
-    cyls <- split(mtcars, mtcars$cyl)
-    paths <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
-    walk2(cyls, paths, write.csv)
-    ```
+```{r, eval = FALSE}
+temp <- tempfile()
+dir.create(temp)
+    
+cyls <- split(mtcars, mtcars$cyl)
+paths <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+walk2(cyls, paths, write.csv)
+```
+    
+```{r}
+temp <- tempfile()
+dir.create(temp)
+
+cyls <- split(mtcars, mtcars$cyl)
+names(cyls) <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+iwalk(cyls, ~ write.csv(.x, .y))
+```
+
+```{r}
+temp <- tempfile()
+dir.create(temp)
+
+cyls <- split(mtcars, mtcars$cyl)
+cyls <- set_names(cyls, file.path(temp, paste0("cyl-", names(cyls), ".csv")))
+iwalk(cyls, ~ write.csv(.x, .y))
+```
+
+```{r}
+temp <- tempfile()
+dir.create(temp)
+
+mtcars %>% 
+  split(mtcars$cyl) %>% 
+  set_names(~ file.path(temp, paste0("cyl-", .x, ".csv"))) %>% 
+  iwalk(~ write.csv(.x, .y))
+```
+
+> advantages: more concise. 
+
+> disadvantages: it relies on the user and reader’s familiarity with the arguments. 
 
 3.  Explain how the following code transforms a data frame using functions
     stored in a list.
 
-    ```{r}
-    trans <- list(
-      disp = function(x) x * 0.0163871,
-      am = function(x) factor(x, labels = c("auto", "manual"))
-    )
-    
-    nm <- names(trans)
-    mtcars[nm] <- map2(trans, mtcars[nm], function(f, var) f(var))
-    ```
+```{r}
+trans <- list(
+  disp = function(x) x * 0.0163871,
+  am = function(x) factor(x, labels = c("auto", "manual"))
+)
+
+nm <- names(trans)
+mtcars[nm] <- map2(trans, mtcars[nm], function(f, var) f(var))
+```
     
     Compare and contrast the `map2()` approach to this `map()` approach:
     
-    ```{r, eval = FALSE}
-    mtcars[nm] <- map(nm, ~ trans[[.x]](mtcars[[.x]]))
-    ```
+```{r, eval = FALSE}
+mtcars[nm] <- map(nm, ~ trans[[.x]](mtcars[[.x]]))
+```
+
+> `mtcars[nm] <- map2(trans, mtcars[nm], function(f, var) f(var))` is easier to read for readers. We can also simplify the map2 version to the following:
+
+```{r}
+trans <- list(
+  disp = function(x) x * 0.0163871,
+  am = function(x) factor(x, labels = c("auto", "manual"))
+)
+
+nm <- names(trans)
+mtcars[nm] <- map2(trans, mtcars[nm], ~ .x(.y))
+```
+
 
 4.  What does `write.csv()` return, i.e. what happens if you use it with 
     `map2()` instead of `walk2()`?
 
+```{r}
+temp <- tempfile()
+dir.create(temp)
+    
+cyls <- split(mtcars, mtcars$cyl)
+paths <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+map2(cyls, paths, write.csv)
+```
+
+> write.csv() returns `NULL`s.
