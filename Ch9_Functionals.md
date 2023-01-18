@@ -28,7 +28,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.4918665
+## [1] 0.5044587
 ```
 
 ```r
@@ -36,7 +36,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.4933633
+## [1] 0.4953686
 ```
 
 ```r
@@ -44,7 +44,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 494.3538
+## [1] 491.0261
 ```
 
 The chances are that you've already used a functional. You might have used for-loop replacements like base R's `lapply()`, `apply()`, and `tapply()`; or purrr's `map()`; or maybe you've used a mathematical functional like `integrate()` or `optim()`. 
@@ -312,9 +312,9 @@ str(x)
 
 ```
 ## List of 3
-##  $ : num [1:2] 0.903 0.86
-##  $ : num [1:2] 0.334 0.954
-##  $ : num [1:2] 0.482 0.359
+##  $ : num [1:2] 0.863 0.431
+##  $ : num [1:2] 0.451 0.349
+##  $ : num [1:2] 0.349 0.254
 ```
 
 Reserve this syntax for short and simple functions. A good rule of thumb is that if your function spans lines or uses `{}`, it's time to give it a name.
@@ -430,7 +430,7 @@ map_dbl(x, plus, runif(1))
 ```
 
 ```
-## [1] 0.2595412 0.2595412 0.2595412 0.2595412
+## [1] 0.9951101 0.9951101 0.9951101 0.9951101
 ```
 
 ```r
@@ -438,7 +438,7 @@ map_dbl(x, ~ plus(.x, runif(1)))
 ```
 
 ```
-## [1] 0.8489219 0.7608644 0.7118626 0.1183744
+## [1] 0.6644926 0.4995296 0.3980880 0.3352313
 ```
 
 ### 9.2.4 Argument names
@@ -506,7 +506,7 @@ x <- rcauchy(1000)
     ```
     
     ```
-    ## [1]  2.80489342 -0.08672223 -0.06076832 -0.02457681
+    ## [1] -4.39534825 -0.10476367 -0.10313699 -0.08889105
     ```
     
     This is still a little confusing because I'm using both `x` and `.x`.
@@ -518,7 +518,7 @@ x <- rcauchy(1000)
     ```
     
     ```
-    ## [1]  2.80489342 -0.08672223 -0.06076832 -0.02457681
+    ## [1] -4.39534825 -0.10476367 -0.10313699 -0.08889105
     ```
 
 *   Sometimes, if you want to be (too) clever, you can take advantage of R's 
@@ -533,7 +533,7 @@ x <- rcauchy(1000)
     ```
     
     ```
-    ## [1]  2.80489342 -0.08672223 -0.06076832 -0.02457681
+    ## [1] -4.39534825 -0.10476367 -0.10313699 -0.08889105
     ```
     
     I don't recommend this technique as it relies on the reader's familiarity with both the argument order to `.f`, and R's 
@@ -590,7 +590,7 @@ as_mapper(1)
 ```
 ## function (x, ...) 
 ## pluck_raw(x, list(1), .default = NULL)
-## <environment: 0x000001e4c8def948>
+## <environment: 0x000001aa927a9f18>
 ```
 
 > equivalent to function(x) x[[1]]
@@ -603,7 +603,7 @@ as_mapper(c("a", "b", "c"))
 ```
 ## function (x, ...) 
 ## pluck_raw(x, list("a", "b", "c"), .default = NULL)
-## <environment: 0x000001e4c41856b0>
+## <environment: 0x000001aa8d7691a8>
 ```
 
 > equivalent to function(x) x[["a"]][["b"]][["c"]]
@@ -616,7 +616,7 @@ as_mapper(list(1, "a", 2))
 ```
 ## function (x, ...) 
 ## pluck_raw(x, list(1, "a", 2), .default = NULL)
-## <environment: 0x000001e4c36cb358>
+## <environment: 0x000001aa8cd1da08>
 ```
 
 > equivalent to function(x) x[[1]][["a"]][[2]]
@@ -630,7 +630,7 @@ as_mapper(list(1, attr_getter("a")))
 ## function (x, ...) 
 ## pluck_raw(x, list(1, function (x) 
 ## attr(x, attr, exact = TRUE)), .default = NULL)
-## <environment: 0x000001e4c31e5ea8>
+## <environment: 0x000001aa8c72cb80>
 ```
 
 > equivalent to function(x) attr(x[[1]], "a")
@@ -648,13 +648,13 @@ map(1:3, ~ runif(2))
 
 ```
 ## [[1]]
-## [1] 0.7972099 0.9038307
+## [1] 0.4253421 0.4325306
 ## 
 ## [[2]]
-## [1] 0.1650184 0.1935076
+## [1] 0.4560090 0.5127342
 ## 
 ## [[3]]
-## [1] 0.8941988 0.8719594
+## [1] 0.1470554 0.3439617
 ```
 
 > This creates three different pairs of random numbers because `~ runif(2)` is converted into an anonymous function. 
@@ -670,6 +670,43 @@ as_mapper(~ runif(2))
 ## runif(2)
 ## attr(,"class")
 ## [1] "rlang_lambda_function" "function"
+```
+
+
+```r
+as_mapper(1:3, runif(2))
+```
+
+```
+## function (x, ...) 
+## pluck_raw(x, list(1L, 2L, 3L), .default = NULL)
+## <environment: 0x000001aa8e6b2910>
+```
+
+
+```r
+?purrr::pluck()
+```
+
+```
+## starting httpd help server ... done
+```
+
+
+
+```r
+map(1:3, 0.22)
+```
+
+```
+## [[1]]
+## [1] 1
+## 
+## [[2]]
+## [1] 2
+## 
+## [[3]]
+## [1] 3
 ```
 
 
@@ -698,8 +735,8 @@ as_mapper(runif(2))
 
 ```
 ## function (x, ...) 
-## pluck_raw(x, list(0.625230752630159, 0.817468862747774), .default = NULL)
-## <environment: 0x000001e4c5048cb0>
+## pluck_raw(x, list(0.665345342829823, 0.847153527662158), .default = NULL)
+## <environment: 0x000001aa911afaf8>
 ```
 
 > This leads to three `NULL`s because these indexes cannot be found.
@@ -976,106 +1013,106 @@ trials_p_value
 
 ```
 ##         p_value
-## 1   0.265359724
-## 2   0.954960547
-## 3   0.700396243
-## 4   0.589009312
-## 5   0.930299977
-## 6   0.121858960
-## 7   0.008156475
-## 8   0.461576387
-## 9   0.835831741
-## 10  0.141577128
-## 11  0.210781768
-## 12  0.075521501
-## 13  0.157604188
-## 14  0.434723712
-## 15  0.797387475
-## 16  0.646489622
-## 17  0.837387132
-## 18  0.188334943
-## 19  1.000000000
-## 20  0.613755965
-## 21  0.213782774
-## 22  0.447767766
-## 23  0.962134542
-## 24  0.111783842
-## 25  0.391321515
-## 26  0.364607853
-## 27  0.405926070
-## 28  0.104104289
-## 29  0.056992195
-## 30  0.267009724
-## 31  0.080894982
-## 32  0.976638863
-## 33  0.016462493
-## 34  0.053840440
-## 35  0.408380247
-## 36  0.976051044
-## 37  0.178720345
-## 38  0.026763212
-## 39  0.425808371
-## 40  0.495482583
-## 41  0.187253031
-## 42  0.287036273
-## 43  0.602522336
-## 44  0.233728211
-## 45  0.807079509
-## 46  0.709355996
-## 47  0.055883114
-## 48  0.019759696
-## 49  0.670310207
-## 50  0.838786459
-## 51  0.429523718
-## 52  0.848360295
-## 53  0.506273259
-## 54  0.443830817
-## 55  0.571687434
-## 56  0.485719109
-## 57  0.453426326
-## 58  0.974576807
-## 59  0.083250363
-## 60  0.605832702
-## 61  0.213030894
-## 62  0.473289198
-## 63  0.684915548
-## 64  0.693719801
-## 65  0.171048209
-## 66  0.960070653
-## 67  0.350474629
-## 68  0.498121935
-## 69  0.527490057
-## 70  0.383047137
-## 71  0.120413787
-## 72  0.882352193
-## 73  0.517587820
-## 74  0.072018889
-## 75  0.690872900
-## 76  0.205606014
-## 77  0.155118730
-## 78  0.274266513
-## 79  0.499754132
-## 80  0.710074587
-## 81  0.852795268
-## 82  0.633046419
-## 83  0.278718565
-## 84  0.330756499
-## 85  0.792970194
-## 86  0.913672071
-## 87  0.359862976
-## 88  0.089466173
-## 89  0.012600815
-## 90  0.812522219
-## 91  0.803233409
-## 92  0.131537544
-## 93  0.174174471
-## 94  0.990170354
-## 95  0.058502531
-## 96  0.777850698
-## 97  0.803548896
-## 98  0.327644446
-## 99  0.450933549
-## 100 0.363844964
+## 1   0.582301434
+## 2   0.457757452
+## 3   0.436629751
+## 4   0.391341537
+## 5   0.578017479
+## 6   0.865918546
+## 7   0.453636271
+## 8   0.119170474
+## 9   0.760498323
+## 10  0.846683185
+## 11  0.655777330
+## 12  0.402480879
+## 13  0.710011188
+## 14  0.590937114
+## 15  0.668531558
+## 16  0.078900008
+## 17  0.328027409
+## 18  0.404951817
+## 19  0.606744776
+## 20  0.487325460
+## 21  0.771691295
+## 22  0.977674752
+## 23  0.777835580
+## 24  0.637908361
+## 25  0.722607652
+## 26  0.546755561
+## 27  0.057399219
+## 28  0.501182760
+## 29  0.445461660
+## 30  0.223358650
+## 31  0.992570455
+## 32  0.802258183
+## 33  0.544135939
+## 34  0.140847668
+## 35  0.156769677
+## 36  0.350905723
+## 37  0.691275411
+## 38  0.966795768
+## 39  0.336960147
+## 40  0.439215884
+## 41  0.865059490
+## 42  0.144904784
+## 43  0.166131844
+## 44  0.680984077
+## 45  0.427068815
+## 46  0.789796736
+## 47  0.021321142
+## 48  0.956635419
+## 49  0.929147608
+## 50  0.893540991
+## 51  0.886493912
+## 52  0.160924455
+## 53  0.517587820
+## 54  0.747150006
+## 55  0.339364709
+## 56  0.025295285
+## 57  0.134721981
+## 58  0.994508630
+## 59  0.966108433
+## 60  0.486708744
+## 61  0.677978099
+## 62  0.023326834
+## 63  0.424070008
+## 64  0.521813137
+## 65  0.208702239
+## 66  0.562011326
+## 67  0.470297915
+## 68  0.830377103
+## 69  0.362712253
+## 70  0.861842366
+## 71  0.177311870
+## 72  0.269698920
+## 73  0.653421400
+## 74  0.952355047
+## 75  0.020117555
+## 76  0.891795700
+## 77  0.916753878
+## 78  0.501675977
+## 79  0.924099898
+## 80  0.585385379
+## 81  0.374632675
+## 82  0.952716251
+## 83  0.093300589
+## 84  0.894411195
+## 85  0.954869723
+## 86  0.934968616
+## 87  0.275160853
+## 88  0.197429987
+## 89  0.874627459
+## 90  0.097438721
+## 91  0.877047439
+## 92  0.100755750
+## 93  0.059103335
+## 94  0.443307342
+## 95  0.411438627
+## 96  0.003382853
+## 97  0.707253324
+## 98  0.560864552
+## 99  0.712707861
+## 100 0.760378492
 ```
 
 ```r
@@ -1084,7 +1121,7 @@ str(trials_p_value)
 
 ```
 ## 'data.frame':	100 obs. of  1 variable:
-##  $ p_value: num  0.265 0.955 0.7 0.589 0.93 ...
+##  $ p_value: num  0.582 0.458 0.437 0.391 0.578 ...
 ```
 
 
@@ -1094,7 +1131,7 @@ trials_p_value %>%
   geom_histogram(binwidth = 0.01)
 ```
 
-![](Ch9_Functionals_files/figure-html/unnamed-chunk-45-1.png)<!-- -->
+![](Ch9_Functionals_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
 
 
 5.  The following code uses a map nested inside another map to apply a
@@ -1319,25 +1356,25 @@ map(bootstraps_models, summary) %>% str()
 ##   .. .. ..- attr(*, "order")= int 1
 ##   .. .. ..- attr(*, "intercept")= int 1
 ##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc4c5578> 
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95ce8af8> 
 ##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
 ##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
 ##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -3.67 -2.1 -2.04 -2.4 -2.08 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Merc 280" "Camaro Z28" "Merc 450SE" "Maserati Bora" ...
-##   ..$ coefficients : num [1:2, 1:4] 29.74376 -0.04099 1.24257 0.00439 23.93723 ...
+##   ..$ residuals    : Named num [1:32] -1.46 4.63 -2.43 -2.93 -4.49 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Datsun 710" "Pontiac Firebird" "Volvo 142E" "Camaro Z28" ...
+##   ..$ coefficients : num [1:2, 1:4] 27.84881 -0.0332 1.33951 0.00485 20.79033 ...
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
 ##   ..$ aliased      : Named logi [1:2] FALSE FALSE
 ##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.19
+##   ..$ sigma        : num 3.44
 ##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.744
-##   ..$ adj.r.squared: num 0.736
-##   ..$ fstatistic   : Named num [1:3] 87.3 1 30
+##   ..$ r.squared    : num 0.61
+##   ..$ adj.r.squared: num 0.597
+##   ..$ fstatistic   : Named num [1:3] 46.8 1 30
 ##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.51e-01 -4.76e-04 -4.76e-04 1.89e-06
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.52e-01 -4.90e-04 -4.90e-04 1.99e-06
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
@@ -1354,25 +1391,95 @@ map(bootstraps_models, summary) %>% str()
 ##   .. .. ..- attr(*, "order")= int 1
 ##   .. .. ..- attr(*, "intercept")= int 1
 ##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc511008> 
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95d0ebc8> 
 ##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
 ##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
 ##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] 7.04 2.61 4.5 1.11 -5.2 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Toyota Corolla" "Chrysler Imperial" "Lotus Europa" "Porsche 914-2" ...
-##   ..$ coefficients : num [1:2, 1:4] 29.70761 -0.04005 1.12824 0.00405 26.33087 ...
+##   ..$ residuals    : Named num [1:32] -1.59 0.77 -3.8 -2.51 6.66 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Merc 230" "Porsche 914-2" "Volvo 142E" "AMC Javelin" ...
+##   ..$ coefficients : num [1:2, 1:4] 30.15341 -0.04093 1.16062 0.00481 25.98038 ...
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
 ##   ..$ aliased      : Named logi [1:2] FALSE FALSE
 ##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.31
+##   ..$ sigma        : num 3.37
 ##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.765
+##   ..$ r.squared    : num 0.707
+##   ..$ adj.r.squared: num 0.697
+##   ..$ fstatistic   : Named num [1:3] 72.3 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.19e-01 -4.22e-04 -4.22e-04 2.04e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95de8690> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -1.253 -2.412 0.737 -1.613 -4.411 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Camaro Z28" "Mazda RX4" "Porsche 914-2" "Merc 450SE" ...
+##   ..$ coefficients : num [1:2, 1:4] 30.87202 -0.04663 1.20063 0.00565 25.71308 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 3.45
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.694
+##   ..$ adj.r.squared: num 0.684
+##   ..$ fstatistic   : Named num [1:3] 68.1 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.21e-01 -4.92e-04 -4.92e-04 2.69e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95e2a878> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] 6.2 -2.91 6.17 2.55 1.09 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Pontiac Firebird" "Merc 450SLC" "Fiat 128" "Hornet 4 Drive" ...
+##   ..$ coefficients : num [1:2, 1:4] 29.46368 -0.04115 1.11982 0.00417 26.31108 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 2.91
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.764
 ##   ..$ adj.r.squared: num 0.757
-##   ..$ fstatistic   : Named num [1:3] 97.8 1 30
+##   ..$ fstatistic   : Named num [1:3] 97.3 1 30
 ##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.16e-01 -3.58e-04 -3.58e-04 1.50e-06
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.48e-01 -4.91e-04 -4.91e-04 2.06e-06
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
@@ -1389,258 +1496,13 @@ map(bootstraps_models, summary) %>% str()
 ##   .. .. ..- attr(*, "order")= int 1
 ##   .. .. ..- attr(*, "intercept")= int 1
 ##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc62b8b8> 
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95eb8658> 
 ##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
 ##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
 ##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -3.04 5.27 -1.41 5.27 -2.59 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Mazda RX4" "Toyota Corolla" "AMC Javelin" "Toyota Corolla.1" ...
-##   ..$ coefficients : num [1:2, 1:4] 32.29597 -0.05159 1.20593 0.00464 26.78106 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.39
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.804
-##   ..$ adj.r.squared: num 0.798
-##   ..$ fstatistic   : Named num [1:3] 123 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.26e-01 -4.23e-04 -4.23e-04 1.88e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc67d6c0> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -2.59 6.3 -1.03 -2.4 -2.41 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Maserati Bora" "Fiat 128" "Duster 360" "Valiant" ...
-##   ..$ coefficients : num [1:2, 1:4] 29.11327 -0.03828 1.3004 0.00461 22.38798 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.19
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.697
-##   ..$ adj.r.squared: num 0.687
-##   ..$ fstatistic   : Named num [1:3] 69.1 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.66e-01 -5.30e-04 -5.30e-04 2.08e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc6ab400> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -4.08 2.75 6.03 -4.03 6.03 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Volvo 142E" "Honda Civic" "Toyota Corolla" "Toyota Corona" ...
-##   ..$ coefficients : num [1:2, 1:4] 31.2807 -0.0479 1.3142 0.0062 23.8016 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.74
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.666
-##   ..$ adj.r.squared: num 0.655
-##   ..$ fstatistic   : Named num [1:3] 59.7 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.24e-01 -5.04e-04 -5.04e-04 2.75e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc6f5318> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] 0.647 -3.193 3.199 -3.428 5.735 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Fiat X1-9" "Merc 450SLC" "Chrysler Imperial" "Toyota Corona" ...
-##   ..$ coefficients : num [1:2, 1:4] 29.96863 -0.04197 1.23558 0.00526 24.25476 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.43
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.679
-##   ..$ adj.r.squared: num 0.669
-##   ..$ fstatistic   : Named num [1:3] 63.6 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.30e-01 -4.81e-04 -4.81e-04 2.35e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc739b88> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -1.831 -2.326 -3.726 -0.432 2.109 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Volvo 142E" "Merc 280" "Merc 280C" "Lincoln Continental" ...
-##   ..$ coefficients : num [1:2, 1:4] 27.65587 -0.03657 0.9448 0.00318 29.2717 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 2.26
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.815
-##   ..$ adj.r.squared: num 0.809
-##   ..$ fstatistic   : Named num [1:3] 133 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.75e-01 -5.33e-04 -5.33e-04 1.98e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc781198> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] 2.36 2.19 1.52 4.34 -2.97 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Hornet 4 Drive" "Honda Civic" "Lincoln Continental" "Fiat 128" ...
-##   ..$ coefficients : num [1:2, 1:4] 32.01735 -0.0503 0.90972 0.00398 35.19472 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 2.81
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.842
-##   ..$ adj.r.squared: num 0.836
-##   ..$ fstatistic   : Named num [1:3] 160 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.05e-01 -3.84e-04 -3.84e-04 2.01e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc7b12d8> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -4.46 -1.79 6.16 -4.23 2.86 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Merc 280" "Merc 450SL" "Toyota Corolla" "Volvo 142E" ...
-##   ..$ coefficients : num [1:2, 1:4] 30.7389 -0.0422 1.0953 0.004 28.0645 ...
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##   ..$ aliased      : Named logi [1:2] FALSE FALSE
-##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
-##   ..$ sigma        : num 3.02
-##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.788
-##   ..$ adj.r.squared: num 0.781
-##   ..$ fstatistic   : Named num [1:3] 112 1 30
-##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.31e-01 -4.18e-04 -4.18e-04 1.75e-06
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
-##   ..- attr(*, "class")= chr "summary.lm"
-##  $ :List of 11
-##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
-##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
-##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
-##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
-##   .. .. .. .. ..$ : chr "disp"
-##   .. .. ..- attr(*, "term.labels")= chr "disp"
-##   .. .. ..- attr(*, "order")= int 1
-##   .. .. ..- attr(*, "intercept")= int 1
-##   .. .. ..- attr(*, "response")= int 1
-##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001e4cc809f80> 
-##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
-##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
-##   ..$ residuals    : Named num [1:32] -0.538 -2.105 -2.049 1.382 -2.105 ...
-##   .. ..- attr(*, "names")= chr [1:32] "Merc 450SL" "Mazda RX4 Wag" "Valiant" "Ford Pantera L" ...
-##   ..$ coefficients : num [1:2, 1:4] 30.38271 -0.04548 1.00871 0.00375 30.12044 ...
+##   ..$ residuals    : Named num [1:32] -1.39 7.96 -1.39 4.64 1.05 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Mazda RX4 Wag" "Toyota Corolla" "Mazda RX4 Wag.1" "Honda Civic" ...
+##   ..$ coefficients : num [1:2, 1:4] 28.78507 -0.03997 1.1498 0.00493 25.03482 ...
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
@@ -1648,11 +1510,186 @@ map(bootstraps_models, summary) %>% str()
 ##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
 ##   ..$ sigma        : num 2.87
 ##   ..$ df           : int [1:3] 2 30 2
-##   ..$ r.squared    : num 0.831
-##   ..$ adj.r.squared: num 0.825
-##   ..$ fstatistic   : Named num [1:3] 147 1 30
+##   ..$ r.squared    : num 0.687
+##   ..$ adj.r.squared: num 0.676
+##   ..$ fstatistic   : Named num [1:3] 65.8 1 30
 ##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##   ..$ cov.unscaled : num [1:2, 1:2] 1.24e-01 -3.98e-04 -3.98e-04 1.71e-06
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.60e-01 -6.15e-04 -6.15e-04 2.94e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95efa3b8> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -2.61 -2.06 -2.36 -1.8 -1.07 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Merc 280" "AMC Javelin" "Maserati Bora" "Merc 450SE" ...
+##   ..$ coefficients : num [1:2, 1:4] 27.40627 -0.03338 1.09328 0.00438 25.06787 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 2.99
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.659
+##   ..$ adj.r.squared: num 0.648
+##   ..$ fstatistic   : Named num [1:3] 58 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.34e-01 -4.70e-04 -4.70e-04 2.15e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95f3c5c0> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -1.2733 -0.5438 0.0096 -3.3733 -2.4571 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Merc 450SL" "Duster 360" "Fiat X1-9" "Merc 450SLC" ...
+##   ..$ coefficients : num [1:2, 1:4] 30.78963 -0.04429 1.09299 0.00376 28.17015 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 2.91
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.823
+##   ..$ adj.r.squared: num 0.817
+##   ..$ fstatistic   : Named num [1:3] 139 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.41e-01 -4.28e-04 -4.28e-04 1.67e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95f7e7a8> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -0.0763 1.5763 -1.7681 1.5763 6.1435 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Ford Pantera L" "Hornet 4 Drive" "Merc 450SL" "Hornet 4 Drive.1" ...
+##   ..$ coefficients : num [1:2, 1:4] 30.77424 -0.04244 1.20423 0.00435 25.55505 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 3.16
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.761
+##   ..$ adj.r.squared: num 0.753
+##   ..$ fstatistic   : Named num [1:3] 95.4 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.45e-01 -4.63e-04 -4.63e-04 1.89e-06
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95fb4728> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -2.26 -2.62 -3.31 3.25 -1.15 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Mazda RX4 Wag" "Valiant" "Toyota Corona" "Hornet Sportabout" ...
+##   ..$ coefficients : num [1:2, 1:4] 29.49905 -0.03902 1.28088 0.00474 23.03032 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 3.35
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.693
+##   ..$ adj.r.squared: num 0.683
+##   ..$ fstatistic   : Named num [1:3] 67.7 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 0.145882 -0.000479 -0.000479 0.000002
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   ..- attr(*, "class")= chr "summary.lm"
+##  $ :List of 11
+##   ..$ call         : language lm(formula = mpg ~ disp, data = .x)
+##   ..$ terms        :Classes 'terms', 'formula'  language mpg ~ disp
+##   .. .. ..- attr(*, "variables")= language list(mpg, disp)
+##   .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. .. ..$ : chr [1:2] "mpg" "disp"
+##   .. .. .. .. ..$ : chr "disp"
+##   .. .. ..- attr(*, "term.labels")= chr "disp"
+##   .. .. ..- attr(*, "order")= int 1
+##   .. .. ..- attr(*, "intercept")= int 1
+##   .. .. ..- attr(*, "response")= int 1
+##   .. .. ..- attr(*, ".Environment")=<environment: 0x000001aa95fe7f70> 
+##   .. .. ..- attr(*, "predvars")= language list(mpg, disp)
+##   .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. .. ..- attr(*, "names")= chr [1:2] "mpg" "disp"
+##   ..$ residuals    : Named num [1:32] -1.6577 -2.1516 -2.5072 -0.0516 -2.7337 ...
+##   .. ..- attr(*, "names")= chr [1:32] "Datsun 710" "Merc 450SLC" "Volvo 142E" "Merc 450SL" ...
+##   ..$ coefficients : num [1:2, 1:4] 29.03143 -0.04235 1.06378 0.00423 27.29091 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
+##   .. .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##   ..$ aliased      : Named logi [1:2] FALSE FALSE
+##   .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "disp"
+##   ..$ sigma        : num 2.9
+##   ..$ df           : int [1:3] 2 30 2
+##   ..$ r.squared    : num 0.77
+##   ..$ adj.r.squared: num 0.762
+##   ..$ fstatistic   : Named num [1:3] 100 1 30
+##   .. ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##   ..$ cov.unscaled : num [1:2, 1:2] 1.34e-01 -4.67e-04 -4.67e-04 2.12e-06
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
 ##   .. .. ..$ : chr [1:2] "(Intercept)" "disp"
@@ -1668,16 +1705,16 @@ data.frame(R_squared = map_dbl(model_summarys, "r.squared"), row.names = c(1:10)
 
 ```
 ##    R_squared
-## 1  0.7441749
-## 2  0.7652887
-## 3  0.8044441
-## 4  0.6972354
-## 5  0.6656715
-## 6  0.6793621
-## 7  0.8153900
-## 8  0.8416934
-## 9  0.7880133
-## 10 0.8306538
+## 1  0.6096112
+## 2  0.7067848
+## 3  0.6941614
+## 4  0.7644033
+## 5  0.6868359
+## 6  0.6590983
+## 7  0.8225449
+## 8  0.7607009
+## 9  0.6929600
+## 10 0.7696813
 ```
 
 
@@ -1863,8 +1900,8 @@ map_dbl(xs, mean)
 ```
 
 ```
-## [1]        NA 0.4056740 0.4714098 0.6618588 0.4488411 0.6362356 0.5715872
-## [8] 0.5773200
+## [1]        NA 0.6471605 0.5924293 0.4393753 0.3808531 0.4462200 0.5171233
+## [8] 0.6731285
 ```
 
 But passing `ws` as an additional argument doesn't work because arguments after `.f` are not transformed:
@@ -1890,8 +1927,8 @@ map2_dbl(xs, ws, weighted.mean)
 ```
 
 ```
-## [1]        NA 0.4255568 0.4425218 0.6743179 0.4468548 0.6930027 0.5554545
-## [8] 0.5785316
+## [1]        NA 0.6346095 0.5608061 0.4374747 0.3497780 0.4451572 0.5250463
+## [8] 0.6573144
 ```
 <img src="diagrams/functionals/map2.png" width="921" />
 
@@ -1903,8 +1940,8 @@ map2_dbl(xs, ws, weighted.mean, na.rm = TRUE)
 ```
 
 ```
-## [1] 0.4244894 0.4255568 0.4425218 0.6743179 0.4468548 0.6930027 0.5554545
-## [8] 0.5785316
+## [1] 0.4381414 0.6346095 0.5608061 0.4374747 0.3497780 0.4451572 0.5250463
+## [8] 0.6573144
 ```
 <img src="diagrams/functionals/map2-arg.png" width="1133" />
 
@@ -2052,9 +2089,9 @@ imap_chr(x, ~ paste0("The highest value of ", .y, " is ", max(.x)))
 ```
 
 ```
-## [1] "The highest value of 1 is 894" "The highest value of 2 is 815"
-## [3] "The highest value of 3 is 977" "The highest value of 4 is 952"
-## [5] "The highest value of 5 is 948" "The highest value of 6 is 831"
+## [1] "The highest value of 1 is 998" "The highest value of 2 is 950"
+## [3] "The highest value of 3 is 899" "The highest value of 4 is 965"
+## [5] "The highest value of 5 is 923" "The highest value of 6 is 949"
 ```
 
 `imap()` is a useful helper if you want to work with the values in a vector along with their positions.
@@ -2074,8 +2111,8 @@ pmap_dbl(list(xs, ws), weighted.mean)
 ```
 
 ```
-## [1]        NA 0.4255568 0.4425218 0.6743179 0.4468548 0.6930027 0.5554545
-## [8] 0.5785316
+## [1]        NA 0.6346095 0.5608061 0.4374747 0.3497780 0.4451572 0.5250463
+## [8] 0.6573144
 ```
 
 As before, the varying arguments come before `.f` (although now they must be wrapped in a list), and the constant arguments come afterwards.
@@ -2086,8 +2123,8 @@ pmap_dbl(list(xs, ws), weighted.mean, na.rm = TRUE)
 ```
 
 ```
-## [1] 0.4244894 0.4255568 0.4425218 0.6743179 0.4468548 0.6930027 0.5554545
-## [8] 0.5785316
+## [1] 0.4381414 0.6346095 0.5608061 0.4374747 0.3497780 0.4451572 0.5250463
+## [8] 0.6573144
 ```
 <img src="diagrams/functionals/pmap-arg.png" width="1145" />
 
@@ -2102,7 +2139,7 @@ pmap_dbl(list(trim = trims), mean, x = x)
 ```
 
 ```
-## [1] -0.42288600 -0.19517667 -0.12837337 -0.09530066
+## [1] -7.65022686 -0.10477170 -0.07500046 -0.03117504
 ```
 
 I think it's good practice to name the components of the list to make it very clear how the function will be called. 
@@ -2123,13 +2160,13 @@ pmap(params, runif)
 
 ```
 ## [[1]]
-## [1] 0.8912658
+## [1] 0.1916888
 ## 
 ## [[2]]
-## [1] 27.89872 89.32502
+## [1] 28.73654 97.34841
 ## 
 ## [[3]]
-## [1] 274.1486 517.4268 514.9597
+## [1] 136.0161 708.3832 671.5364
 ```
 
 <img src="diagrams/functionals/pmap-3.png" width="1122" />
