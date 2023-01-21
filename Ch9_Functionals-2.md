@@ -7,7 +7,8 @@ output:
     keep_md: yes
 ---
 
-```{r setup}
+
+```r
 library(purrr)
 ```
 
@@ -21,20 +22,28 @@ After the map family, the next most important family of functions is the reduce 
 
 `reduce()` takes a vector of length _n_ and produces a vector of length 1 by calling a function with a pair of values at a time: `reduce(1:4, f)` is equivalent to `f(f(f(1, 2), 3), 4)`. 
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/functionals/reduce.png")
-```
+<img src="diagrams/functionals/reduce.png" width="779" />
 
 `reduce()` is a useful way to generalise a function that works with two inputs (a __binary__ function) to work with any number of inputs. Imagine you have a list of numeric vectors, and you want to find the values that occur in every element. First we generate some sample data:
 
-```{r}
+
+```r
 l <- map(1:4, ~ sample(1:10, 15, replace = T))
 str(l)
 ```
 
+```
+## List of 4
+##  $ : int [1:15] 3 3 4 3 8 5 10 1 2 3 ...
+##  $ : int [1:15] 3 1 4 7 4 10 10 1 10 8 ...
+##  $ : int [1:15] 9 5 4 7 2 7 9 1 1 1 ...
+##  $ : int [1:15] 1 3 8 7 10 2 9 2 8 4 ...
+```
+
 To solve this challenge we need to use `intersect()` repeatedly:
 
-```{r}
+
+```r
 out <- l[[1]]
 out <- intersect(out, l[[2]])
 out <- intersect(out, l[[3]])
@@ -42,27 +51,40 @@ out <- intersect(out, l[[4]])
 out
 ```
 
+```
+## [1] 4 1 6
+```
+
 `reduce()` automates this solution for us, so we can write:
 
-```{r}
+
+```r
 reduce(l, intersect)
+```
+
+```
+## [1] 4 1 6
 ```
 
 We could apply the same idea if we wanted to list all the elements that appear in at least one entry. All we have to do is switch from `intersect()` to `union()`:
 
-```{r}
+
+```r
 reduce(l, union)
+```
+
+```
+##  [1]  3  4  8  5 10  1  2  6  7  9
 ```
 
 Like the map family, you can also pass additional arguments. `intersect()` and `union()` don't take extra arguments so I can't demonstrate them here, but the principle is straightforward and I drew you a picture.
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/functionals/reduce-arg.png")
-```
+<img src="diagrams/functionals/reduce-arg.png" width="968" />
 
 As usual, the essence of `reduce()` can be reduced to a simple wrapper around a for loop:
 
-```{r}
+
+```r
 simple_reduce <- function(x, f) {
   out <- x[[1]]
   for (i in seq(2, length(x))) {
@@ -81,64 +103,140 @@ The base equivalent is `Reduce()`. Note that the argument order is different: th
 
 The first `reduce()` variant, `accumulate()`, is useful for understanding how reduce works, because instead of returning just the final result, it returns all the intermediate results as well:
 
-```{r}
+
+```r
 accumulate(l, intersect)
+```
+
+```
+## [[1]]
+##  [1]  3  3  4  3  8  5 10  1  2  3 10 10  5  3  6
+## 
+## [[2]]
+## [1]  3  4  8  5 10  1  6
+## 
+## [[3]]
+## [1] 4 5 1 6
+## 
+## [[4]]
+## [1] 4 1 6
 ```
 
 Another useful way to understand reduce is to think about `sum()`: `sum(x)` is equivalent to `x[[1]] + x[[2]] + x[[3]] + ...`, i.e. ``reduce(x, `+`)``. Then ``accumulate(x, `+`)`` is the cumulative sum:
 
-```{r}
+
+```r
 x <- c(4, 3, 10)
 reduce(x, `+`)
+```
 
+```
+## [1] 17
+```
+
+```r
 accumulate(x, `+`)
+```
+
+```
+## [1]  4  7 17
 ```
 
 ### 9.5.3 Output types
 
 In the above example using `+`, what should `reduce()` return when `x` is short, i.e. length 1 or 0? Without additional arguments, `reduce()` just returns the input when `x` is length 1:
 
-```{r}
+
+```r
 reduce(1, `+`)
+```
+
+```
+## [1] 1
 ```
 
 This means that `reduce()` has no way to check that the input is valid:
 
-```{r}
+
+```r
 reduce("a", `+`)
+```
+
+```
+## [1] "a"
 ```
 
 What if it's length 0? We get an error that suggests we need to use the `.init` argument:
 
-```{r, error = TRUE}
+
+```r
 reduce(integer(), `+`)
+```
+
+```
+## Error in `reduce()`:
+## ! Must supply `.init` when `.x` is empty.
 ```
 
 What should `.init` be here? To figure that out, we need to see what happens when `.init` is supplied:
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/functionals/reduce-init.png")
-```
+<img src="diagrams/functionals/reduce-init.png" width="1015" />
 
 So if we call ``reduce(1, `+`, init)`` the result will be `1 + init`. Now we know that the result should be just `1`, so that suggests that `.init` should be 0:
 
-```{r}
+
+```r
 reduce(integer(), `+`, .init = 0)
+```
+
+```
+## [1] 0
 ```
 
 This also ensures that `reduce()` checks that length 1 inputs are valid for the function that you're calling:
 
-```{r, error = TRUE}
+
+```r
 reduce("a", `+`, .init = 0)
+```
+
+```
+## Error in .x + .y: non-numeric argument to binary operator
 ```
 
 If you want to get algebraic about it, 0 is called the __identity__ of the real numbers under the operation of addition: if you add a 0 to any number, you get the same number back. R applies the same principle to determine what a summary function with a zero length input should return:
 
-```{r, warning = FALSE}
+
+```r
 sum(integer())  # x + 0 = x
+```
+
+```
+## [1] 0
+```
+
+```r
 prod(integer()) # x * 1 = x
+```
+
+```
+## [1] 1
+```
+
+```r
 min(integer())  # min(x, Inf) = x
+```
+
+```
+## [1] Inf
+```
+
+```r
 max(integer())  # max(x, -Inf) = x
+```
+
+```
+## [1] -Inf
 ```
 
 If you're using `reduce()` in a function, you should always supply `.init`. Think carefully about what your function should return when you pass a vector of length 0 or 1, and make sure to test your implementation.
@@ -150,12 +248,8 @@ Very occasionally you need to pass two arguments to the function that you're red
 
 The length of the second argument varies based on whether or not `.init` is supplied: if you have four elements of `x`, `f` will only be called three times. If you supply init, `f` will be called four times.
 
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/functionals/reduce2.png")
-```
-```{r, echo = FALSE, out.width = NULL}
-knitr::include_graphics("diagrams/functionals/reduce2-init.png")
-```
+<img src="diagrams/functionals/reduce2.png" width="1299" />
+<img src="diagrams/functionals/reduce2-init.png" width="1299" />
 
 ### 9.5.5 Map-reduce
 \index{map-reduce}
@@ -191,20 +285,48 @@ A __predicate functional__ applies a predicate to each element of a vector. purr
 
 The following example shows how you might use these functionals with a data frame:
 
-```{r}
+
+```r
 df <- data.frame(x = 1:3, y = c("a", "b", "c"))
 detect(df, is.factor)
-detect_index(df, is.factor)
+```
 
+```
+## NULL
+```
+
+```r
+detect_index(df, is.factor)
+```
+
+```
+## [1] 0
+```
+
+```r
 str(keep(df, is.factor))
+```
+
+```
+## 'data.frame':	3 obs. of  0 variables
+```
+
+```r
 str(discard(df, is.factor))
+```
+
+```
+## 'data.frame':	3 obs. of  2 variables:
+##  $ x: int  1 2 3
+##  $ y: chr  "a" "b" "c"
 ```
 
 ### 9.6.2 Map variants {#predicate-map}
 
 `map()` and `modify()` come in variants that also take predicate functions, transforming only the elements of `.x` where `.p` is `TRUE`.
 
-```{r}
+
+```r
 df <- data.frame(
   num1 = c(0, 10, 20),
   num2 = c(5, 6, 7),
@@ -213,8 +335,34 @@ df <- data.frame(
 )
 
 str(map_if(df, is.numeric, mean))
+```
+
+```
+## List of 3
+##  $ num1: num 10
+##  $ num2: num 6
+##  $ chr1: chr [1:3] "a" "b" "c"
+```
+
+```r
 str(modify_if(df, is.numeric, mean))
+```
+
+```
+## 'data.frame':	3 obs. of  3 variables:
+##  $ num1: num  10 10 10
+##  $ num2: num  6 6 6
+##  $ chr1: chr  "a" "b" "c"
+```
+
+```r
 str(map(keep(df, is.numeric), mean))
+```
+
+```
+## List of 2
+##  $ num1: num 10
+##  $ num2: num 6
 ```
 
 ### 9.6.3 Exercises
@@ -225,7 +373,8 @@ str(map(keep(df, is.numeric), mean))
 2.  `simple_reduce()` has a problem when `x` is length 0 or length 1. Describe
     the source of the problem and how you might go about fixing it.
     
-    ```{r}
+    
+    ```r
     simple_reduce <- function(x, f) {
       out <- x[[1]]
       for (i in seq(2, length(x))) {
@@ -250,7 +399,8 @@ str(map(keep(df, is.numeric), mean))
     would you apply it to every column of a data frame? How would you apply it 
     to every numeric column in a data frame?
 
-    ```{r}
+    
+    ```r
     scale01 <- function(x) {
       rng <- range(x, na.rm = TRUE)
       (x - rng[1]) / (rng[2] - rng[1])
@@ -278,20 +428,46 @@ To finish up the chapter, here I provide a survey of important base functionals 
 
 A typical example of `apply()` looks like this
 
-```{r}
+
+```r
 a2d <- matrix(1:20, nrow = 5)
 apply(a2d, 1, mean)
+```
+
+```
+## [1]  8.5  9.5 10.5 11.5 12.5
+```
+
+```r
 apply(a2d, 2, mean)
+```
+
+```
+## [1]  3  8 13 18
 ```
 
 <!-- HW: recreate diagrams from plyr paper -->
 
 You can specify multiple dimensions to `MARGIN`, which is useful for high-dimensional arrays:
 
-```{r}
+
+```r
 a3d <- array(1:24, c(2, 3, 4))
 apply(a3d, 1, mean)
+```
+
+```
+## [1] 12 13
+```
+
+```r
 apply(a3d, c(1, 2), mean)
+```
+
+```
+##      [,1] [,2] [,3]
+## [1,]   10   12   14
+## [2,]   11   13   15
 ```
 
 There are two caveats to using `apply()`: 
@@ -306,21 +482,46 @@ There are two caveats to using `apply()`:
     function is the identity operator, the output is not always the same as 
     the input. 
 
-    ```{r}
+    
+    ```r
     a1 <- apply(a2d, 1, identity)
     identical(a2d, a1)
-
+    ```
+    
+    ```
+    ## [1] FALSE
+    ```
+    
+    ```r
     a2 <- apply(a2d, 2, identity)
     identical(a2d, a2)
+    ```
+    
+    ```
+    ## [1] TRUE
     ```
 
 *   Never use `apply()` with a data frame. It always coerces it to a matrix,
     which will lead to undesirable results if your data frame contains anything
     other than numbers.
     
-    ```{r}
+    
+    ```r
     df <- data.frame(x = 1:3, y = c("a", "b", "c"))
     apply(df, 2, mean)
+    ```
+    
+    ```
+    ## Warning in mean.default(newX[, i], ...): argument is not numeric or logical:
+    ## returning NA
+    
+    ## Warning in mean.default(newX[, i], ...): argument is not numeric or logical:
+    ## returning NA
+    ```
+    
+    ```
+    ##  x  y 
+    ## NA NA
     ```
 
 ### 9.7.2 Mathematical concerns
@@ -335,11 +536,46 @@ Base R provides a useful set:
 
 The following example shows how functionals might be used with a simple function, `sin()`:
 
-```{r}
+
+```r
 integrate(sin, 0, pi)
+```
+
+```
+## 2 with absolute error < 2.2e-14
+```
+
+```r
 str(uniroot(sin, pi * c(1 / 2, 3 / 2)))
+```
+
+```
+## List of 5
+##  $ root      : num 3.14
+##  $ f.root    : num 1.22e-16
+##  $ iter      : int 2
+##  $ init.it   : int NA
+##  $ estim.prec: num 6.1e-05
+```
+
+```r
 str(optimise(sin, c(0, 2 * pi)))
+```
+
+```
+## List of 2
+##  $ minimum  : num 4.71
+##  $ objective: num -1
+```
+
+```r
 str(optimise(sin, c(0, pi), maximum = TRUE))
+```
+
+```
+## List of 2
+##  $ maximum  : num 1.57
+##  $ objective: num 1
 ```
 
 ### 9.7.3 Exercises
