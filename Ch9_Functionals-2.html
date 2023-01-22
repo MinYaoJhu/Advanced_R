@@ -382,10 +382,10 @@ generate some sample data:</p>
 <pre class="r"><code>l &lt;- map(1:4, ~ sample(1:10, 15, replace = T))
 str(l)</code></pre>
 <pre><code>## List of 4
-##  $ : int [1:15] 3 3 4 3 8 5 10 1 2 3 ...
-##  $ : int [1:15] 3 1 4 7 4 10 10 1 10 8 ...
-##  $ : int [1:15] 9 5 4 7 2 7 9 1 1 1 ...
-##  $ : int [1:15] 1 3 8 7 10 2 9 2 8 4 ...</code></pre>
+##  $ : int [1:15] 3 1 1 5 10 1 6 8 1 1 ...
+##  $ : int [1:15] 4 10 10 1 1 5 10 5 8 8 ...
+##  $ : int [1:15] 8 3 1 5 7 6 9 6 2 6 ...
+##  $ : int [1:15] 4 5 7 9 8 2 3 9 4 6 ...</code></pre>
 <p>To solve this challenge we need to use <code>intersect()</code>
 repeatedly:</p>
 <pre class="r"><code>out &lt;- l[[1]]
@@ -393,16 +393,16 @@ out &lt;- intersect(out, l[[2]])
 out &lt;- intersect(out, l[[3]])
 out &lt;- intersect(out, l[[4]])
 out</code></pre>
-<pre><code>## [1] 4 1 6</code></pre>
+<pre><code>## [1] 3 1 5 8 2</code></pre>
 <p><code>reduce()</code> automates this solution for us, so we can
 write:</p>
 <pre class="r"><code>reduce(l, intersect)</code></pre>
-<pre><code>## [1] 4 1 6</code></pre>
+<pre><code>## [1] 3 1 5 8 2</code></pre>
 <p>We could apply the same idea if we wanted to list all the elements
 that appear in at least one entry. All we have to do is switch from
 <code>intersect()</code> to <code>union()</code>:</p>
 <pre class="r"><code>reduce(l, union)</code></pre>
-<pre><code>##  [1]  3  4  8  5 10  1  2  6  7  9</code></pre>
+<pre><code>##  [1]  3  1  5 10  6  8  2  4  9  7</code></pre>
 <p>Like the map family, you can also pass additional arguments.
 <code>intersect()</code> and <code>union()</code> don’t take extra
 arguments so I can’t demonstrate them here, but the principle is
@@ -431,16 +431,16 @@ returning just the final result, it returns all the intermediate results
 as well:</p>
 <pre class="r"><code>accumulate(l, intersect)</code></pre>
 <pre><code>## [[1]]
-##  [1]  3  3  4  3  8  5 10  1  2  3 10 10  5  3  6
+##  [1]  3  1  1  5 10  1  6  8  1  1 10  8  2  6  5
 ## 
 ## [[2]]
-## [1]  3  4  8  5 10  1  6
+## [1]  3  1  5 10  8  2
 ## 
 ## [[3]]
-## [1] 4 5 1 6
+## [1] 3 1 5 8 2
 ## 
 ## [[4]]
-## [1] 4 1 6</code></pre>
+## [1] 3 1 5 8 2</code></pre>
 <p>Another useful way to understand reduce is to think about
 <code>sum()</code>: <code>sum(x)</code> is equivalent to
 <code>x[[1]] + x[[2]] + x[[3]] + ...</code>,
@@ -495,6 +495,14 @@ zero length input should return:</p>
 <pre><code>## [1] Inf</code></pre>
 <pre class="r"><code>max(integer())  # max(x, -Inf) = x</code></pre>
 <pre><code>## [1] -Inf</code></pre>
+<pre class="r"><code>reduce(integer(), sum, .init = &quot;x&quot;)</code></pre>
+<pre><code>## [1] &quot;x&quot;</code></pre>
+<pre class="r"><code>reduce(integer(), prod, .init = &quot;x&quot;)</code></pre>
+<pre><code>## [1] &quot;x&quot;</code></pre>
+<pre class="r"><code>reduce(integer(), min, .init = &quot;x&quot;)</code></pre>
+<pre><code>## [1] &quot;x&quot;</code></pre>
+<pre class="r"><code>reduce(integer(), max, .init = &quot;x&quot;)</code></pre>
+<pre><code>## [1] &quot;x&quot;</code></pre>
 <p>If you’re using <code>reduce()</code> in a function, you should
 always supply <code>.init</code>. Think carefully about what your
 function should return when you pass a vector of length 0 or 1, and make
@@ -610,9 +618,36 @@ str(map_if(df, is.numeric, mean))</code></pre>
 <div id="exercises" class="section level3">
 <h3>9.6.3 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Why isn’t <code>is.na()</code> a predicate function? What base R
+<li>Why isn’t <code>is.na()</code> a predicate function? What base R
 function is closest to being a predicate version of
-<code>is.na()</code>?</p></li>
+<code>is.na()</code>?</li>
+</ol>
+<pre class="r"><code>df &lt;- data.frame(x = 1:3, y = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
+str(df)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    3 obs. of  2 variables:
+##  $ x: int  1 2 3
+##  $ y: chr  &quot;a&quot; &quot;b&quot; &quot;c&quot;</code></pre>
+<pre class="r"><code>is.na(df)</code></pre>
+<pre><code>##          x     y
+## [1,] FALSE FALSE
+## [2,] FALSE FALSE
+## [3,] FALSE FALSE</code></pre>
+<pre class="r"><code>str(is.na(df))</code></pre>
+<pre><code>##  logi [1:3, 1:2] FALSE FALSE FALSE FALSE FALSE FALSE
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : NULL
+##   ..$ : chr [1:2] &quot;x&quot; &quot;y&quot;</code></pre>
+<blockquote>
+<p><code>is.na()</code> is not a predicate function because it returns a
+logical vector.</p>
+</blockquote>
+<pre class="r"><code>anyNA(df)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<blockquote>
+<p><code>anyNA()</code> is closest to being a predicate version of
+<code>is.na()</code> because it returns a single TRUE or FALSE.</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
 <li><p><code>simple_reduce()</code> has a problem when <code>x</code> is
 length 0 or length 1. Describe the source of the problem and how you
 might go about fixing it.</p>
@@ -623,6 +658,44 @@ might go about fixing it.</p>
   }
   out
 }</code></pre></li>
+</ol>
+<pre class="r"><code>simple_reduce(c(1:5), sum)</code></pre>
+<pre><code>## [1] 15</code></pre>
+<pre class="r"><code>simple_reduce(1, sum)</code></pre>
+<pre class="r"><code>integer()
+simple_reduce(integer(), sum)</code></pre>
+<pre class="r"><code>simple_reduce &lt;- function(x, f, default = NULL) {
+  if (length(x) == 0L &amp; is.null(default) == TRUE)
+    stop(&quot;x is length 0&quot;)
+  
+  if (length(x) == 0L &amp; is.null(default) == FALSE)
+    return(default)
+  
+  if (length(x) == 1L &amp; is.null(default) == TRUE)
+    return(x)
+  
+  if (length(x) == 1L &amp; is.null(default) == FALSE)
+    out &lt;- f(default, x) 
+  return(out)
+  
+  
+  out &lt;- x[[1]]
+  for (i in seq(2, length(x))) {
+    out &lt;- f(out, x[[i]])
+  }
+  out
+}</code></pre>
+<pre class="r"><code>simple_reduce(c(1:5), sum)</code></pre>
+<pre><code>## [1] 3 1 5 8 2</code></pre>
+<pre class="r"><code>simple_reduce(c(1:5), sum, 1)</code></pre>
+<pre><code>## [1] 3 1 5 8 2</code></pre>
+<pre class="r"><code>simple_reduce(1, sum)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>simple_reduce(1, sum, 1)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<pre class="r"><code>simple_reduce(integer(), sum, 1)</code></pre>
+<pre class="r"><code>simple_reduce(integer(), sum)</code></pre>
+<ol start="3" style="list-style-type: decimal">
 <li><p>Implement the <code>span()</code> function from Haskell: given a
 list <code>x</code> and a predicate function <code>f</code>,
 <code>span(x, f)</code> returns the location of the longest sequential

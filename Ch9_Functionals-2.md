@@ -34,10 +34,10 @@ str(l)
 
 ```
 ## List of 4
-##  $ : int [1:15] 3 3 4 3 8 5 10 1 2 3 ...
-##  $ : int [1:15] 3 1 4 7 4 10 10 1 10 8 ...
-##  $ : int [1:15] 9 5 4 7 2 7 9 1 1 1 ...
-##  $ : int [1:15] 1 3 8 7 10 2 9 2 8 4 ...
+##  $ : int [1:15] 3 1 1 5 10 1 6 8 1 1 ...
+##  $ : int [1:15] 4 10 10 1 1 5 10 5 8 8 ...
+##  $ : int [1:15] 8 3 1 5 7 6 9 6 2 6 ...
+##  $ : int [1:15] 4 5 7 9 8 2 3 9 4 6 ...
 ```
 
 To solve this challenge we need to use `intersect()` repeatedly:
@@ -52,7 +52,7 @@ out
 ```
 
 ```
-## [1] 4 1 6
+## [1] 3 1 5 8 2
 ```
 
 `reduce()` automates this solution for us, so we can write:
@@ -63,7 +63,7 @@ reduce(l, intersect)
 ```
 
 ```
-## [1] 4 1 6
+## [1] 3 1 5 8 2
 ```
 
 We could apply the same idea if we wanted to list all the elements that appear in at least one entry. All we have to do is switch from `intersect()` to `union()`:
@@ -74,7 +74,7 @@ reduce(l, union)
 ```
 
 ```
-##  [1]  3  4  8  5 10  1  2  6  7  9
+##  [1]  3  1  5 10  6  8  2  4  9  7
 ```
 
 Like the map family, you can also pass additional arguments. `intersect()` and `union()` don't take extra arguments so I can't demonstrate them here, but the principle is straightforward and I drew you a picture.
@@ -110,16 +110,16 @@ accumulate(l, intersect)
 
 ```
 ## [[1]]
-##  [1]  3  3  4  3  8  5 10  1  2  3 10 10  5  3  6
+##  [1]  3  1  1  5 10  1  6  8  1  1 10  8  2  6  5
 ## 
 ## [[2]]
-## [1]  3  4  8  5 10  1  6
+## [1]  3  1  5 10  8  2
 ## 
 ## [[3]]
-## [1] 4 5 1 6
+## [1] 3 1 5 8 2
 ## 
 ## [[4]]
-## [1] 4 1 6
+## [1] 3 1 5 8 2
 ```
 
 Another useful way to understand reduce is to think about `sum()`: `sum(x)` is equivalent to `x[[1]] + x[[2]] + x[[3]] + ...`, i.e. ``reduce(x, `+`)``. Then ``accumulate(x, `+`)`` is the cumulative sum:
@@ -237,6 +237,38 @@ max(integer())  # max(x, -Inf) = x
 
 ```
 ## [1] -Inf
+```
+
+```r
+reduce(integer(), sum, .init = "x")
+```
+
+```
+## [1] "x"
+```
+
+```r
+reduce(integer(), prod, .init = "x")
+```
+
+```
+## [1] "x"
+```
+
+```r
+reduce(integer(), min, .init = "x")
+```
+
+```
+## [1] "x"
+```
+
+```r
+reduce(integer(), max, .init = "x")
+```
+
+```
+## [1] "x"
 ```
 
 If you're using `reduce()` in a function, you should always supply `.init`. Think carefully about what your function should return when you pass a vector of length 0 or 1, and make sure to test your implementation.
@@ -369,6 +401,53 @@ str(map(keep(df, is.numeric), mean))
 
 1.  Why isn't `is.na()` a predicate function? What base R function is closest
     to being a predicate version of `is.na()`?
+    
+
+```r
+df <- data.frame(x = 1:3, y = c("a", "b", "c"))
+str(df)
+```
+
+```
+## 'data.frame':	3 obs. of  2 variables:
+##  $ x: int  1 2 3
+##  $ y: chr  "a" "b" "c"
+```
+
+```r
+is.na(df)
+```
+
+```
+##          x     y
+## [1,] FALSE FALSE
+## [2,] FALSE FALSE
+## [3,] FALSE FALSE
+```
+
+```r
+str(is.na(df))
+```
+
+```
+##  logi [1:3, 1:2] FALSE FALSE FALSE FALSE FALSE FALSE
+##  - attr(*, "dimnames")=List of 2
+##   ..$ : NULL
+##   ..$ : chr [1:2] "x" "y"
+```
+
+> `is.na()` is not a predicate function because it returns a logical vector.
+
+
+```r
+anyNA(df)
+```
+
+```
+## [1] FALSE
+```
+
+> `anyNA()` is closest to being a predicate version of `is.na()` because it returns a single TRUE or FALSE.
 
 2.  `simple_reduce()` has a problem when `x` is length 0 or length 1. Describe
     the source of the problem and how you might go about fixing it.
@@ -383,6 +462,100 @@ str(map(keep(df, is.numeric), mean))
       out
     }
     ```
+
+
+```r
+simple_reduce(c(1:5), sum)
+```
+
+```
+## [1] 15
+```
+
+
+
+```r
+simple_reduce(1, sum)
+```
+
+
+```r
+integer()
+simple_reduce(integer(), sum)
+```
+
+
+```r
+simple_reduce <- function(x, f, default = NULL) {
+  if (length(x) == 0L & is.null(default) == TRUE)
+    stop("x is length 0")
+  
+  if (length(x) == 0L & is.null(default) == FALSE)
+    return(default)
+  
+  if (length(x) == 1L & is.null(default) == TRUE)
+    return(x)
+  
+  if (length(x) == 1L & is.null(default) == FALSE)
+    out <- f(default, x) 
+  return(out)
+  
+  
+  out <- x[[1]]
+  for (i in seq(2, length(x))) {
+    out <- f(out, x[[i]])
+  }
+  out
+}
+```
+
+
+```r
+simple_reduce(c(1:5), sum)
+```
+
+```
+## [1] 3 1 5 8 2
+```
+
+
+```r
+simple_reduce(c(1:5), sum, 1)
+```
+
+```
+## [1] 3 1 5 8 2
+```
+
+
+```r
+simple_reduce(1, sum)
+```
+
+```
+## [1] 1
+```
+
+
+
+```r
+simple_reduce(1, sum, 1)
+```
+
+```
+## [1] 2
+```
+
+
+```r
+simple_reduce(integer(), sum, 1)
+```
+
+
+```r
+simple_reduce(integer(), sum)
+```
+
 
 3.  Implement the `span()` function from Haskell: given a list `x` and a 
     predicate function `f`, `span(x, f)` returns the location of the longest 
