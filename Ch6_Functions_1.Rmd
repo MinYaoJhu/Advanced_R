@@ -334,21 +334,20 @@ identical(anova, Anova)
 ```
 
 
-2.  It's possible (although typically not useful) to call an anonymous function.
-    Which of the two approaches below is correct? Why?
+2.  It's possible (although typically not useful) to call an anonymous function. Which of the two approaches below is correct? Why?
 
-    ```{r, result = "hide"}
-    function(x) 3()
-    (function(x) 3)()
-    ```
+```{r, result = "hide"}
+function(x) 3()
+(function(x) 3)()
+```
 
 > `(function(x) 3)()` is correct.
 
 > The anonymous function function(x) 3 is surrounded by a pair of parentheses before it is called by (). These extra parentheses separate the function call from the anonymous function’s body. Without them a function with the invalid body 3() is returned, which throws an error when we call it. This is easier to see if we name the function:
 
-```{r, result = "hide"}
+```{r eval=FALSE}
 function1 <- function(x) 3()
-#function1()
+function1()
 # Error in function1() : attempt to apply non-function
 ```
 
@@ -382,14 +381,17 @@ sapply(1:2, function(x) x + 1L)
 
 5.  This code makes a list of all functions in the base package. 
     
-    ```{r}
-    objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    funs <- Filter(is.function, objs) #
+```{r}
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+funs <- Filter(is.function, objs) #
+
+#?mget
+```
     
-    #?mget
-    ```
-    
-> Search by name for an object (get) or zero or more objects (mget).
+> Return the Value of a Named Object: Search by name for an object (get) or zero or more objects (mget).
+
+mget(x, envir = as.environment(-1), mode = "any", ifnotfound,
+     inherits = FALSE)
     
 ```{r}
 str(funs)
@@ -414,6 +416,7 @@ n_args <- funs %>%
 
 ```{r}
 str(n_args)
+head(n_args)
 ```
 
 
@@ -422,6 +425,15 @@ n_args %>%
   which.max()
 ```
 
+another method:
+
+```{r}
+n_args %>% 
+  sort(decreasing = TRUE) %>%
+  head()
+```
+
+
 other method:
 
 ```{r}
@@ -429,13 +441,14 @@ fun.args <- sapply(funs, function(x) length(formals(x)))
 
 names(funs)[which.max(fun.args)] 
 ```
-
+> sapply is a user-friendly version and wrapper of lapply by default returning a vector, matrix or, if simplify = "array", an array if appropriate, by applying simplify2array(). sapply(x, f, simplify = FALSE, USE.NAMES = FALSE) is the same as lapply(x, f).
 
 
     b. How many base functions have no arguments? What's special about those
        functions?
        
 ```{r}
+length(n_args)
 sum(n_args == 0)
 ```
 > However, this over counts because formals() returns NULL for primitive functions, and length(NULL) is 0. To fix this, we can first remove the primitive functions:
@@ -455,10 +468,10 @@ sum(n_args2 == 0)
     c. How could you adapt the code to find all primitive functions?
     
 ```{r}
-    objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    pri <- Filter(is.primitive, objs)
-    str(pri)
-    length(pri)
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+pri <- Filter(is.primitive, objs)
+# str(pri)
+length(pri)
 ```
 
 
@@ -720,10 +733,21 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
 
 > R’s lexical scoping follows four primary rules:
 
-> 1. Name masking
-> 2. Functions versus variables
+> 1. Name masking.
+
+The basic principle of lexical scoping is that names defined inside a function mask names defined outside a function. 
+
+> 2. Functions versus variables.
+
+when a function and a non-function share the same name (they must, of course, reside in different environments), applying these rules gets a little more complicated. When you use a name in a function call, R ignores non-function objects when looking for that value. 
+
 > 3. A fresh start
+
+Every time a function is called a new environment is created to host its execution. This means that a function has no way to tell what happened the last time it was run; each invocation is completely independent. 
+
 > 4. Dynamic lookup
+
+Lexical scoping determines where, but not when to look for values. R looks for values when the function is run, not when the function is created. Together, these two properties tell us that the output of a function can differ depending on the objects outside the function’s environment.
 
 3. What does the following function return? Make a prediction before 
    running the code yourself.
@@ -742,6 +766,8 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
     ```
 
 > 202. Correct!
+
+> The innermost f() is called last, though it is the first function to return a value. Therefore, the order of the calculation passes “from the inside to the outside” and the function returns ((10 ^ 2) + 1) * 2 = 202.
 
 ## 6.5 Lazy evaluation {#lazy-evaluation}
 \index{evaluation!lazy|see {lazy evaluation}} 
@@ -928,7 +954,13 @@ FALSE & NA
 
 > && does not perform elementwise comparisons; instead it uses the first element of each value only. 
 
-  What is different with this code? Why is this behaviour undesirable here?
+> In summary: && short-circuits which means that if the left-hand side is FALSE it doesn’t evaluate the right-hand side (because it doesn’t matter). Similarly, if the left-hand side of || is TRUE it doesn’t evaluate the right-hand side.
+
+> && does not perform elementwise comparisons; instead it uses the first element of each value only. It also uses lazy evaluation, in the sense that evaluation “proceeds only until the result is determined.”
+
+> This means that the RHS of && won’t be evaluated if the LHS already determines the outcome of the comparison (e.g. evaluate to FALSE). This behaviour is also known as “short-circuiting.”
+
+What is different with this code? Why is this behaviour undesirable here?
     
     ```{r}
     x_ok <- function(x) {
@@ -962,6 +994,8 @@ NULL > 0
     ```
 
 > 100. Lazy evaluation, Default arguments. `x = z`can be supplied inside the function
+
+> The function returns 100. The default argument (x = z) gets lazily evaluated within the function environment when x gets accessed. At this time z has already been bound to the value 100. The illustrated principle here is lazy evaluation.
 
 3.  What does this function return? Why? Which principle does it illustrate?
   

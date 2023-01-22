@@ -14,29 +14,10 @@ library(tidyverse)
 
 ```
 ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
+## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
 ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
 ## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
-## ✔ readr   2.1.3      ✔ forcats 0.5.2
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 4.2.2
-```
-
-```
-## Warning: package 'readr' was built under R version 4.2.2
-```
-
-```
-## Warning: package 'purrr' was built under R version 4.2.2
-```
-
-```
-## Warning: package 'stringr' was built under R version 4.2.2
-```
-
-```
+## ✔ readr   2.1.3      ✔ forcats 0.5.2 
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
@@ -272,8 +253,8 @@ onePlusTen
 ## function() {
 ##         x + 10
 ##       }
-## <bytecode: 0x0000021b4029e558>
-## <environment: 0x0000021b40145770>
+## <bytecode: 0x0000025759b15d40>
+## <environment: 0x00000257599f2158>
 ```
 
 ```r
@@ -284,8 +265,8 @@ tenPlusTen
 ## function() {
 ##         x + 10
 ##       }
-## <bytecode: 0x0000021b4029e558>
-## <environment: 0x0000021b402f3c20>
+## <bytecode: 0x0000025759b15d40>
+## <environment: 0x0000025759b63678>
 ```
 
 
@@ -471,7 +452,7 @@ match.fun(mean)
 ```
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x0000021b3a0a96a0>
+## <bytecode: 0x00000257531304f0>
 ## <environment: namespace:base>
 ```
 
@@ -489,17 +470,13 @@ match.fun(anova)
 ```
 ## function (object, ...) 
 ## UseMethod("anova")
-## <bytecode: 0x0000021b386f8c68>
+## <bytecode: 0x00000257517facb8>
 ## <environment: namespace:stats>
 ```
 
 
 ```r
 library(car)
-```
-
-```
-## Warning: package 'car' was built under R version 4.2.2
 ```
 
 ```
@@ -532,7 +509,7 @@ match.fun(Anova)
 ## {
 ##     UseMethod("Anova", mod)
 ## }
-## <bytecode: 0x0000021b429df9e8>
+## <bytecode: 0x0000025757e9b1a8>
 ## <environment: namespace:car>
 ```
 
@@ -546,25 +523,24 @@ identical(anova, Anova)
 ```
 
 
-2.  It's possible (although typically not useful) to call an anonymous function.
-    Which of the two approaches below is correct? Why?
+2.  It's possible (although typically not useful) to call an anonymous function. Which of the two approaches below is correct? Why?
 
-    
-    ```r
-    function(x) 3()
-    ```
-    
-    ```
-    ## function(x) 3()
-    ```
-    
-    ```r
-    (function(x) 3)()
-    ```
-    
-    ```
-    ## [1] 3
-    ```
+
+```r
+function(x) 3()
+```
+
+```
+## function(x) 3()
+```
+
+```r
+(function(x) 3)()
+```
+
+```
+## [1] 3
+```
 
 > `(function(x) 3)()` is correct.
 
@@ -573,7 +549,7 @@ identical(anova, Anova)
 
 ```r
 function1 <- function(x) 3()
-#function1()
+function1()
 # Error in function1() : attempt to apply non-function
 ```
 
@@ -613,15 +589,18 @@ sapply(1:2, function(x) x + 1L)
 
 5.  This code makes a list of all functions in the base package. 
     
+
+```r
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+funs <- Filter(is.function, objs) #
+
+#?mget
+```
     
-    ```r
-    objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    funs <- Filter(is.function, objs) #
-    
-    ?mget
-    ```
-    
-> Search by name for an object (get) or zero or more objects (mget).
+> Return the Value of a Named Object: Search by name for an object (get) or zero or more objects (mget).
+
+mget(x, envir = as.environment(-1), mode = "any", ifnotfound,
+     inherits = FALSE)
     
 
 ```r
@@ -742,8 +721,8 @@ str(funs)
 ```r
 library(purrr)
 
-?map
-?map_int
+#?map
+#?map_int
 
 n_args <- funs %>% 
   map(formals) %>%
@@ -763,6 +742,15 @@ str(n_args)
 ##  - attr(*, "names")= chr [1:1333] "-" "-.Date" "-.POSIXt" "!" ...
 ```
 
+```r
+head(n_args)
+```
+
+```
+##         -    -.Date  -.POSIXt         ! !.hexmode !.octmode 
+##         0         2         2         0         1         1
+```
+
 
 
 ```r
@@ -774,6 +762,23 @@ n_args %>%
 ## scan 
 ## 1056
 ```
+
+another method:
+
+
+```r
+n_args %>% 
+  sort(decreasing = TRUE) %>%
+  head()
+```
+
+```
+##             scan   format.default           source          formatC 
+##               22               16               16               15 
+##          library merge.data.frame 
+##               13               13
+```
+
 
 other method:
 
@@ -787,12 +792,20 @@ names(funs)[which.max(fun.args)]
 ```
 ## [1] "scan"
 ```
-
+> sapply is a user-friendly version and wrapper of lapply by default returning a vector, matrix or, if simplify = "array", an array if appropriate, by applying simplify2array(). sapply(x, f, simplify = FALSE, USE.NAMES = FALSE) is the same as lapply(x, f).
 
 
     b. How many base functions have no arguments? What's special about those
        functions?
        
+
+```r
+length(n_args)
+```
+
+```
+## [1] 1333
+```
 
 ```r
 sum(n_args == 0)
@@ -824,117 +837,10 @@ sum(n_args2 == 0)
     
 
 ```r
-    objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
-    pri <- Filter(is.primitive, objs)
-    str(pri)
-```
-
-```
-## List of 204
-##  $ -                   :function (e1, e2)  
-##  $ !                   :function (x)  
-##  $ !=                  :function (e1, e2)  
-##  $ $                   :.Primitive("$") 
-##  $ $<-                 :.Primitive("$<-") 
-##  $ %%                  :function (e1, e2)  
-##  $ %*%                 :function (x, y)  
-##  $ %/%                 :function (e1, e2)  
-##  $ &                   :function (e1, e2)  
-##  $ &&                  :.Primitive("&&") 
-##  $ (                   :.Primitive("(") 
-##  $ *                   :function (e1, e2)  
-##  $ ...elt              :function (n)  
-##  $ ...length           :function ()  
-##  $ ...names            :function ()  
-##  $ .C                  :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
-##  $ .cache_class        :function (class, extends)  
-##  $ .Call               :function (.NAME, ..., PACKAGE)  
-##  $ .Call.graphics      :function (.NAME, ..., PACKAGE)  
-##  $ .class2             :function (x)  
-##  $ .External           :function (.NAME, ..., PACKAGE)  
-##  $ .External.graphics  :function (.NAME, ..., PACKAGE)  
-##  $ .External2          :function (.NAME, ..., PACKAGE)  
-##  $ .Fortran            :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
-##  $ .Internal           :function (call)  
-##  $ .isMethodsDispatchOn:function (onOff = NULL)  
-##  $ .Primitive          :function (name)  
-##  $ .primTrace          :function (obj)  
-##  $ .primUntrace        :function (obj)  
-##  $ .subset             :function (x, ...)  
-##  $ .subset2            :function (x, ...)  
-##  $ /                   :function (e1, e2)  
-##  $ :                   :.Primitive(":") 
-##  $ ::                  :function (pkg, name)  
-##  $ :::                 :function (pkg, name)  
-##  $ @                   :.Primitive("@") 
-##  $ @<-                 :.Primitive("@<-") 
-##  $ [                   :.Primitive("[") 
-##  $ [[                  :.Primitive("[[") 
-##  $ [[<-                :.Primitive("[[<-") 
-##  $ [<-                 :.Primitive("[<-") 
-##  $ ^                   :function (e1, e2)  
-##  $ {                   :.Primitive("{") 
-##  $ |                   :function (e1, e2)  
-##  $ ||                  :.Primitive("||") 
-##  $ ~                   :.Primitive("~") 
-##  $ +                   :function (e1, e2)  
-##  $ <                   :function (e1, e2)  
-##  $ <-                  :.Primitive("<-") 
-##  $ <<-                 :.Primitive("<<-") 
-##  $ <=                  :function (e1, e2)  
-##  $ =                   :.Primitive("=") 
-##  $ ==                  :function (e1, e2)  
-##  $ >                   :function (e1, e2)  
-##  $ >=                  :function (e1, e2)  
-##  $ abs                 :function (x)  
-##  $ acos                :function (x)  
-##  $ acosh               :function (x)  
-##  $ all                 :function (..., na.rm = FALSE)  
-##  $ any                 :function (..., na.rm = FALSE)  
-##  $ anyNA               :function (x, recursive = FALSE)  
-##  $ Arg                 :function (z)  
-##  $ as.call             :function (x)  
-##  $ as.character        :function (x, ...)  
-##  $ as.complex          :function (x, ...)  
-##  $ as.double           :function (x, ...)  
-##  $ as.environment      :function (x)  
-##  $ as.integer          :function (x, ...)  
-##  $ as.logical          :function (x, ...)  
-##  $ as.numeric          :function (x, ...)  
-##  $ as.raw              :function (x)  
-##  $ asin                :function (x)  
-##  $ asinh               :function (x)  
-##  $ atan                :function (x)  
-##  $ atanh               :function (x)  
-##  $ attr                :function (x, which, exact = FALSE)  
-##  $ attr<-              :function (x, which, value)  
-##  $ attributes          :function (x)  
-##  $ attributes<-        :function (x, value)  
-##  $ baseenv             :function ()  
-##  $ break               :.Primitive("break") 
-##  $ browser             :function (text = "", condition = NULL, expr = TRUE, skipCalls = 0L)  
-##  $ c                   :function (...)  
-##  $ call                :function (name, ...)  
-##  $ ceiling             :function (x)  
-##  $ class               :function (x)  
-##  $ class<-             :function (x, value)  
-##  $ Conj                :function (z)  
-##  $ cos                 :function (x)  
-##  $ cosh                :function (x)  
-##  $ cospi               :function (x)  
-##  $ cummax              :function (x)  
-##  $ cummin              :function (x)  
-##  $ cumprod             :function (x)  
-##  $ cumsum              :function (x)  
-##  $ digamma             :function (x)  
-##  $ dim                 :function (x)  
-##  $ dim<-               :function (x, value)  
-##  $ dimnames            :function (x)  
-##   [list output truncated]
-```
-
-```r
-    length(pri)
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+pri <- Filter(is.primitive, objs)
+# str(pri)
+length(pri)
 ```
 
 ```
@@ -978,7 +884,7 @@ sqrt(mean(square(deviation(x))))
 ```
 
 ```
-## [1] 0.2863583
+## [1] 0.2667185
 ```
 
 Or you save the intermediate results as variables:
@@ -993,7 +899,7 @@ out
 ```
 
 ```
-## [1] 0.2863583
+## [1] 0.2667185
 ```
 
 The magrittr package [@magrittr] provides a third option: the binary operator `%>%`, which is called the pipe and is pronounced as "and then".
@@ -1029,7 +935,7 @@ x %>%
 ```
 
 ```
-## [1] 0.2863583
+## [1] 0.2667185
 ```
 
 `x %>% f()` is equivalent to `f(x)`; `x %>% f(y)` is equivalent to `f(x, y)`. The pipe allows you to focus on the high-level composition of functions rather than the low-level flow of data; the focus is on what's being done (the verbs), rather than on what's being modified (the nouns). This style is common in Haskell and F#, the main inspiration for magrittr, and is the default style in stack based programming languages like Forth and Factor. 
@@ -1282,10 +1188,21 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
 
 > R’s lexical scoping follows four primary rules:
 
-> 1. Name masking
-> 2. Functions versus variables
+> 1. Name masking.
+
+The basic principle of lexical scoping is that names defined inside a function mask names defined outside a function. 
+
+> 2. Functions versus variables.
+
+when a function and a non-function share the same name (they must, of course, reside in different environments), applying these rules gets a little more complicated. When you use a name in a function call, R ignores non-function objects when looking for that value. 
+
 > 3. A fresh start
+
+Every time a function is called a new environment is created to host its execution. This means that a function has no way to tell what happened the last time it was run; each invocation is completely independent. 
+
 > 4. Dynamic lookup
+
+Lexical scoping determines where, but not when to look for values. R looks for values when the function is run, not when the function is created. Together, these two properties tell us that the output of a function can differ depending on the objects outside the function’s environment.
 
 3. What does the following function return? Make a prediction before 
    running the code yourself.
@@ -1305,6 +1222,8 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
     ```
 
 > 202. Correct!
+
+> The innermost f() is called last, though it is the first function to return a value. Therefore, the order of the calculation passes “from the inside to the outside” and the function returns ((10 ^ 2) + 1) * 2 = 202.
 
 ## 6.5 Lazy evaluation {#lazy-evaluation}
 \index{evaluation!lazy|see {lazy evaluation}} 
@@ -1577,7 +1496,13 @@ FALSE & NA
 
 > && does not perform elementwise comparisons; instead it uses the first element of each value only. 
 
-  What is different with this code? Why is this behaviour undesirable here?
+> In summary: && short-circuits which means that if the left-hand side is FALSE it doesn’t evaluate the right-hand side (because it doesn’t matter). Similarly, if the left-hand side of || is TRUE it doesn’t evaluate the right-hand side.
+
+> && does not perform elementwise comparisons; instead it uses the first element of each value only. It also uses lazy evaluation, in the sense that evaluation “proceeds only until the result is determined.”
+
+> This means that the RHS of && won’t be evaluated if the LHS already determines the outcome of the comparison (e.g. evaluate to FALSE). This behaviour is also known as “short-circuiting.”
+
+What is different with this code? Why is this behaviour undesirable here?
     
     
     ```r
@@ -1643,6 +1568,8 @@ NULL > 0
     ```
 
 > 100. Lazy evaluation, Default arguments. `x = z`can be supplied inside the function
+
+> The function returns 100. The default argument (x = z) gets lazily evaluated within the function environment when x gets accessed. At this time z has already been bound to the value 100. The illustrated principle here is lazy evaluation.
 
 3.  What does this function return? Why? Which principle does it illustrate?
   
@@ -1753,7 +1680,7 @@ nclass.FD(x, digits = 5)
     ```
     
     ```
-    ## [1] "2022-12-12 09:25:52 GMT"
+    ## [1] "2023-01-22 16:25:33 GMT"
     ```
 
 
@@ -1762,7 +1689,7 @@ print(Sys.time())
 ```
 
 ```
-## [1] "2022-12-12 09:25:52 GMT"
+## [1] "2023-01-22 16:25:33 GMT"
 ```
 
 

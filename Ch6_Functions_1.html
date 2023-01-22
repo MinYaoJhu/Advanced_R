@@ -359,15 +359,11 @@ display: none;
 
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
+## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
 ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
 ## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
-## ✔ readr   2.1.3      ✔ forcats 0.5.2</code></pre>
-<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;readr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;purrr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;stringr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <div id="functions" class="section level1">
@@ -593,14 +589,14 @@ onePlusTen</code></pre>
 <pre><code>## function() {
 ##         x + 10
 ##       }
-## &lt;bytecode: 0x0000021b4029e558&gt;
-## &lt;environment: 0x0000021b40145770&gt;</code></pre>
+## &lt;bytecode: 0x0000025759b15d40&gt;
+## &lt;environment: 0x00000257599f2158&gt;</code></pre>
 <pre class="r"><code>tenPlusTen</code></pre>
 <pre><code>## function() {
 ##         x + 10
 ##       }
-## &lt;bytecode: 0x0000021b4029e558&gt;
-## &lt;environment: 0x0000021b402f3c20&gt;</code></pre>
+## &lt;bytecode: 0x0000025759b15d40&gt;
+## &lt;environment: 0x0000025759b63678&gt;</code></pre>
 <p>I’ll draw functions as in the following diagram. The black dot on the
 left is the environment. The two blocks to the right are the function
 arguments. I won’t draw the body, because it’s usually large, and
@@ -711,7 +707,7 @@ object while avoiding undesired matching to objects of other types.</p>
 <pre class="r"><code>match.fun(mean)</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;mean&quot;)
-## &lt;bytecode: 0x0000021b3a0a96a0&gt;
+## &lt;bytecode: 0x00000257531304f0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <blockquote>
 <p>A function can have more than one name.</p>
@@ -732,10 +728,9 @@ are exactly equal is just to use identical().</p>
 <pre class="r"><code>match.fun(anova)</code></pre>
 <pre><code>## function (object, ...) 
 ## UseMethod(&quot;anova&quot;)
-## &lt;bytecode: 0x0000021b386f8c68&gt;
+## &lt;bytecode: 0x00000257517facb8&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <pre class="r"><code>library(car)</code></pre>
-<pre><code>## Warning: package &#39;car&#39; was built under R version 4.2.2</code></pre>
 <pre><code>## Loading required package: carData</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;car&#39;</code></pre>
@@ -750,19 +745,18 @@ are exactly equal is just to use identical().</p>
 ## {
 ##     UseMethod(&quot;Anova&quot;, mod)
 ## }
-## &lt;bytecode: 0x0000021b429df9e8&gt;
+## &lt;bytecode: 0x0000025757e9b1a8&gt;
 ## &lt;environment: namespace:car&gt;</code></pre>
 <pre class="r"><code>identical(anova, Anova)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li><p>It’s possible (although typically not useful) to call an
-anonymous function. Which of the two approaches below is correct?
-Why?</p>
+<li>It’s possible (although typically not useful) to call an anonymous
+function. Which of the two approaches below is correct? Why?</li>
+</ol>
 <pre class="r"><code>function(x) 3()</code></pre>
 <pre><code>## function(x) 3()</code></pre>
 <pre class="r"><code>(function(x) 3)()</code></pre>
-<pre><code>## [1] 3</code></pre></li>
-</ol>
+<pre><code>## [1] 3</code></pre>
 <blockquote>
 <p><code>(function(x) 3)()</code> is correct.</p>
 </blockquote>
@@ -774,7 +768,7 @@ function with the invalid body 3() is returned, which throws an error
 when we call it. This is easier to see if we name the function:</p>
 </blockquote>
 <pre class="r"><code>function1 &lt;- function(x) 3()
-#function1()
+function1()
 # Error in function1() : attempt to apply non-function</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>A good rule of thumb is that an anonymous function should fit on one
@@ -816,16 +810,18 @@ R-core generally avoids creating them unless there is no other option.
 6.2.2</p>
 </blockquote>
 <ol start="5" style="list-style-type: decimal">
-<li><p>This code makes a list of all functions in the base package.</p>
+<li>This code makes a list of all functions in the base package.</li>
+</ol>
 <pre class="r"><code>objs &lt;- mget(ls(&quot;package:base&quot;, all = TRUE), inherits = TRUE)
 funs &lt;- Filter(is.function, objs) #
 
-?mget</code></pre></li>
-</ol>
+#?mget</code></pre>
 <blockquote>
-<p>Search by name for an object (get) or zero or more objects
-(mget).</p>
+<p>Return the Value of a Named Object: Search by name for an object
+(get) or zero or more objects (mget).</p>
 </blockquote>
+<p>mget(x, envir = as.environment(-1), mode = “any”, ifnotfound,
+inherits = FALSE)</p>
 <pre class="r"><code>str(funs)</code></pre>
 <pre><code>## List of 1333
 ##  $ -                                 :function (e1, e2)  
@@ -936,8 +932,8 @@ funs &lt;- Filter(is.function, objs) #
 a. Which base function has the most arguments?</code></pre>
 <pre class="r"><code>library(purrr)
 
-?map
-?map_int
+#?map
+#?map_int
 
 n_args &lt;- funs %&gt;% 
   map(formals) %&gt;%
@@ -950,18 +946,37 @@ trying).</p>
 <pre class="r"><code>str(n_args)</code></pre>
 <pre><code>##  Named int [1:1333] 0 2 2 0 1 1 0 0 2 2 ...
 ##  - attr(*, &quot;names&quot;)= chr [1:1333] &quot;-&quot; &quot;-.Date&quot; &quot;-.POSIXt&quot; &quot;!&quot; ...</code></pre>
+<pre class="r"><code>head(n_args)</code></pre>
+<pre><code>##         -    -.Date  -.POSIXt         ! !.hexmode !.octmode 
+##         0         2         2         0         1         1</code></pre>
 <pre class="r"><code>n_args %&gt;% 
   which.max()</code></pre>
 <pre><code>## scan 
 ## 1056</code></pre>
+<p>another method:</p>
+<pre class="r"><code>n_args %&gt;% 
+  sort(decreasing = TRUE) %&gt;%
+  head()</code></pre>
+<pre><code>##             scan   format.default           source          formatC 
+##               22               16               16               15 
+##          library merge.data.frame 
+##               13               13</code></pre>
 <p>other method:</p>
 <pre class="r"><code>fun.args &lt;- sapply(funs, function(x) length(formals(x))) 
 
 names(funs)[which.max(fun.args)] </code></pre>
 <pre><code>## [1] &quot;scan&quot;</code></pre>
+<blockquote>
+<p>sapply is a user-friendly version and wrapper of lapply by default
+returning a vector, matrix or, if simplify = “array”, an array if
+appropriate, by applying simplify2array(). sapply(x, f, simplify =
+FALSE, USE.NAMES = FALSE) is the same as lapply(x, f).</p>
+</blockquote>
 <pre><code>b. How many base functions have no arguments? What&#39;s special about those
    functions?
    </code></pre>
+<pre class="r"><code>length(n_args)</code></pre>
+<pre><code>## [1] 1333</code></pre>
 <pre class="r"><code>sum(n_args == 0)</code></pre>
 <pre><code>## [1] 253</code></pre>
 <blockquote>
@@ -981,111 +996,10 @@ sum(n_args2 == 0)</code></pre>
 functions.</p>
 </blockquote>
 <pre><code>c. How could you adapt the code to find all primitive functions?</code></pre>
-<pre class="r"><code>    objs &lt;- mget(ls(&quot;package:base&quot;, all = TRUE), inherits = TRUE)
-    pri &lt;- Filter(is.primitive, objs)
-    str(pri)</code></pre>
-<pre><code>## List of 204
-##  $ -                   :function (e1, e2)  
-##  $ !                   :function (x)  
-##  $ !=                  :function (e1, e2)  
-##  $ $                   :.Primitive(&quot;$&quot;) 
-##  $ $&lt;-                 :.Primitive(&quot;$&lt;-&quot;) 
-##  $ %%                  :function (e1, e2)  
-##  $ %*%                 :function (x, y)  
-##  $ %/%                 :function (e1, e2)  
-##  $ &amp;                   :function (e1, e2)  
-##  $ &amp;&amp;                  :.Primitive(&quot;&amp;&amp;&quot;) 
-##  $ (                   :.Primitive(&quot;(&quot;) 
-##  $ *                   :function (e1, e2)  
-##  $ ...elt              :function (n)  
-##  $ ...length           :function ()  
-##  $ ...names            :function ()  
-##  $ .C                  :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
-##  $ .cache_class        :function (class, extends)  
-##  $ .Call               :function (.NAME, ..., PACKAGE)  
-##  $ .Call.graphics      :function (.NAME, ..., PACKAGE)  
-##  $ .class2             :function (x)  
-##  $ .External           :function (.NAME, ..., PACKAGE)  
-##  $ .External.graphics  :function (.NAME, ..., PACKAGE)  
-##  $ .External2          :function (.NAME, ..., PACKAGE)  
-##  $ .Fortran            :function (.NAME, ..., NAOK = FALSE, DUP = TRUE, PACKAGE, ENCODING)  
-##  $ .Internal           :function (call)  
-##  $ .isMethodsDispatchOn:function (onOff = NULL)  
-##  $ .Primitive          :function (name)  
-##  $ .primTrace          :function (obj)  
-##  $ .primUntrace        :function (obj)  
-##  $ .subset             :function (x, ...)  
-##  $ .subset2            :function (x, ...)  
-##  $ /                   :function (e1, e2)  
-##  $ :                   :.Primitive(&quot;:&quot;) 
-##  $ ::                  :function (pkg, name)  
-##  $ :::                 :function (pkg, name)  
-##  $ @                   :.Primitive(&quot;@&quot;) 
-##  $ @&lt;-                 :.Primitive(&quot;@&lt;-&quot;) 
-##  $ [                   :.Primitive(&quot;[&quot;) 
-##  $ [[                  :.Primitive(&quot;[[&quot;) 
-##  $ [[&lt;-                :.Primitive(&quot;[[&lt;-&quot;) 
-##  $ [&lt;-                 :.Primitive(&quot;[&lt;-&quot;) 
-##  $ ^                   :function (e1, e2)  
-##  $ {                   :.Primitive(&quot;{&quot;) 
-##  $ |                   :function (e1, e2)  
-##  $ ||                  :.Primitive(&quot;||&quot;) 
-##  $ ~                   :.Primitive(&quot;~&quot;) 
-##  $ +                   :function (e1, e2)  
-##  $ &lt;                   :function (e1, e2)  
-##  $ &lt;-                  :.Primitive(&quot;&lt;-&quot;) 
-##  $ &lt;&lt;-                 :.Primitive(&quot;&lt;&lt;-&quot;) 
-##  $ &lt;=                  :function (e1, e2)  
-##  $ =                   :.Primitive(&quot;=&quot;) 
-##  $ ==                  :function (e1, e2)  
-##  $ &gt;                   :function (e1, e2)  
-##  $ &gt;=                  :function (e1, e2)  
-##  $ abs                 :function (x)  
-##  $ acos                :function (x)  
-##  $ acosh               :function (x)  
-##  $ all                 :function (..., na.rm = FALSE)  
-##  $ any                 :function (..., na.rm = FALSE)  
-##  $ anyNA               :function (x, recursive = FALSE)  
-##  $ Arg                 :function (z)  
-##  $ as.call             :function (x)  
-##  $ as.character        :function (x, ...)  
-##  $ as.complex          :function (x, ...)  
-##  $ as.double           :function (x, ...)  
-##  $ as.environment      :function (x)  
-##  $ as.integer          :function (x, ...)  
-##  $ as.logical          :function (x, ...)  
-##  $ as.numeric          :function (x, ...)  
-##  $ as.raw              :function (x)  
-##  $ asin                :function (x)  
-##  $ asinh               :function (x)  
-##  $ atan                :function (x)  
-##  $ atanh               :function (x)  
-##  $ attr                :function (x, which, exact = FALSE)  
-##  $ attr&lt;-              :function (x, which, value)  
-##  $ attributes          :function (x)  
-##  $ attributes&lt;-        :function (x, value)  
-##  $ baseenv             :function ()  
-##  $ break               :.Primitive(&quot;break&quot;) 
-##  $ browser             :function (text = &quot;&quot;, condition = NULL, expr = TRUE, skipCalls = 0L)  
-##  $ c                   :function (...)  
-##  $ call                :function (name, ...)  
-##  $ ceiling             :function (x)  
-##  $ class               :function (x)  
-##  $ class&lt;-             :function (x, value)  
-##  $ Conj                :function (z)  
-##  $ cos                 :function (x)  
-##  $ cosh                :function (x)  
-##  $ cospi               :function (x)  
-##  $ cummax              :function (x)  
-##  $ cummin              :function (x)  
-##  $ cumprod             :function (x)  
-##  $ cumsum              :function (x)  
-##  $ digamma             :function (x)  
-##  $ dim                 :function (x)  
-##  $ dim&lt;-               :function (x, value)  
-##  $ dimnames            :function (x)  
-##   [list output truncated]</code></pre>
-<pre class="r"><code>    length(pri)</code></pre>
+<pre class="r"><code>objs &lt;- mget(ls(&quot;package:base&quot;, all = TRUE), inherits = TRUE)
+pri &lt;- Filter(is.primitive, objs)
+# str(pri)
+length(pri)</code></pre>
 <pre><code>## [1] 204</code></pre>
 <ol start="6" style="list-style-type: decimal">
 <li>What are the three important components of a function?</li>
@@ -1127,14 +1041,14 @@ deviation &lt;- function(x) x - mean(x)</code></pre>
 <pre class="r"><code>x &lt;- runif(100)
 
 sqrt(mean(square(deviation(x))))</code></pre>
-<pre><code>## [1] 0.2863583</code></pre>
+<pre><code>## [1] 0.2667185</code></pre>
 <p>Or you save the intermediate results as variables:</p>
 <pre class="r"><code>out &lt;- deviation(x)
 out &lt;- square(out)
 out &lt;- mean(out)
 out &lt;- sqrt(out)
 out</code></pre>
-<pre><code>## [1] 0.2863583</code></pre>
+<pre><code>## [1] 0.2667185</code></pre>
 <p>The magrittr package <span class="citation">[@magrittr]</span>
 provides a third option: the binary operator <code>%&gt;%</code>, which
 is called the pipe and is pronounced as “and then”.</p>
@@ -1152,7 +1066,7 @@ is called the pipe and is pronounced as “and then”.</p>
   square() %&gt;%
   mean() %&gt;%
   sqrt()</code></pre>
-<pre><code>## [1] 0.2863583</code></pre>
+<pre><code>## [1] 0.2667185</code></pre>
 <p><code>x %&gt;% f()</code> is equivalent to <code>f(x)</code>;
 <code>x %&gt;% f(y)</code> is equivalent to <code>f(x, y)</code>. The
 pipe allows you to focus on the high-level composition of functions
@@ -1373,12 +1287,39 @@ values?</li>
 </blockquote>
 <blockquote>
 <ol style="list-style-type: decimal">
-<li>Name masking</li>
-<li>Functions versus variables</li>
+<li>Name masking.</li>
+</ol>
+</blockquote>
+<p>The basic principle of lexical scoping is that names defined inside a
+function mask names defined outside a function.</p>
+<blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>Functions versus variables.</li>
+</ol>
+</blockquote>
+<p>when a function and a non-function share the same name (they must, of
+course, reside in different environments), applying these rules gets a
+little more complicated. When you use a name in a function call, R
+ignores non-function objects when looking for that value.</p>
+<blockquote>
+<ol start="3" style="list-style-type: decimal">
 <li>A fresh start</li>
+</ol>
+</blockquote>
+<p>Every time a function is called a new environment is created to host
+its execution. This means that a function has no way to tell what
+happened the last time it was run; each invocation is completely
+independent.</p>
+<blockquote>
+<ol start="4" style="list-style-type: decimal">
 <li>Dynamic lookup</li>
 </ol>
 </blockquote>
+<p>Lexical scoping determines where, but not when to look for values. R
+looks for values when the function is run, not when the function is
+created. Together, these two properties tell us that the output of a
+function can differ depending on the objects outside the function’s
+environment.</p>
 <ol start="3" style="list-style-type: decimal">
 <li><p>What does the following function return? Make a prediction before
 running the code yourself.</p>
@@ -1397,6 +1338,12 @@ f(10)</code></pre></li>
 <ol start="202" style="list-style-type: decimal">
 <li>Correct!</li>
 </ol>
+</blockquote>
+<blockquote>
+<p>The innermost f() is called last, though it is the first function to
+return a value. Therefore, the order of the calculation passes “from the
+inside to the outside” and the function returns ((10 ^ 2) + 1) * 2 =
+202.</p>
 </blockquote>
 </div>
 </div>
@@ -1582,6 +1529,23 @@ x_ok(NULL)</code></pre>
 <p>&amp;&amp; does not perform elementwise comparisons; instead it uses
 the first element of each value only.</p>
 </blockquote>
+<blockquote>
+<p>In summary: &amp;&amp; short-circuits which means that if the
+left-hand side is FALSE it doesn’t evaluate the right-hand side (because
+it doesn’t matter). Similarly, if the left-hand side of || is TRUE it
+doesn’t evaluate the right-hand side.</p>
+</blockquote>
+<blockquote>
+<p>&amp;&amp; does not perform elementwise comparisons; instead it uses
+the first element of each value only. It also uses lazy evaluation, in
+the sense that evaluation “proceeds only until the result is
+determined.”</p>
+</blockquote>
+<blockquote>
+<p>This means that the RHS of &amp;&amp; won’t be evaluated if the LHS
+already determines the outcome of the comparison (e.g. evaluate to
+FALSE). This behaviour is also known as “short-circuiting.”</p>
+</blockquote>
 <p>What is different with this code? Why is this behaviour undesirable
 here?</p>
 <pre><code>```r
@@ -1632,6 +1596,12 @@ f2()</code></pre></li>
 <li>Lazy evaluation, Default arguments. <code>x = z</code>can be
 supplied inside the function</li>
 </ol>
+</blockquote>
+<blockquote>
+<p>The function returns 100. The default argument (x = z) gets lazily
+evaluated within the function environment when x gets accessed. At this
+time z has already been bound to the value 100. The illustrated
+principle here is lazy evaluation.</p>
 </blockquote>
 <ol start="3" style="list-style-type: decimal">
 <li><p>What does this function return? Why? Which principle does it
@@ -1697,10 +1667,10 @@ hist().</p>
   print(x)
 }
 show_time()</code></pre>
-<pre><code>## [1] &quot;2022-12-12 09:25:52 GMT&quot;</code></pre></li>
+<pre><code>## [1] &quot;2023-01-22 16:25:33 GMT&quot;</code></pre></li>
 </ol>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2022-12-12 09:25:52 GMT&quot;</code></pre>
+<pre><code>## [1] &quot;2023-01-22 16:25:33 GMT&quot;</code></pre>
 <blockquote>
 <p>Functions can have a special argument … (pronounced dot-dot-dot).
 With it, a function can take any number of additional arguments.</p>
