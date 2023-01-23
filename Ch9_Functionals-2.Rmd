@@ -324,12 +324,92 @@ simple_reduce(integer(), sum)
     predicate function `f`, `span(x, f)` returns the location of the longest 
     sequential run of elements where the predicate is true. (Hint: you 
     might find `rle()` helpful.)
+    
+```{r}
+# ?rle()
+```
+
+> Run Length Encoding: Compute the lengths and values of runs of equal values in a vector – or the reverse operation.
+
+```{r}
+x <- rev(rep(6:10, 1:5))
+str(x)
+x
+rle(x)
+```
+
+```{r}
+z <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE)
+rle(z)
+```
+
+
+```{r}
+col3 <- 750+ 100*rt(1500, df = 3)
+breaks <- factor(cut(col3, breaks = 360+5*(0:155)))
+z <- table(breaks)
+z[1:5] # The names are larger than the data ...
+str(unname(z))
+barplot(unname(z), axes = FALSE)
+```
+
+```{r}
+library(rlang)
+```
+
+```{r}
+x <- c(11, 1:4, 0:5)
+x
+which.max(x)
+```
+
+
+```{r}
+span <- function(x, f) {
+  idx <- unname(map_lgl(x, ~ f(.x)))
+  rle <- rle(idx) 
+  
+  # Check if the predicate is never true
+  if (none(rle$values,is_true)) {
+    #return(integer(0))
+    stop("the predicate is never true")
+  }
+
+  # Find the length of the longest sequence of true values
+  longest <- max(rle$lengths[rle$values])
+  # Find the positition of the (first) longest run in rle
+  longest_idx <- which(rle$values & rle$lengths == longest)[1]
+
+  # Add up all lengths in rle before the longest run
+  ind_before_longest <- sum(rle$lengths[seq_len(longest_idx - 1)])
+
+  out_start <- ind_before_longest + 1L
+  out_end <- ind_before_longest + longest
+  out_start:out_end
+}
+```
+
+```{r}
+# Check that it works
+span(c(0,  0,  0,  0,  0), is.na)
+#> integer(0)
+span(c(NA, 0,  0,  0,  0), is.na)
+#> [1] 1
+span(c(NA, 0, NA, NA, NA), is.na)
+#> [1] 3 4 5
+```
+
 
 4.  Implement `arg_max()`. It should take a function and a vector of inputs, 
     and return the elements of the input where the function returns the highest 
     value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10.
     `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`.
     Also implement the matching `arg_min()` function.
+    
+```{r}
+
+```
+
 
 5.  The function below scales a vector so it falls in the range [0, 1]. How
     would you apply it to every column of a data frame? How would you apply it 
