@@ -370,6 +370,13 @@ span1 <- function(x, f) {
 }
 ```
 
+```{r}
+span1(c(NA, 0,  0,  0,  0), is.na)
+span1(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
+```
+
+
+
 
 ```{r}
 span2 <- function(x, f) {
@@ -409,6 +416,25 @@ span2(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
 
 
 4.  Implement `arg_max()`. It should take a function and a vector of inputs, and return the elements of the input where the function returns the highest value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10. `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`. Also implement the matching `arg_min()` function.
+
+```{r}
+arg_max <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[which.max(y)]
+}
+
+arg_min <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[which.min(y)]
+}
+
+arg_max(-10:5, function(x) x ^ 2)
+arg_max(-5:5, function(x) x ^ 2)
+arg_min(-10:5, function(x) x ^ 2)
+arg_min(-5:5, function(x) x ^ 2)
+```
+
+
     
 ```{r}
 arg_max <- function(x, f) {
@@ -557,7 +583,7 @@ str(optimise(sin, c(0, pi), maximum = TRUE))
 1.  How does `apply()` arrange the output? Read the documentation and perform     some experiments.
 
 ```{r}
-?apply()
+# ?apply()
 ```
 
 Apply Functions Over Array Margins
@@ -715,4 +741,20 @@ fixedpoint2(sin, x0 = 1)
 fixedpoint2(ftn1, 2, tol = 1e-6)
 ```
 
+```{r}
+fixedpoint_show(ftn1, 2)
+```
 
+```{r}
+fp <- function(x, FUN) {
+  abs(x-FUN(x))
+}
+
+optimize(fp, c(-10,10), function(x) x^2)
+
+optimize(fp, c(-2,2), ftn1)
+```
+
+One Dimensional Optimization
+Description
+The function optimize searches the interval from lower to upper for a minimum or maximum of the function f with respect to its first argument.

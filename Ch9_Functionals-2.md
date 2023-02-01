@@ -34,10 +34,10 @@ str(l)
 
 ```
 ## List of 4
-##  $ : int [1:15] 4 3 7 8 5 5 8 2 10 3 ...
-##  $ : int [1:15] 2 10 3 8 2 2 9 5 5 10 ...
-##  $ : int [1:15] 10 4 2 1 4 6 4 4 2 7 ...
-##  $ : int [1:15] 1 4 7 4 8 6 8 10 9 6 ...
+##  $ : int [1:15] 6 5 7 2 3 2 10 6 7 3 ...
+##  $ : int [1:15] 4 3 4 2 4 4 4 5 7 10 ...
+##  $ : int [1:15] 2 5 8 10 1 2 1 10 6 1 ...
+##  $ : int [1:15] 9 4 4 1 10 1 4 3 4 7 ...
 ```
 
 To solve this challenge we need to use `intersect()` repeatedly:
@@ -52,7 +52,7 @@ out
 ```
 
 ```
-## [1]  7  8  5 10  6
+## [1]  6  5  7 10  4
 ```
 
 `reduce()` automates this solution for us, so we can write:
@@ -63,7 +63,7 @@ reduce(l, intersect)
 ```
 
 ```
-## [1]  7  8  5 10  6
+## [1]  6  5  7 10  4
 ```
 
 We could apply the same idea if we wanted to list all the elements that appear in at least one entry. All we have to do is switch from `intersect()` to `union()`:
@@ -74,7 +74,7 @@ reduce(l, union)
 ```
 
 ```
-##  [1]  4  3  7  8  5  2 10  6  1  9
+##  [1]  6  5  7  2  3 10  4  9  8  1
 ```
 
 Like the map family, you can also pass additional arguments. `intersect()` and `union()` don't take extra arguments so I can't demonstrate them here, but the principle is straightforward and I drew you a picture.
@@ -110,16 +110,16 @@ accumulate(l, intersect)
 
 ```
 ## [[1]]
-##  [1]  4  3  7  8  5  5  8  2 10  3  2  7  6  1  5
+##  [1]  6  5  7  2  3  2 10  6  7  3  5  4  4  9  4
 ## 
 ## [[2]]
-## [1]  3  7  8  5  2 10  6
+## [1]  6  5  7  2  3 10  4  9
 ## 
 ## [[3]]
-## [1]  7  8  5  2 10  6
+## [1]  6  5  7  2 10  4
 ## 
 ## [[4]]
-## [1]  7  8  5 10  6
+## [1]  6  5  7 10  4
 ```
 
 Another useful way to understand reduce is to think about `sum()`: `sum(x)` is equivalent to `x[[1]] + x[[2]] + x[[3]] + ...`, i.e. ``reduce(x, `+`)``. Then ``accumulate(x, `+`)`` is the cumulative sum:
@@ -515,7 +515,7 @@ simple_reduce(c(1:5), sum)
 ```
 
 ```
-## [1]  7  8  5 10  6
+## [1]  6  5  7 10  4
 ```
 
 
@@ -524,7 +524,7 @@ simple_reduce(c(1:5), sum, 1)
 ```
 
 ```
-## [1]  7  8  5 10  6
+## [1]  6  5  7 10  4
 ```
 
 
@@ -663,6 +663,25 @@ span1 <- function(x, f) {
 ```
 
 
+```r
+span1(c(NA, 0,  0,  0,  0), is.na)
+```
+
+```
+## [1] 2
+```
+
+```r
+span1(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
+```
+
+```
+## [1] 5
+```
+
+
+
+
 
 ```r
 span2 <- function(x, f) {
@@ -729,6 +748,51 @@ span2(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
 
 
 4.  Implement `arg_max()`. It should take a function and a vector of inputs, and return the elements of the input where the function returns the highest value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10. `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`. Also implement the matching `arg_min()` function.
+
+
+```r
+arg_max <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[which.max(y)]
+}
+
+arg_min <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[which.min(y)]
+}
+
+arg_max(-10:5, function(x) x ^ 2)
+```
+
+```
+## [1] -10
+```
+
+```r
+arg_max(-5:5, function(x) x ^ 2)
+```
+
+```
+## [1] -5
+```
+
+```r
+arg_min(-10:5, function(x) x ^ 2)
+```
+
+```
+## [1] 0
+```
+
+```r
+arg_min(-5:5, function(x) x ^ 2)
+```
+
+```
+## [1] 0
+```
+
+
     
 
 ```r
@@ -1157,11 +1221,7 @@ str(optimise(sin, c(0, pi), maximum = TRUE))
 
 
 ```r
-?apply()
-```
-
-```
-## starting httpd help server ... done
+# ?apply()
 ```
 
 Apply Functions Over Array Margins
@@ -1442,7 +1502,7 @@ fixedpoint
 ##         return(xnew)
 ##     }
 ## }
-## <bytecode: 0x000001aba5dcf028>
+## <bytecode: 0x00000160a1cdf518>
 ## <environment: namespace:spuRs>
 ```
 
@@ -1529,3 +1589,49 @@ fixedpoint2(ftn1, 2, tol = 1e-6)
 ```
 
 
+```r
+fixedpoint_show(ftn1, 2)
+```
+
+![](Ch9_Functionals-2_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
+
+```
+## last x value 1.144921  continue (y or n)?
+```
+
+```
+## [1] 1.144921
+```
+
+
+```r
+fp <- function(x, FUN) {
+  abs(x-FUN(x))
+}
+
+optimize(fp, c(-10,10), function(x) x^2)
+```
+
+```
+## $minimum
+## [1] 1.000014
+## 
+## $objective
+## [1] 1.407851e-05
+```
+
+```r
+optimize(fp, c(-2,2), ftn1)
+```
+
+```
+## $minimum
+## [1] 1.3098
+## 
+## $objective
+## [1] 4.769741e-07
+```
+
+One Dimensional Optimization
+Description
+The function optimize searches the interval from lower to upper for a minimum or maximum of the function f with respect to its first argument.

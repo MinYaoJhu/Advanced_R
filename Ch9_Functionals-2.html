@@ -382,10 +382,10 @@ generate some sample data:</p>
 <pre class="r"><code>l &lt;- map(1:4, ~ sample(1:10, 15, replace = T))
 str(l)</code></pre>
 <pre><code>## List of 4
-##  $ : int [1:15] 4 3 7 8 5 5 8 2 10 3 ...
-##  $ : int [1:15] 2 10 3 8 2 2 9 5 5 10 ...
-##  $ : int [1:15] 10 4 2 1 4 6 4 4 2 7 ...
-##  $ : int [1:15] 1 4 7 4 8 6 8 10 9 6 ...</code></pre>
+##  $ : int [1:15] 6 5 7 2 3 2 10 6 7 3 ...
+##  $ : int [1:15] 4 3 4 2 4 4 4 5 7 10 ...
+##  $ : int [1:15] 2 5 8 10 1 2 1 10 6 1 ...
+##  $ : int [1:15] 9 4 4 1 10 1 4 3 4 7 ...</code></pre>
 <p>To solve this challenge we need to use <code>intersect()</code>
 repeatedly:</p>
 <pre class="r"><code>out &lt;- l[[1]]
@@ -393,16 +393,16 @@ out &lt;- intersect(out, l[[2]])
 out &lt;- intersect(out, l[[3]])
 out &lt;- intersect(out, l[[4]])
 out</code></pre>
-<pre><code>## [1]  7  8  5 10  6</code></pre>
+<pre><code>## [1]  6  5  7 10  4</code></pre>
 <p><code>reduce()</code> automates this solution for us, so we can
 write:</p>
 <pre class="r"><code>reduce(l, intersect)</code></pre>
-<pre><code>## [1]  7  8  5 10  6</code></pre>
+<pre><code>## [1]  6  5  7 10  4</code></pre>
 <p>We could apply the same idea if we wanted to list all the elements
 that appear in at least one entry. All we have to do is switch from
 <code>intersect()</code> to <code>union()</code>:</p>
 <pre class="r"><code>reduce(l, union)</code></pre>
-<pre><code>##  [1]  4  3  7  8  5  2 10  6  1  9</code></pre>
+<pre><code>##  [1]  6  5  7  2  3 10  4  9  8  1</code></pre>
 <p>Like the map family, you can also pass additional arguments.
 <code>intersect()</code> and <code>union()</code> don’t take extra
 arguments so I can’t demonstrate them here, but the principle is
@@ -431,16 +431,16 @@ returning just the final result, it returns all the intermediate results
 as well:</p>
 <pre class="r"><code>accumulate(l, intersect)</code></pre>
 <pre><code>## [[1]]
-##  [1]  4  3  7  8  5  5  8  2 10  3  2  7  6  1  5
+##  [1]  6  5  7  2  3  2 10  6  7  3  5  4  4  9  4
 ## 
 ## [[2]]
-## [1]  3  7  8  5  2 10  6
+## [1]  6  5  7  2  3 10  4  9
 ## 
 ## [[3]]
-## [1]  7  8  5  2 10  6
+## [1]  6  5  7  2 10  4
 ## 
 ## [[4]]
-## [1]  7  8  5 10  6</code></pre>
+## [1]  6  5  7 10  4</code></pre>
 <p>Another useful way to understand reduce is to think about
 <code>sum()</code>: <code>sum(x)</code> is equivalent to
 <code>x[[1]] + x[[2]] + x[[3]] + ...</code>,
@@ -686,9 +686,9 @@ simple_reduce(integer(), sum)</code></pre>
   out
 }</code></pre>
 <pre class="r"><code>simple_reduce(c(1:5), sum)</code></pre>
-<pre><code>## [1]  7  8  5 10  6</code></pre>
+<pre><code>## [1]  6  5  7 10  4</code></pre>
 <pre class="r"><code>simple_reduce(c(1:5), sum, 1)</code></pre>
-<pre><code>## [1]  7  8  5 10  6</code></pre>
+<pre><code>## [1]  6  5  7 10  4</code></pre>
 <pre class="r"><code>simple_reduce(1, sum)</code></pre>
 <pre><code>## [1] 1</code></pre>
 <pre class="r"><code>simple_reduce(1, sum, 1)</code></pre>
@@ -746,6 +746,10 @@ x</code></pre>
   longest_start &lt;- ind_before_longest + 1L
   longest_start
 }</code></pre>
+<pre class="r"><code>span1(c(NA, 0,  0,  0,  0), is.na)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<pre class="r"><code>span1(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)</code></pre>
+<pre><code>## [1] 5</code></pre>
 <pre class="r"><code>span2 &lt;- function(x, f) {
   idx &lt;- unname(map_lgl(x, ~ f(.x)))
   rle &lt;- rle(idx) 
@@ -786,6 +790,24 @@ function returns the highest value. For example,
 <code>c(-5, 5)</code>. Also implement the matching
 <code>arg_min()</code> function.</li>
 </ol>
+<pre class="r"><code>arg_max &lt;- function(x, f) {
+  y &lt;- map_dbl(x, f)
+  x[which.max(y)]
+}
+
+arg_min &lt;- function(x, f) {
+  y &lt;- map_dbl(x, f)
+  x[which.min(y)]
+}
+
+arg_max(-10:5, function(x) x ^ 2)</code></pre>
+<pre><code>## [1] -10</code></pre>
+<pre class="r"><code>arg_max(-5:5, function(x) x ^ 2)</code></pre>
+<pre><code>## [1] -5</code></pre>
+<pre class="r"><code>arg_min(-10:5, function(x) x ^ 2)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>arg_min(-5:5, function(x) x ^ 2)</code></pre>
+<pre><code>## [1] 0</code></pre>
 <pre class="r"><code>arg_max &lt;- function(x, f) {
   y &lt;- map_dbl(x, f)
   x[y == max(y)]
@@ -1073,8 +1095,7 @@ simple function, <code>sin()</code>:</p>
 <li>How does <code>apply()</code> arrange the output? Read the
 documentation and perform some experiments.</li>
 </ol>
-<pre class="r"><code>?apply()</code></pre>
-<pre><code>## starting httpd help server ... done</code></pre>
+<pre class="r"><code># ?apply()</code></pre>
 <p>Apply Functions Over Array Margins</p>
 <p>Description Returns a vector or array or list of values obtained by
 applying a function to margins of an array or matrix.</p>
@@ -1257,7 +1278,7 @@ function is an element that is mapped to itself by the function.</p>
 ##         return(xnew)
 ##     }
 ## }
-## &lt;bytecode: 0x000001aba5dcf028&gt;
+## &lt;bytecode: 0x00000160a1cdf518&gt;
 ## &lt;environment: namespace:spuRs&gt;</code></pre>
 <pre class="r"><code>ftn1 &lt;- function(x) return(exp(exp(-x)))
 fixedpoint(ftn1, 2, tol = 1e-6)</code></pre>
@@ -1307,6 +1328,29 @@ fixedpoint(ftn1, 2, tol = 1e-6)</code></pre>
 <pre class="r"><code>fixedpoint2(ftn1, 2, tol = 1e-6)</code></pre>
 <pre><code>## Algorithm converged</code></pre>
 <pre><code>## [1] 1.3098</code></pre>
+<pre class="r"><code>fixedpoint_show(ftn1, 2)</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<pre><code>## last x value 1.144921  continue (y or n)?</code></pre>
+<pre><code>## [1] 1.144921</code></pre>
+<pre class="r"><code>fp &lt;- function(x, FUN) {
+  abs(x-FUN(x))
+}
+
+optimize(fp, c(-10,10), function(x) x^2)</code></pre>
+<pre><code>## $minimum
+## [1] 1.000014
+## 
+## $objective
+## [1] 1.407851e-05</code></pre>
+<pre class="r"><code>optimize(fp, c(-2,2), ftn1)</code></pre>
+<pre><code>## $minimum
+## [1] 1.3098
+## 
+## $objective
+## [1] 4.769741e-07</code></pre>
+<p>One Dimensional Optimization Description The function optimize
+searches the interval from lower to upper for a minimum or maximum of
+the function f with respect to its first argument.</p>
 </div>
 </div>
 
