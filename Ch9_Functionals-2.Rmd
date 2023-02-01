@@ -345,15 +345,6 @@ rle(z)
 
 
 ```{r}
-col3 <- 750+ 100*rt(1500, df = 3)
-breaks <- factor(cut(col3, breaks = 360+5*(0:155)))
-z <- table(breaks)
-z[1:5] # The names are larger than the data ...
-str(unname(z))
-barplot(unname(z), axes = FALSE)
-```
-
-```{r}
 library(rlang)
 ```
 
@@ -363,47 +354,77 @@ x
 which.max(x)
 ```
 
-
 ```{r}
-span <- function(x, f) {
+span1 <- function(x, f) {
   idx <- unname(map_lgl(x, ~ f(.x)))
   rle <- rle(idx) 
+
+  # Find the length of the longest sequence of values
+  longest <- which.max(rle$lengths)
   
+  # Add up all lengths in rle before the longest run
+  ind_before_longest <- sum(rle$lengths[seq_len(longest - 1)])
+
+  longest_start <- ind_before_longest + 1L
+  longest_start
+}
+```
+
+
+```{r}
+span2 <- function(x, f) {
+  idx <- unname(map_lgl(x, ~ f(.x)))
+  rle <- rle(idx) 
+
   # Check if the predicate is never true
   if (none(rle$values,is_true)) {
-    #return(integer(0))
-    stop("the predicate is never true")
+    stop("never true")
   }
 
   # Find the length of the longest sequence of true values
   longest <- max(rle$lengths[rle$values])
-  # Find the positition of the (first) longest run in rle
+
+  # Find the position of the (first) longest run in rle
   longest_idx <- which(rle$values & rle$lengths == longest)[1]
 
   # Add up all lengths in rle before the longest run
   ind_before_longest <- sum(rle$lengths[seq_len(longest_idx - 1)])
 
-  out_start <- ind_before_longest + 1L
-  out_end <- ind_before_longest + longest
-  out_start:out_end
+  longest_start <- ind_before_longest + 1L
+  longest_start
 }
 ```
 
+```{r eval = FALSE}
+span1(c(0,  0,  0,  0,  0), is.na)
+span2(c(0,  0,  0,  0,  0), is.na)
+```
+
 ```{r}
-# Check that it works
-span(c(0,  0,  0,  0,  0), is.na)
-#> integer(0)
-span(c(NA, 0,  0,  0,  0), is.na)
-#> [1] 1
-span(c(NA, 0, NA, NA, NA), is.na)
-#> [1] 3 4 5
+span1(c(NA, 0,  0,  0,  0), is.na)
+span2(c(NA, 0,  0,  0,  0), is.na)
+span1(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
+span2(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
 ```
 
 
 4.  Implement `arg_max()`. It should take a function and a vector of inputs, and return the elements of the input where the function returns the highest value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10. `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`. Also implement the matching `arg_min()` function.
     
 ```{r}
+arg_max <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[y == max(y)]
+}
 
+arg_min <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[y == min(y)]
+}
+
+arg_max(-10:5, function(x) x ^ 2)
+arg_max(-5:5, function(x) x ^ 2)
+arg_min(-10:5, function(x) x ^ 2)
+arg_min(-5:5, function(x) x ^ 2)
 ```
 
 
@@ -617,7 +638,7 @@ apply(ma, 1, stats::quantile) # 5 x n matrix with rownames
 2.  What do `eapply()` and `rapply()` do? Does purrr have equivalents?
 
 ```{r}
-?eapply()
+#?eapply()
 ```
 
 Apply a Function Over Values in an Environment
@@ -628,7 +649,7 @@ Usage
 eapply(env, FUN, ..., all.names = FALSE, USE.NAMES = TRUE)
 
 ```{r}
-?rapply()
+#?rapply()
 ```
 
 Recursively Apply a Function to a List
@@ -640,6 +661,5 @@ rapply(object, f, classes = "ANY", deflt = NULL,
        how = c("unlist", "replace", "list"), ...)
 Arguments
 
-3.  Challenge: read about the 
-    [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
+3.  Challenge: read about the [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
     Complete the exercises using R.

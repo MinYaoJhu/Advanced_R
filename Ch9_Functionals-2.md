@@ -34,10 +34,10 @@ str(l)
 
 ```
 ## List of 4
-##  $ : int [1:15] 3 1 1 5 10 1 6 8 1 1 ...
-##  $ : int [1:15] 4 10 10 1 1 5 10 5 8 8 ...
-##  $ : int [1:15] 8 3 1 5 7 6 9 6 2 6 ...
-##  $ : int [1:15] 4 5 7 9 8 2 3 9 4 6 ...
+##  $ : int [1:15] 8 5 4 5 10 1 10 4 2 9 ...
+##  $ : int [1:15] 2 9 9 9 8 4 3 2 7 5 ...
+##  $ : int [1:15] 5 3 8 2 1 8 8 3 5 3 ...
+##  $ : int [1:15] 7 9 9 10 1 7 5 4 8 2 ...
 ```
 
 To solve this challenge we need to use `intersect()` repeatedly:
@@ -52,7 +52,7 @@ out
 ```
 
 ```
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9
 ```
 
 `reduce()` automates this solution for us, so we can write:
@@ -63,7 +63,7 @@ reduce(l, intersect)
 ```
 
 ```
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9
 ```
 
 We could apply the same idea if we wanted to list all the elements that appear in at least one entry. All we have to do is switch from `intersect()` to `union()`:
@@ -74,7 +74,7 @@ reduce(l, union)
 ```
 
 ```
-##  [1]  3  1  5 10  6  8  2  4  9  7
+##  [1]  8  5  4 10  1  2  9  3  7  6
 ```
 
 Like the map family, you can also pass additional arguments. `intersect()` and `union()` don't take extra arguments so I can't demonstrate them here, but the principle is straightforward and I drew you a picture.
@@ -110,16 +110,16 @@ accumulate(l, intersect)
 
 ```
 ## [[1]]
-##  [1]  3  1  1  5 10  1  6  8  1  1 10  8  2  6  5
+##  [1]  8  5  4  5 10  1 10  4  2  9  2  3  7  5  5
 ## 
 ## [[2]]
-## [1]  3  1  5 10  8  2
+## [1] 8 5 4 1 2 9 3 7
 ## 
 ## [[3]]
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9 3
 ## 
 ## [[4]]
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9
 ```
 
 Another useful way to understand reduce is to think about `sum()`: `sum(x)` is equivalent to `x[[1]] + x[[2]] + x[[3]] + ...`, i.e. ``reduce(x, `+`)``. Then ``accumulate(x, `+`)`` is the cumulative sum:
@@ -515,7 +515,7 @@ simple_reduce(c(1:5), sum)
 ```
 
 ```
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9
 ```
 
 
@@ -524,7 +524,7 @@ simple_reduce(c(1:5), sum, 1)
 ```
 
 ```
-## [1] 3 1 5 8 2
+## [1] 8 5 1 2 9
 ```
 
 
@@ -561,16 +561,220 @@ simple_reduce(integer(), sum)
     predicate function `f`, `span(x, f)` returns the location of the longest 
     sequential run of elements where the predicate is true. (Hint: you 
     might find `rle()` helpful.)
+    
 
-4.  Implement `arg_max()`. It should take a function and a vector of inputs, 
-    and return the elements of the input where the function returns the highest 
-    value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10.
-    `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`.
-    Also implement the matching `arg_min()` function.
+```r
+# ?rle()
+```
 
-5.  The function below scales a vector so it falls in the range [0, 1]. How
-    would you apply it to every column of a data frame? How would you apply it 
-    to every numeric column in a data frame?
+> Run Length Encoding: Compute the lengths and values of runs of equal values in a vector – or the reverse operation.
+
+
+```r
+x <- rev(rep(6:10, 1:5))
+str(x)
+```
+
+```
+##  int [1:15] 10 10 10 10 10 9 9 9 9 8 ...
+```
+
+```r
+x
+```
+
+```
+##  [1] 10 10 10 10 10  9  9  9  9  8  8  8  7  7  6
+```
+
+```r
+rle(x)
+```
+
+```
+## Run Length Encoding
+##   lengths: int [1:5] 5 4 3 2 1
+##   values : int [1:5] 10 9 8 7 6
+```
+
+
+```r
+z <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE)
+rle(z)
+```
+
+```
+## Run Length Encoding
+##   lengths: int [1:5] 2 2 1 1 3
+##   values : logi [1:5] TRUE FALSE TRUE FALSE TRUE
+```
+
+
+
+```r
+library(rlang)
+```
+
+```
+## 
+## Attaching package: 'rlang'
+```
+
+```
+## The following objects are masked from 'package:purrr':
+## 
+##     %@%, flatten, flatten_chr, flatten_dbl, flatten_int, flatten_lgl,
+##     flatten_raw, invoke, splice
+```
+
+
+```r
+x <- c(11, 1:4, 0:5)
+x
+```
+
+```
+##  [1] 11  1  2  3  4  0  1  2  3  4  5
+```
+
+```r
+which.max(x)
+```
+
+```
+## [1] 1
+```
+
+
+```r
+span1 <- function(x, f) {
+  idx <- unname(map_lgl(x, ~ f(.x)))
+  rle <- rle(idx) 
+
+  # Find the length of the longest sequence of values
+  longest <- which.max(rle$lengths)
+  
+  # Add up all lengths in rle before the longest run
+  ind_before_longest <- sum(rle$lengths[seq_len(longest - 1)])
+
+  longest_start <- ind_before_longest + 1L
+  longest_start
+}
+```
+
+
+
+```r
+span2 <- function(x, f) {
+  idx <- unname(map_lgl(x, ~ f(.x)))
+  rle <- rle(idx) 
+
+  # Check if the predicate is never true
+  if (none(rle$values,is_true)) {
+    stop("never true")
+  }
+
+  # Find the length of the longest sequence of true values
+  longest <- max(rle$lengths[rle$values])
+
+  # Find the position of the (first) longest run in rle
+  longest_idx <- which(rle$values & rle$lengths == longest)[1]
+
+  # Add up all lengths in rle before the longest run
+  ind_before_longest <- sum(rle$lengths[seq_len(longest_idx - 1)])
+
+  longest_start <- ind_before_longest + 1L
+  longest_start
+}
+```
+
+
+```r
+span1(c(0,  0,  0,  0,  0), is.na)
+span2(c(0,  0,  0,  0,  0), is.na)
+```
+
+
+```r
+span1(c(NA, 0,  0,  0,  0), is.na)
+```
+
+```
+## [1] 2
+```
+
+```r
+span2(c(NA, 0,  0,  0,  0), is.na)
+```
+
+```
+## [1] 1
+```
+
+```r
+span1(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
+```
+
+```
+## [1] 5
+```
+
+```r
+span2(c(NA, 0,  0, 0, NA, NA, NA, NA, NA), is.na)
+```
+
+```
+## [1] 5
+```
+
+
+4.  Implement `arg_max()`. It should take a function and a vector of inputs, and return the elements of the input where the function returns the highest value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return -10. `arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`. Also implement the matching `arg_min()` function.
+    
+
+```r
+arg_max <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[y == max(y)]
+}
+
+arg_min <- function(x, f) {
+  y <- map_dbl(x, f)
+  x[y == min(y)]
+}
+
+arg_max(-10:5, function(x) x ^ 2)
+```
+
+```
+## [1] -10
+```
+
+```r
+arg_max(-5:5, function(x) x ^ 2)
+```
+
+```
+## [1] -5  5
+```
+
+```r
+arg_min(-10:5, function(x) x ^ 2)
+```
+
+```
+## [1] 0
+```
+
+```r
+arg_min(-5:5, function(x) x ^ 2)
+```
+
+```
+## [1] 0
+```
+
+
+5.  The function below scales a vector so it falls in the range [0, 1]. How would you apply it to every column of a data frame? How would you apply it to every numeric column in a data frame?
 
     
     ```r
@@ -579,6 +783,134 @@ simple_reduce(integer(), sum)
       (x - rng[1]) / (rng[2] - rng[1])
     }
     ```
+
+> apply it to every column of a data frame
+
+
+```r
+df <- data.frame(
+  x = 1:3,
+  y = 6:4
+)
+df
+```
+
+```
+##   x y
+## 1 1 6
+## 2 2 5
+## 3 3 4
+```
+
+
+```r
+modify(df, scale01)
+```
+
+```
+##     x   y
+## 1 0.0 1.0
+## 2 0.5 0.5
+## 3 1.0 0.0
+```
+
+
+> apply it to every numeric column in a data frame
+
+
+```r
+str(mtcars)
+```
+
+```
+## 'data.frame':	32 obs. of  11 variables:
+##  $ mpg : num  21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
+##  $ cyl : num  6 6 4 6 8 6 8 4 4 6 ...
+##  $ disp: num  160 160 108 258 360 ...
+##  $ hp  : num  110 110 93 110 175 105 245 62 95 123 ...
+##  $ drat: num  3.9 3.9 3.85 3.08 3.15 2.76 3.21 3.69 3.92 3.92 ...
+##  $ wt  : num  2.62 2.88 2.32 3.21 3.44 ...
+##  $ qsec: num  16.5 17 18.6 19.4 17 ...
+##  $ vs  : num  0 0 1 1 0 1 0 1 1 1 ...
+##  $ am  : num  1 1 1 0 0 0 0 0 0 0 ...
+##  $ gear: num  4 4 4 3 3 3 3 4 4 4 ...
+##  $ carb: num  4 4 1 1 2 1 4 2 2 4 ...
+```
+
+
+```r
+modify_if(mtcars, is.numeric, scale01)
+```
+
+```
+##          mpg cyl       disp         hp       drat         wt       qsec vs am
+## 1  0.4510638 0.5 0.22175106 0.20494700 0.52534562 0.28304781 0.23333333  0  1
+## 2  0.4510638 0.5 0.22175106 0.20494700 0.52534562 0.34824853 0.30000000  0  1
+## 3  0.5276596 0.0 0.09204290 0.14487633 0.50230415 0.20634109 0.48928571  1  1
+## 4  0.4680851 0.5 0.46620105 0.20494700 0.14746544 0.43518282 0.58809524  1  0
+## 5  0.3531915 1.0 0.72062859 0.43462898 0.17972350 0.49271286 0.30000000  0  0
+## 6  0.3276596 0.5 0.38388626 0.18727915 0.00000000 0.49782664 0.68095238  1  0
+## 7  0.1659574 1.0 0.72062859 0.68197880 0.20737327 0.52595244 0.15952381  0  0
+## 8  0.5957447 0.0 0.18857570 0.03533569 0.42857143 0.42879059 0.65476190  1  0
+## 9  0.5276596 0.0 0.17385882 0.15194346 0.53456221 0.41856303 1.00000000  1  0
+## 10 0.3744681 0.5 0.24070841 0.25088339 0.53456221 0.49271286 0.45238095  1  0
+## 11 0.3148936 0.5 0.24070841 0.25088339 0.53456221 0.49271286 0.52380952  1  0
+## 12 0.2553191 1.0 0.51060115 0.45229682 0.14285714 0.65379698 0.34523810  0  0
+## 13 0.2936170 1.0 0.51060115 0.45229682 0.14285714 0.56686269 0.36904762  0  0
+## 14 0.2042553 1.0 0.51060115 0.45229682 0.14285714 0.57964715 0.41666667  0  0
+## 15 0.0000000 1.0 1.00000000 0.54063604 0.07834101 0.95551010 0.41428571  0  0
+## 16 0.0000000 1.0 0.97006735 0.57597173 0.11059908 1.00000000 0.39523810  0  0
+## 17 0.1829787 1.0 0.92017960 0.62897527 0.21658986 0.97980056 0.34761905  0  0
+## 18 0.9361702 0.0 0.01895735 0.04946996 0.60829493 0.17565840 0.59166667  1  1
+## 19 0.8510638 0.0 0.01147418 0.00000000 1.00000000 0.02608029 0.47857143  1  1
+## 20 1.0000000 0.0 0.00000000 0.04593640 0.67281106 0.08233188 0.64285714  1  1
+## 21 0.4723404 0.0 0.12222499 0.15901060 0.43317972 0.24341601 0.65595238  1  0
+## 22 0.2170213 1.0 0.61586431 0.34628975 0.00000000 0.51316799 0.28214286  0  0
+## 23 0.2042553 1.0 0.58094288 0.34628975 0.17972350 0.49143442 0.33333333  0  0
+## 24 0.1234043 1.0 0.69568471 0.68197880 0.44700461 0.59498849 0.10833333  0  0
+## 25 0.3744681 1.0 0.82040409 0.43462898 0.14746544 0.59626694 0.30357143  0  0
+## 26 0.7191489 0.0 0.01970566 0.04946996 0.60829493 0.10790079 0.52380952  1  1
+## 27 0.6638298 0.0 0.12272387 0.13780919 0.76958525 0.16031705 0.26190476  0  1
+## 28 0.8510638 0.0 0.05986530 0.21554770 0.46543779 0.00000000 0.28571429  1  1
+## 29 0.2297872 1.0 0.69817910 0.74911661 0.67281106 0.42367681 0.00000000  0  1
+## 30 0.3957447 0.5 0.18433525 0.43462898 0.39631336 0.32140118 0.11904762  0  1
+## 31 0.1957447 1.0 0.57345972 1.00000000 0.35944700 0.52595244 0.01190476  0  1
+## 32 0.4680851 0.0 0.12446994 0.20141343 0.62211982 0.32395807 0.48809524  1  1
+##    gear      carb
+## 1   0.5 0.4285714
+## 2   0.5 0.4285714
+## 3   0.5 0.0000000
+## 4   0.0 0.0000000
+## 5   0.0 0.1428571
+## 6   0.0 0.0000000
+## 7   0.0 0.4285714
+## 8   0.5 0.1428571
+## 9   0.5 0.1428571
+## 10  0.5 0.4285714
+## 11  0.5 0.4285714
+## 12  0.0 0.2857143
+## 13  0.0 0.2857143
+## 14  0.0 0.2857143
+## 15  0.0 0.4285714
+## 16  0.0 0.4285714
+## 17  0.0 0.4285714
+## 18  0.5 0.0000000
+## 19  0.5 0.1428571
+## 20  0.5 0.0000000
+## 21  0.0 0.0000000
+## 22  0.0 0.1428571
+## 23  0.0 0.1428571
+## 24  0.0 0.4285714
+## 25  0.0 0.1428571
+## 26  0.5 0.0000000
+## 27  1.0 0.1428571
+## 28  1.0 0.1428571
+## 29  1.0 0.4285714
+## 30  1.0 0.7142857
+## 31  1.0 1.0000000
+## 32  0.5 0.1428571
+```
+
 
 ## 9.7 Base functionals {#base-functionals}
 
@@ -604,6 +936,19 @@ A typical example of `apply()` looks like this
 
 ```r
 a2d <- matrix(1:20, nrow = 5)
+a2d
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]    1    6   11   16
+## [2,]    2    7   12   17
+## [3,]    3    8   13   18
+## [4,]    4    9   14   19
+## [5,]    5   10   15   20
+```
+
+```r
 apply(a2d, 1, mean)
 ```
 
@@ -626,6 +971,36 @@ You can specify multiple dimensions to `MARGIN`, which is useful for high-dimens
 
 ```r
 a3d <- array(1:24, c(2, 3, 4))
+a3d
+```
+
+```
+## , , 1
+## 
+##      [,1] [,2] [,3]
+## [1,]    1    3    5
+## [2,]    2    4    6
+## 
+## , , 2
+## 
+##      [,1] [,2] [,3]
+## [1,]    7    9   11
+## [2,]    8   10   12
+## 
+## , , 3
+## 
+##      [,1] [,2] [,3]
+## [1,]   13   15   17
+## [2,]   14   16   18
+## 
+## , , 4
+## 
+##      [,1] [,2] [,3]
+## [1,]   19   21   23
+## [2,]   20   22   24
+```
+
+```r
 apply(a3d, 1, mean)
 ```
 
@@ -658,6 +1033,18 @@ There are two caveats to using `apply()`:
     
     ```r
     a1 <- apply(a2d, 1, identity)
+    a1
+    ```
+    
+    ```
+    ##      [,1] [,2] [,3] [,4] [,5]
+    ## [1,]    1    2    3    4    5
+    ## [2,]    6    7    8    9   10
+    ## [3,]   11   12   13   14   15
+    ## [4,]   16   17   18   19   20
+    ```
+    
+    ```r
     identical(a2d, a1)
     ```
     
@@ -667,6 +1054,19 @@ There are two caveats to using `apply()`:
     
     ```r
     a2 <- apply(a2d, 2, identity)
+    a2
+    ```
+    
+    ```
+    ##      [,1] [,2] [,3] [,4]
+    ## [1,]    1    6   11   16
+    ## [2,]    2    7   12   17
+    ## [3,]    3    8   13   18
+    ## [4,]    4    9   14   19
+    ## [5,]    5   10   15   20
+    ```
+    
+    ```r
     identical(a2d, a2)
     ```
     
@@ -753,11 +1153,246 @@ str(optimise(sin, c(0, pi), maximum = TRUE))
 
 ### 9.7.3 Exercises
 
-1.  How does `apply()` arrange the output? Read the documentation and perform 
-    some experiments.
+1.  How does `apply()` arrange the output? Read the documentation and perform     some experiments.
+
+
+```r
+?apply()
+```
+
+```
+## starting httpd help server ... done
+```
+
+Apply Functions Over Array Margins
+
+Description
+Returns a vector or array or list of values obtained by applying a function to margins of an array or matrix.
+
+Arguments
+X	
+an array, including a matrix.
+
+MARGIN	
+a vector giving the subscripts which the function will be applied over. E.g., for a matrix 1 indicates rows, 2 indicates columns, c(1, 2) indicates rows and columns. Where X has named dimnames, it can be a character vector selecting dimension names.
+
+FUN	
+the function to be applied: see ‘Details’. In the case of functions like +, %*%, etc., the function name must be backquoted or quoted.
+
+...	
+optional arguments to FUN.
+
+simplify	
+a logical indicating whether results should be simplified if possible.
+
+
+```r
+## Compute row and column sums for a matrix:
+x <- cbind(x1 = 3, x2 = c(4:1, 2:5))
+dimnames(x)[[1]] <- letters[1:8]
+x
+```
+
+```
+##   x1 x2
+## a  3  4
+## b  3  3
+## c  3  2
+## d  3  1
+## e  3  2
+## f  3  3
+## g  3  4
+## h  3  5
+```
+
+
+```r
+apply(x, 2, mean, trim = .2)
+```
+
+```
+## x1 x2 
+##  3  3
+```
+
+
+```r
+col.sums <- apply(x, 2, sum)
+row.sums <- apply(x, 1, sum)
+rbind(cbind(x, Rtot = row.sums), Ctot = c(col.sums, sum(col.sums)))
+```
+
+```
+##      x1 x2 Rtot
+## a     3  4    7
+## b     3  3    6
+## c     3  2    5
+## d     3  1    4
+## e     3  2    5
+## f     3  3    6
+## g     3  4    7
+## h     3  5    8
+## Ctot 24 24   48
+```
+
+```r
+stopifnot( apply(x, 2, is.vector))
+```
+
+
+
+```r
+## Sort the columns of a matrix
+apply(x, 2, sort)
+```
+
+```
+##      x1 x2
+## [1,]  3  1
+## [2,]  3  2
+## [3,]  3  2
+## [4,]  3  3
+## [5,]  3  3
+## [6,]  3  4
+## [7,]  3  4
+## [8,]  3  5
+```
+
+
+```r
+## keeping named dimnames
+names(dimnames(x)) <- c("row", "col")
+x3 <- array(x, dim = c(dim(x),3),
+	    dimnames = c(dimnames(x), list(C = paste0("cop.",1:3))))
+x3
+```
+
+```
+## , , C = cop.1
+## 
+##    col
+## row x1 x2
+##   a  3  4
+##   b  3  3
+##   c  3  2
+##   d  3  1
+##   e  3  2
+##   f  3  3
+##   g  3  4
+##   h  3  5
+## 
+## , , C = cop.2
+## 
+##    col
+## row x1 x2
+##   a  3  4
+##   b  3  3
+##   c  3  2
+##   d  3  1
+##   e  3  2
+##   f  3  3
+##   g  3  4
+##   h  3  5
+## 
+## , , C = cop.3
+## 
+##    col
+## row x1 x2
+##   a  3  4
+##   b  3  3
+##   c  3  2
+##   d  3  1
+##   e  3  2
+##   f  3  3
+##   g  3  4
+##   h  3  5
+```
+
+
+```r
+identical(x,  apply( x,  2,  identity))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+identical(x3, apply(x3, 2:3, identity))
+```
+
+```
+## [1] TRUE
+```
+
+
+```r
+##- function with extra args:
+cave <- function(x, c1, c2) c(mean(x[c1]), mean(x[c2]))
+apply(x, 1, cave,  c1 = "x1", c2 = c("x1","x2"))
+```
+
+```
+##       row
+##          a b   c d   e f   g h
+##   [1,] 3.0 3 3.0 3 3.0 3 3.0 3
+##   [2,] 3.5 3 2.5 2 2.5 3 3.5 4
+```
+
+
+```r
+ma <- matrix(c(1:4, 1, 6:8), nrow = 2)
+ma
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]    1    3    1    7
+## [2,]    2    4    6    8
+```
+
+
+```r
+apply(ma, 1, stats::quantile) # 5 x n matrix with rownames
+```
+
+```
+##      [,1] [,2]
+## 0%      1  2.0
+## 25%     1  3.5
+## 50%     2  5.0
+## 75%     4  6.5
+## 100%    7  8.0
+```
+
 
 2.  What do `eapply()` and `rapply()` do? Does purrr have equivalents?
 
-3.  Challenge: read about the 
-    [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
+
+```r
+?eapply()
+```
+
+Apply a Function Over Values in an Environment
+Description
+eapply applies FUN to the named values from an environment and returns the results as a list. The user can request that all named objects are used (normally names that begin with a dot are not). The output is not sorted and no enclosing environments are searched.
+
+Usage
+eapply(env, FUN, ..., all.names = FALSE, USE.NAMES = TRUE)
+
+
+```r
+?rapply()
+```
+
+Recursively Apply a Function to a List
+Description
+rapply is a recursive version of lapply with flexibility in how the result is structured (how = "..").
+
+Usage
+rapply(object, f, classes = "ANY", deflt = NULL,
+       how = c("unlist", "replace", "list"), ...)
+Arguments
+
+3.  Challenge: read about the [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
     Complete the exercises using R.
