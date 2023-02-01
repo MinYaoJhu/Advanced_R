@@ -382,10 +382,10 @@ generate some sample data:</p>
 <pre class="r"><code>l &lt;- map(1:4, ~ sample(1:10, 15, replace = T))
 str(l)</code></pre>
 <pre><code>## List of 4
-##  $ : int [1:15] 8 5 4 5 10 1 10 4 2 9 ...
-##  $ : int [1:15] 2 9 9 9 8 4 3 2 7 5 ...
-##  $ : int [1:15] 5 3 8 2 1 8 8 3 5 3 ...
-##  $ : int [1:15] 7 9 9 10 1 7 5 4 8 2 ...</code></pre>
+##  $ : int [1:15] 4 3 7 8 5 5 8 2 10 3 ...
+##  $ : int [1:15] 2 10 3 8 2 2 9 5 5 10 ...
+##  $ : int [1:15] 10 4 2 1 4 6 4 4 2 7 ...
+##  $ : int [1:15] 1 4 7 4 8 6 8 10 9 6 ...</code></pre>
 <p>To solve this challenge we need to use <code>intersect()</code>
 repeatedly:</p>
 <pre class="r"><code>out &lt;- l[[1]]
@@ -393,16 +393,16 @@ out &lt;- intersect(out, l[[2]])
 out &lt;- intersect(out, l[[3]])
 out &lt;- intersect(out, l[[4]])
 out</code></pre>
-<pre><code>## [1] 8 5 1 2 9</code></pre>
+<pre><code>## [1]  7  8  5 10  6</code></pre>
 <p><code>reduce()</code> automates this solution for us, so we can
 write:</p>
 <pre class="r"><code>reduce(l, intersect)</code></pre>
-<pre><code>## [1] 8 5 1 2 9</code></pre>
+<pre><code>## [1]  7  8  5 10  6</code></pre>
 <p>We could apply the same idea if we wanted to list all the elements
 that appear in at least one entry. All we have to do is switch from
 <code>intersect()</code> to <code>union()</code>:</p>
 <pre class="r"><code>reduce(l, union)</code></pre>
-<pre><code>##  [1]  8  5  4 10  1  2  9  3  7  6</code></pre>
+<pre><code>##  [1]  4  3  7  8  5  2 10  6  1  9</code></pre>
 <p>Like the map family, you can also pass additional arguments.
 <code>intersect()</code> and <code>union()</code> don’t take extra
 arguments so I can’t demonstrate them here, but the principle is
@@ -431,16 +431,16 @@ returning just the final result, it returns all the intermediate results
 as well:</p>
 <pre class="r"><code>accumulate(l, intersect)</code></pre>
 <pre><code>## [[1]]
-##  [1]  8  5  4  5 10  1 10  4  2  9  2  3  7  5  5
+##  [1]  4  3  7  8  5  5  8  2 10  3  2  7  6  1  5
 ## 
 ## [[2]]
-## [1] 8 5 4 1 2 9 3 7
+## [1]  3  7  8  5  2 10  6
 ## 
 ## [[3]]
-## [1] 8 5 1 2 9 3
+## [1]  7  8  5  2 10  6
 ## 
 ## [[4]]
-## [1] 8 5 1 2 9</code></pre>
+## [1]  7  8  5 10  6</code></pre>
 <p>Another useful way to understand reduce is to think about
 <code>sum()</code>: <code>sum(x)</code> is equivalent to
 <code>x[[1]] + x[[2]] + x[[3]] + ...</code>,
@@ -686,9 +686,9 @@ simple_reduce(integer(), sum)</code></pre>
   out
 }</code></pre>
 <pre class="r"><code>simple_reduce(c(1:5), sum)</code></pre>
-<pre><code>## [1] 8 5 1 2 9</code></pre>
+<pre><code>## [1]  7  8  5 10  6</code></pre>
 <pre class="r"><code>simple_reduce(c(1:5), sum, 1)</code></pre>
-<pre><code>## [1] 8 5 1 2 9</code></pre>
+<pre><code>## [1]  7  8  5 10  6</code></pre>
 <pre class="r"><code>simple_reduce(1, sum)</code></pre>
 <pre><code>## [1] 1</code></pre>
 <pre class="r"><code>simple_reduce(1, sum, 1)</code></pre>
@@ -1203,23 +1203,110 @@ ma</code></pre>
 <li>What do <code>eapply()</code> and <code>rapply()</code> do? Does
 purrr have equivalents?</li>
 </ol>
-<pre class="r"><code>?eapply()</code></pre>
+<pre class="r"><code>#?eapply()</code></pre>
 <p>Apply a Function Over Values in an Environment Description eapply
 applies FUN to the named values from an environment and returns the
 results as a list. The user can request that all named objects are used
 (normally names that begin with a dot are not). The output is not sorted
 and no enclosing environments are searched.</p>
 <p>Usage eapply(env, FUN, …, all.names = FALSE, USE.NAMES = TRUE)</p>
-<pre class="r"><code>?rapply()</code></pre>
+<blockquote>
+<p>I cannot find an equivalent in purrr.</p>
+</blockquote>
+<pre class="r"><code>#?rapply()</code></pre>
 <p>Recursively Apply a Function to a List Description rapply is a
 recursive version of lapply with flexibility in how the result is
 structured (how = “..”).</p>
 <p>Usage rapply(object, f, classes = “ANY”, deflt = NULL, how =
 c(“unlist”, “replace”, “list”), …) Arguments</p>
+<blockquote>
+<p>I am not sure about this. 🤔</p>
+</blockquote>
 <ol start="3" style="list-style-type: decimal">
 <li>Challenge: read about the <a href="https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096">fixed
 point algorithm</a>. Complete the exercises using R.</li>
 </ol>
+<blockquote>
+<p>A fixed point (sometimes shortened to fixpoint, also known as an
+invariant point) is a value that does not change under a given
+transformation. Specifically, in mathematics, a fixed point of a
+function is an element that is mapped to itself by the function.</p>
+</blockquote>
+<pre class="r"><code>library(spuRs)</code></pre>
+<pre><code>## Loading required package: MASS</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre class="r"><code>fixedpoint</code></pre>
+<pre><code>## function (ftn, x0, tol = 1e-09, max.iter = 100) 
+## {
+##     xold &lt;- x0
+##     xnew &lt;- ftn(xold)
+##     iter &lt;- 1
+##     cat(&quot;At iteration 1 value of x is:&quot;, xnew, &quot;\n&quot;)
+##     while ((abs(xnew - xold) &gt; tol) &amp;&amp; (iter &lt; max.iter)) {
+##         xold &lt;- xnew
+##         xnew &lt;- ftn(xold)
+##         iter &lt;- iter + 1
+##         cat(&quot;At iteration&quot;, iter, &quot;value of x is:&quot;, xnew, &quot;\n&quot;)
+##     }
+##     if (abs(xnew - xold) &gt; tol) {
+##         cat(&quot;Algorithm failed to converge\n&quot;)
+##         return(NULL)
+##     }
+##     else {
+##         cat(&quot;Algorithm converged\n&quot;)
+##         return(xnew)
+##     }
+## }
+## &lt;bytecode: 0x000001aba5dcf028&gt;
+## &lt;environment: namespace:spuRs&gt;</code></pre>
+<pre class="r"><code>ftn1 &lt;- function(x) return(exp(exp(-x)))
+fixedpoint(ftn1, 2, tol = 1e-6)</code></pre>
+<pre><code>## At iteration 1 value of x is: 1.144921 
+## At iteration 2 value of x is: 1.374719 
+## At iteration 3 value of x is: 1.287768 
+## At iteration 4 value of x is: 1.317697 
+## At iteration 5 value of x is: 1.307022 
+## At iteration 6 value of x is: 1.310783 
+## At iteration 7 value of x is: 1.309452 
+## At iteration 8 value of x is: 1.309922 
+## At iteration 9 value of x is: 1.309756 
+## At iteration 10 value of x is: 1.309815 
+## At iteration 11 value of x is: 1.309794 
+## At iteration 12 value of x is: 1.309802 
+## At iteration 13 value of x is: 1.309799 
+## At iteration 14 value of x is: 1.3098 
+## Algorithm converged</code></pre>
+<pre><code>## [1] 1.3098</code></pre>
+<pre class="r"><code>fixedpoint2 &lt;- function (ftn, x0, tol = 1e-06, max.iter = 1000) 
+{
+    xold &lt;- x0
+    xnew &lt;- ftn(xold)
+    iter &lt;- 1
+    
+    # cat(&quot;At iteration 1 value of x is:&quot;, xnew, &quot;\n&quot;)
+    while ((abs(xnew - xold) &gt; tol) &amp;&amp; (iter &lt; max.iter)) {
+        xold &lt;- xnew
+        xnew &lt;- ftn(xold)
+        iter &lt;- iter + 1
+    #     cat(&quot;At iteration&quot;, iter, &quot;value of x is:&quot;, xnew, &quot;\n&quot;)
+    }
+    
+    if (abs(xnew - xold) &gt; tol) {
+        cat(&quot;Algorithm failed to converge\n&quot;)
+        return(NULL)
+    }
+    
+    else {
+        cat(&quot;Algorithm converged\n&quot;)
+        return(xnew)
+    }
+}</code></pre>
+<pre class="r"><code>fixedpoint2(sin, x0 = 1)</code></pre>
+<pre><code>## Algorithm failed to converge</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>fixedpoint2(ftn1, 2, tol = 1e-6)</code></pre>
+<pre><code>## Algorithm converged</code></pre>
+<pre><code>## [1] 1.3098</code></pre>
 </div>
 </div>
 

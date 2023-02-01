@@ -34,10 +34,10 @@ str(l)
 
 ```
 ## List of 4
-##  $ : int [1:15] 8 5 4 5 10 1 10 4 2 9 ...
-##  $ : int [1:15] 2 9 9 9 8 4 3 2 7 5 ...
-##  $ : int [1:15] 5 3 8 2 1 8 8 3 5 3 ...
-##  $ : int [1:15] 7 9 9 10 1 7 5 4 8 2 ...
+##  $ : int [1:15] 4 3 7 8 5 5 8 2 10 3 ...
+##  $ : int [1:15] 2 10 3 8 2 2 9 5 5 10 ...
+##  $ : int [1:15] 10 4 2 1 4 6 4 4 2 7 ...
+##  $ : int [1:15] 1 4 7 4 8 6 8 10 9 6 ...
 ```
 
 To solve this challenge we need to use `intersect()` repeatedly:
@@ -52,7 +52,7 @@ out
 ```
 
 ```
-## [1] 8 5 1 2 9
+## [1]  7  8  5 10  6
 ```
 
 `reduce()` automates this solution for us, so we can write:
@@ -63,7 +63,7 @@ reduce(l, intersect)
 ```
 
 ```
-## [1] 8 5 1 2 9
+## [1]  7  8  5 10  6
 ```
 
 We could apply the same idea if we wanted to list all the elements that appear in at least one entry. All we have to do is switch from `intersect()` to `union()`:
@@ -74,7 +74,7 @@ reduce(l, union)
 ```
 
 ```
-##  [1]  8  5  4 10  1  2  9  3  7  6
+##  [1]  4  3  7  8  5  2 10  6  1  9
 ```
 
 Like the map family, you can also pass additional arguments. `intersect()` and `union()` don't take extra arguments so I can't demonstrate them here, but the principle is straightforward and I drew you a picture.
@@ -110,16 +110,16 @@ accumulate(l, intersect)
 
 ```
 ## [[1]]
-##  [1]  8  5  4  5 10  1 10  4  2  9  2  3  7  5  5
+##  [1]  4  3  7  8  5  5  8  2 10  3  2  7  6  1  5
 ## 
 ## [[2]]
-## [1] 8 5 4 1 2 9 3 7
+## [1]  3  7  8  5  2 10  6
 ## 
 ## [[3]]
-## [1] 8 5 1 2 9 3
+## [1]  7  8  5  2 10  6
 ## 
 ## [[4]]
-## [1] 8 5 1 2 9
+## [1]  7  8  5 10  6
 ```
 
 Another useful way to understand reduce is to think about `sum()`: `sum(x)` is equivalent to `x[[1]] + x[[2]] + x[[3]] + ...`, i.e. ``reduce(x, `+`)``. Then ``accumulate(x, `+`)`` is the cumulative sum:
@@ -515,7 +515,7 @@ simple_reduce(c(1:5), sum)
 ```
 
 ```
-## [1] 8 5 1 2 9
+## [1]  7  8  5 10  6
 ```
 
 
@@ -524,7 +524,7 @@ simple_reduce(c(1:5), sum, 1)
 ```
 
 ```
-## [1] 8 5 1 2 9
+## [1]  7  8  5 10  6
 ```
 
 
@@ -1370,7 +1370,7 @@ apply(ma, 1, stats::quantile) # 5 x n matrix with rownames
 
 
 ```r
-?eapply()
+#?eapply()
 ```
 
 Apply a Function Over Values in an Environment
@@ -1380,9 +1380,11 @@ eapply applies FUN to the named values from an environment and returns the resul
 Usage
 eapply(env, FUN, ..., all.names = FALSE, USE.NAMES = TRUE)
 
+> I cannot find an equivalent in purrr.
+
 
 ```r
-?rapply()
+#?rapply()
 ```
 
 Recursively Apply a Function to a List
@@ -1394,5 +1396,136 @@ rapply(object, f, classes = "ANY", deflt = NULL,
        how = c("unlist", "replace", "list"), ...)
 Arguments
 
+> I am not sure about this. 🤔 
+
 3.  Challenge: read about the [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
     Complete the exercises using R.
+    
+> A fixed point (sometimes shortened to fixpoint, also known as an invariant point) is a value that does not change under a given transformation. Specifically, in mathematics, a fixed point of a function is an element that is mapped to itself by the function.
+
+
+```r
+library(spuRs)
+```
+
+```
+## Loading required package: MASS
+```
+
+```
+## Loading required package: lattice
+```
+
+```r
+fixedpoint
+```
+
+```
+## function (ftn, x0, tol = 1e-09, max.iter = 100) 
+## {
+##     xold <- x0
+##     xnew <- ftn(xold)
+##     iter <- 1
+##     cat("At iteration 1 value of x is:", xnew, "\n")
+##     while ((abs(xnew - xold) > tol) && (iter < max.iter)) {
+##         xold <- xnew
+##         xnew <- ftn(xold)
+##         iter <- iter + 1
+##         cat("At iteration", iter, "value of x is:", xnew, "\n")
+##     }
+##     if (abs(xnew - xold) > tol) {
+##         cat("Algorithm failed to converge\n")
+##         return(NULL)
+##     }
+##     else {
+##         cat("Algorithm converged\n")
+##         return(xnew)
+##     }
+## }
+## <bytecode: 0x000001aba5dcf028>
+## <environment: namespace:spuRs>
+```
+
+
+```r
+ftn1 <- function(x) return(exp(exp(-x)))
+fixedpoint(ftn1, 2, tol = 1e-6)
+```
+
+```
+## At iteration 1 value of x is: 1.144921 
+## At iteration 2 value of x is: 1.374719 
+## At iteration 3 value of x is: 1.287768 
+## At iteration 4 value of x is: 1.317697 
+## At iteration 5 value of x is: 1.307022 
+## At iteration 6 value of x is: 1.310783 
+## At iteration 7 value of x is: 1.309452 
+## At iteration 8 value of x is: 1.309922 
+## At iteration 9 value of x is: 1.309756 
+## At iteration 10 value of x is: 1.309815 
+## At iteration 11 value of x is: 1.309794 
+## At iteration 12 value of x is: 1.309802 
+## At iteration 13 value of x is: 1.309799 
+## At iteration 14 value of x is: 1.3098 
+## Algorithm converged
+```
+
+```
+## [1] 1.3098
+```
+
+
+```r
+fixedpoint2 <- function (ftn, x0, tol = 1e-06, max.iter = 1000) 
+{
+    xold <- x0
+    xnew <- ftn(xold)
+    iter <- 1
+    
+    # cat("At iteration 1 value of x is:", xnew, "\n")
+    while ((abs(xnew - xold) > tol) && (iter < max.iter)) {
+        xold <- xnew
+        xnew <- ftn(xold)
+        iter <- iter + 1
+    #     cat("At iteration", iter, "value of x is:", xnew, "\n")
+    }
+    
+    if (abs(xnew - xold) > tol) {
+        cat("Algorithm failed to converge\n")
+        return(NULL)
+    }
+    
+    else {
+        cat("Algorithm converged\n")
+        return(xnew)
+    }
+}
+```
+
+
+
+```r
+fixedpoint2(sin, x0 = 1)
+```
+
+```
+## Algorithm failed to converge
+```
+
+```
+## NULL
+```
+
+```r
+fixedpoint2(ftn1, 2, tol = 1e-6)
+```
+
+```
+## Algorithm converged
+```
+
+```
+## [1] 1.3098
+```
+
+

@@ -648,6 +648,8 @@ eapply applies FUN to the named values from an environment and returns the resul
 Usage
 eapply(env, FUN, ..., all.names = FALSE, USE.NAMES = TRUE)
 
+> I cannot find an equivalent in purrr.
+
 ```{r}
 #?rapply()
 ```
@@ -661,5 +663,56 @@ rapply(object, f, classes = "ANY", deflt = NULL,
        how = c("unlist", "replace", "list"), ...)
 Arguments
 
+> I am not sure about this. 🤔 
+
 3.  Challenge: read about the [fixed point algorithm](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-12.html#%25_idx_1096).
     Complete the exercises using R.
+    
+> A fixed point (sometimes shortened to fixpoint, also known as an invariant point) is a value that does not change under a given transformation. Specifically, in mathematics, a fixed point of a function is an element that is mapped to itself by the function.
+
+```{r}
+library(spuRs)
+fixedpoint
+```
+
+```{r}
+ftn1 <- function(x) return(exp(exp(-x)))
+fixedpoint(ftn1, 2, tol = 1e-6)
+```
+
+```{r}
+fixedpoint2 <- function (ftn, x0, tol = 1e-06, max.iter = 1000) 
+{
+    xold <- x0
+    xnew <- ftn(xold)
+    iter <- 1
+    
+    # cat("At iteration 1 value of x is:", xnew, "\n")
+    while ((abs(xnew - xold) > tol) && (iter < max.iter)) {
+        xold <- xnew
+        xnew <- ftn(xold)
+        iter <- iter + 1
+    #     cat("At iteration", iter, "value of x is:", xnew, "\n")
+    }
+    
+    if (abs(xnew - xold) > tol) {
+        cat("Algorithm failed to converge\n")
+        return(NULL)
+    }
+    
+    else {
+        cat("Algorithm converged\n")
+        return(xnew)
+    }
+}
+```
+
+
+```{r}
+fixedpoint2(sin, x0 = 1)
+```
+```{r}
+fixedpoint2(ftn1, 2, tol = 1e-6)
+```
+
+
