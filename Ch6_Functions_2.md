@@ -385,7 +385,7 @@ plot.default
 ##             ...)
 ##     invisible()
 ## }
-## <bytecode: 0x000001f0786db0a0>
+## <bytecode: 0x000001c9007f97d8>
 ## <environment: namespace:graphics>
 ```
 
@@ -699,11 +699,7 @@ j09()
 
 
 ```r
-?load()
-```
-
-```
-## starting httpd help server ... done
+#?load()
 ```
 
 Reload Saved Datasets
@@ -1039,7 +1035,7 @@ capture.output
 ##         invisible(NULL)
 ##     else rval
 ## }
-## <bytecode: 0x000001f078eeab90>
+## <bytecode: 0x000001c901bebd88>
 ## <environment: namespace:utils>
 ```
 
@@ -1166,8 +1162,8 @@ replicate(50, (1 + 2))
 ```
 
 ```
-##  [1] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 4 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
-## [39] 3 3 3 3 3 3 3 3 3 3 3 4
+##  [1] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 4 3 3 3 3 3 3 3 3 3 3 3 3 3 3 4 3 3 3 3 3
+## [39] 3 3 3 3 3 3 3 3 3 3 3 3
 ```
 
 ```r
@@ -1533,7 +1529,7 @@ cor(x, y, use = "pairwise.complete.obs", method = "kendall")
 ```
 
 ```
-## [1] -0.1013401
+## [1] 0.2735767
 ```
 
 cor(x, y = NULL, use = "everything",
@@ -1596,6 +1592,34 @@ get("x") <- 2
 4. Create a replacement function that modifies a random location in a vector.
 
 
+```r
+`random<-` <- function(x, value) {
+  idx <- sample(length(x), size = 1)
+  x[idx] <- value
+  x
+}
+```
+
+
+```r
+test <- c(1:20)
+test
+```
+
+```
+##  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
+```
+
+```r
+random(test)<-100
+test
+```
+
+```
+##  [1]   1   2   3   4   5   6   7   8   9 100  11  12  13  14  15  16  17  18  19
+## [20]  20
+```
+
 
 5. Write your own version of `+` that pastes its inputs together if they are 
    character vectors but behaves as usual otherwise. In other words, make this 
@@ -1612,21 +1636,426 @@ get("x") <- 2
 
 
 
+```r
+`+` <- function(a, b = 0L) {
+  if (is.character(a) && is.character(b)) {
+    paste0(a, b)
+  } else {
+    base::`+`(a, b)
+  }
+}
+
+# Test
++ 1
+#> [1] 1
+1 + 2
+#> [1] 3
+"a" + "b"
+#> [1] "ab"
+
+# Return back to the original `+` operator
+rm(`+`)
+
+# Test
++ 1
+#> [1] 1
+1 + 2
+#> [1] 3
+"a" + "b"
+#> [1] "ab"
+```
+
+> To achieve this behaviour, we need to override the + operator. We need to take care to not use the + operator itself inside of the function definition, as this would lead to an undesired infinite recursion. We also add b = 0L as a default value to keep the behaviour of + as a unary operator, i.e. to keep + 1 working and not throwing an error.
+
 6. Create a list of all the replacement functions found in the base package. 
    Which ones are primitive functions? (Hint: use `apropos()`.)
 
 
+```r
+#?apropos
+```
+
+Find Objects by (Partial) Name
+Description
+apropos() returns a character vector giving the names of objects in the search list matching (as a regular expression) what.
+
+find() returns where objects of a given name can be found.
+
+Usage
+apropos(what, where = FALSE, ignore.case = TRUE, mode = "any")
+find(what, mode = "any", numeric = FALSE, simple.words = TRUE)
+
+Arguments
+what	
+character string. For simple.words = FALSE the name of an object; otherwise a regular expression to match object names against.
+
+where, numeric	
+a logical indicating whether positions in the search list should also be returned
+
+ignore.case	
+logical indicating if the search should be case-insensitive, TRUE by default.
+
+mode	
+character; if not "any", only objects whose mode equals mode are searched.
+
+simple.words	
+logical; if TRUE, the what argument is only searched as a whole word.
+
+> The hint suggests to look for functions with a specific naming pattern: Replacement functions conventionally end on “<-.” We can search for these objects by supplying the regular expression "<-$" to apropos(). apropos() also allows to return the position on the search path (search()) for each of its matches via setting where = TRUE. Finally, we can set mode = function to narrow down our search to relevant objects only. This gives us the following statement to begin with:
+
+
+```r
+repls <- apropos("<-", where = TRUE, mode = "function")
+head(repls, 30)
+```
+
+```
+##                     18                     18                     18 
+##                  "$<-"       "$<-.data.frame"        ".rowNamesDF<-" 
+##                     18                     18                     18 
+##                  "@<-"                 "[[<-"      "[[<-.data.frame" 
+##                     18                     18                     18 
+##          "[[<-.factor" "[[<-.numeric_version"         "[[<-.POSIXlt" 
+##                     18                     18                     18 
+##                  "[<-"       "[<-.data.frame"             "[<-.Date" 
+##                     18                     18                     18 
+##         "[<-.difftime"           "[<-.factor"  "[<-.numeric_version" 
+##                     18                     18                     18 
+##          "[<-.POSIXct"          "[<-.POSIXlt"                   "<-" 
+##                     18                     16                     18 
+##                  "<<-"                 "as<-"               "attr<-" 
+##                     18                     16                     18 
+##         "attributes<-"               "body<-"               "body<-" 
+##                     18                     16                     18 
+##              "class<-"             "coerce<-"           "colnames<-" 
+##                     18                     11                     18 
+##            "comment<-"          "contrasts<-"               "diag<-"
+```
+
+To restrict repl to names of replacement functions from the {base} package, we select only matches containing the relevant position on the search path.
+
+
+```r
+repls_base <- repls[names(repls) == length(search())]
+repls_base
+```
+
+```
+##                        18                        18                        18 
+##                     "$<-"          "$<-.data.frame"           ".rowNamesDF<-" 
+##                        18                        18                        18 
+##                     "@<-"                    "[[<-"         "[[<-.data.frame" 
+##                        18                        18                        18 
+##             "[[<-.factor"    "[[<-.numeric_version"            "[[<-.POSIXlt" 
+##                        18                        18                        18 
+##                     "[<-"          "[<-.data.frame"                "[<-.Date" 
+##                        18                        18                        18 
+##            "[<-.difftime"              "[<-.factor"     "[<-.numeric_version" 
+##                        18                        18                        18 
+##             "[<-.POSIXct"             "[<-.POSIXlt"                      "<-" 
+##                        18                        18                        18 
+##                     "<<-"                  "attr<-"            "attributes<-" 
+##                        18                        18                        18 
+##                  "body<-"                 "class<-"              "colnames<-" 
+##                        18                        18                        18 
+##               "comment<-"                  "diag<-"                   "dim<-" 
+##                        18                        18                        18 
+##              "dimnames<-"   "dimnames<-.data.frame"              "Encoding<-" 
+##                        18                        18                        18 
+##           "environment<-"               "formals<-"                 "is.na<-" 
+##                        18                        18                        18 
+##         "is.na<-.default"          "is.na<-.factor" "is.na<-.numeric_version" 
+##                        18                        18                        18 
+##                "length<-"           "length<-.Date"       "length<-.difftime" 
+##                        18                        18                        18 
+##         "length<-.factor"        "length<-.POSIXct"        "length<-.POSIXlt" 
+##                        18                        18                        18 
+##                "levels<-"         "levels<-.factor"                  "mode<-" 
+##                        18                        18                        18 
+##        "mostattributes<-"                 "names<-"         "names<-.POSIXlt" 
+##                        18                        18                        18 
+##              "oldClass<-"            "parent.env<-"            "regmatches<-" 
+##                        18                        18                        18 
+##             "row.names<-"  "row.names<-.data.frame"     "row.names<-.default" 
+##                        18                        18                        18 
+##              "rownames<-"                 "split<-"      "split<-.data.frame" 
+##                        18                        18                        18 
+##         "split<-.default"          "storage.mode<-"                "substr<-" 
+##                        18                        18                        18 
+##             "substring<-"                 "units<-"        "units<-.difftime"
+```
+
+> To find out which of these functions are primitives, we first search for these functions via mget() and then subset the result using Filter() and is.primitive().
+
+
+```r
+repls_base_prim <- mget(repls_base, envir = baseenv()) %>%
+  Filter(is.primitive, .) %>% 
+  names()
+
+repls_base_prim
+```
+
+```
+##  [1] "$<-"            "@<-"            "[[<-"           "[<-"           
+##  [5] "<-"             "<<-"            "attr<-"         "attributes<-"  
+##  [9] "class<-"        "dim<-"          "dimnames<-"     "environment<-" 
+## [13] "length<-"       "levels<-"       "names<-"        "oldClass<-"    
+## [17] "storage.mode<-"
+```
+
+
+```r
+length(repls_base)
+```
+
+```
+## [1] 63
+```
+
+```r
+length(repls_base_prim)
+```
+
+```
+## [1] 17
+```
+
+> Overall the {base} package contains 63 replacement functions of which 17 are primitive functions.
+
+
+notes:
+get: Return the Value of a Named Object
+Return the Value of a Named Object
+Description
+Search by name for an object (get) or zero or more objects (mget).
+
+Usage
+get(x, pos = -1, envir = as.environment(pos), mode = "any",
+    inherits = TRUE)
+
+mget(x, envir = as.environment(-1), mode = "any", ifnotfound,
+     inherits = FALSE)
+
 
 7. What are valid names for user-created infix functions?
 
-
+> names of infix functions are more flexible than regular R functions: they can contain any sequence of characters except “%.”
 
 8. Create an infix `xor()` operator.
 
+
+```r
+#?xor
+```
+
+> xor indicates elementwise exclusive OR.
+
+> In R, the xor() function is used to evaluate exclusive-OR between x and y argument values. Exclusive-OR or shortly XOR is a boolean logical operation. It takes two boolean input values and returns TRUE or FALSE. If input values are the same, it returns FALSE, otherwise, it returns TRUE. (https://www.educative.io/answers/what-is-the-xor-function-in-r)
+
+usage
+xor(x, y)
+
+
+
+```r
+xor(TRUE, TRUE)
+```
+
+```
+## [1] FALSE
+```
+
+```r
+xor(FALSE, TRUE)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+`%xor%` <- function(a, b) {
+  xor(a, b)
+}
+TRUE %xor% TRUE
+```
+
+```
+## [1] FALSE
+```
+
+```r
+#> [1] FALSE
+FALSE %xor% TRUE
+```
+
+```
+## [1] TRUE
+```
+
+```r
+#> [1] TRUE
+```
+
+```r
+# Creating two r vectors named x & y
+x <- c(FALSE, FALSE, TRUE, TRUE)
+y <- c(FALSE,TRUE, FALSE, TRUE)
+# Invoking xor() function to computer 
+# exclusive-or between two vectors x & y
+cat(xor(x,y))
+```
+
+```
+## FALSE TRUE TRUE FALSE
+```
+
+```r
+x %xor% y
+```
+
+```
+## [1] FALSE  TRUE  TRUE FALSE
+```
+
+
+#### `&` `&&`
+
+> In addition, & and && indicate logical AND and | and || indicate logical OR. The shorter forms performs elementwise comparisons in much the same way as arithmetic operators. The longer forms evaluates left to right, proceeding only until the result is determined. The longer form is appropriate for programming control-flow and typically preferred in if clauses.
+
+> Using vectors of more than one element in && or || will give a warning (as from R 4.2.0), or an error if the environment variable _R_CHECK_LENGTH_1_LOGIC2_ is set to a true value (this is intended to become the default in future).
 
 
 9. Create infix versions of the set functions `intersect()`, `union()`, and
    `setdiff()`. You might call them `%n%`, `%u%`, and `%/%` to match 
    conventions from mathematics.
 
+
+```r
+#?intersect
+```
+
+
+```r
+(x <- c(sort(sample(1:20, 9)), NA))
+```
+
+```
+##  [1]  3  4  8  9 10 11 12 14 19 NA
+```
+
+```r
+(y <- c(sort(sample(3:23, 7)), NA))
+```
+
+```
+## [1]  3  6  8 12 17 19 23 NA
+```
+
+```r
+union(x, y)
+```
+
+```
+##  [1]  3  4  8  9 10 11 12 14 19 NA  6 17 23
+```
+
+```r
+intersect(x, y)
+```
+
+```
+## [1]  3  8 12 19 NA
+```
+
+```r
+setdiff(x, y)
+```
+
+```
+## [1]  4  9 10 11 14
+```
+
+```r
+setdiff(y, x)
+```
+
+```
+## [1]  6 17 23
+```
+
+```r
+setequal(x, y)
+```
+
+```
+## [1] FALSE
+```
+
+
+
+```r
+`%n%` <- function(a, b) {
+  intersect(a, b)
+}
+
+`%u%` <- function(a, b) {
+  union(a, b)
+}
+
+`%/%` <- function(a, b) {
+  setdiff(a, b)
+}
+
+x <- c("a", "b", "d")
+y <- c("a", "c", "d")
+
+#test
+union(x,y)
+```
+
+```
+## [1] "a" "b" "d" "c"
+```
+
+```r
+intersect(x,y)
+```
+
+```
+## [1] "a" "d"
+```
+
+```r
+setdiff(x,y)
+```
+
+```
+## [1] "b"
+```
+
+```r
+x %u% y
+```
+
+```
+## [1] "a" "b" "d" "c"
+```
+
+```r
+x %n% y
+```
+
+```
+## [1] "a" "d"
+```
+
+```r
+x %/% y
+```
+
+```
+## [1] "b"
+```
 
