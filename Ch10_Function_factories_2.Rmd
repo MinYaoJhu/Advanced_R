@@ -7,6 +7,23 @@ output:
     keep_md: yes
 ---
 
+```{r setup}
+library(rlang)
+library(ggplot2)
+library(scales)
+```
+
+```{r}
+power1 <- function(exp) {
+  function(x) {
+    x ^ exp
+  }
+}
+
+square <- power1(2)
+cube <- power1(3)
+```
+
 ## 10.4 Statistical factories {#stat-fact}
 
 More motivating examples for function factories come from statistics:
@@ -17,7 +34,7 @@ More motivating examples for function factories come from statistics:
 
 All of these examples can be tackled without function factories, but I think function factories are a good fit for these problems and provide elegant solutions. These examples expect some statistical background, so feel free to skip if they don't make much sense to you.
 
-### Box-Cox transformation
+### 10.4.1 Box-Cox transformation
 \index{Box-Cox transformation}
 
 The Box-Cox transformation (a type of [power transformation](https://en.wikipedia.org/wiki/Power_transform)) is a flexible transformation often used to transform data towards normality. It has a single parameter, $\lambda$, which controls the strength of the transformation. We could express the transformation as a simple two argument function:
@@ -63,7 +80,7 @@ ggplot(data.frame(x = c(0.01, 1)), aes(x)) +
 
 In general, this allows you to use a Box-Cox transformation with any function that accepts a unary transformation function: you don't have to worry about that function providing `...` to pass along additional arguments. I also think that the partitioning of `lambda` and `x` into two different function arguments is natural since `lambda` plays quite a different role than `x`. 
 
-### Bootstrap generators
+### 10.4.2 Bootstrap generators
 \index{bootstrapping}
 
 Function factories are a useful approach for bootstrapping. Instead of thinking about a single bootstrap (you always need more than one!), you can think about a bootstrap __generator__, a function that yields a fresh bootstrap every time it is called:
@@ -105,7 +122,7 @@ head(boot_mtcars2())
 
 I use `rm(mod)` because linear model objects are quite large (they include complete copies of the model matrix and input data) and I want to keep the manufactured function as small as possible.
 
-### Maximum likelihood estimation {#MLE}
+### 10.4.3 Maximum likelihood estimation {#MLE}
 \index{maximum likelihood}
 \indexc{optimise()}
 \indexc{optim()}
@@ -222,12 +239,29 @@ These advantages get bigger in more complex MLE problems, where you have multipl
 
 <!-- GVW: stepping back, what patterns in existing code should people look for that suggest "Hey, maybe use a function factory here"? -->
 
-### Exercises
+### 10.4.4 Exercises
 
 1.  In `boot_model()`, why don't I need to force the evaluation of `df` 
     or `model`?
     
-1.  Why might you formulate the Box-Cox transformation like this?
+> because we use df and formula in lm() before returning the function.
+    
+```{r}
+boot_model <- function(df, formula) {
+  mod <- lm(formula, data = df)
+  fitted <- unname(fitted(mod))
+  resid <- unname(resid(mod))
+  rm(mod)
+  
+  function() {
+    fitted + sample(resid)
+  }
+} 
+```
+
+
+    
+2.  Why might you formulate the Box-Cox transformation like this?
 
     ```{r}
     boxcox3 <- function(x) {
@@ -241,14 +275,110 @@ These advantages get bigger in more complex MLE problems, where you have multipl
     }
     ```
 
-1.  Why don't you need to worry that `boot_permute()` stores a copy of the 
-    data inside the function that it generates?
+```{r}
+boxcox_airpassengers <- boxcox3(AirPassengers)
 
-1.  How much time does `ll_poisson2()` save compared to `ll_poisson1()`?
+plot(boxcox_airpassengers(0))
+plot(boxcox_airpassengers(1))
+plot(boxcox_airpassengers(2))
+plot(boxcox_airpassengers(3))
+
+
+```
+
+
+3.  Why don't you need to worry that `boot_permute()` stores a copy of the 
+    data inside the function that it generates?
+    
+```{r}
+boot_permute <- function(df, var) {
+  n <- nrow(df)
+  force(var)
+  
+  function() {
+    col <- df[[var]]
+    col[sample(n, replace = TRUE)]
+  }
+}
+```
+
+```{r}
+boot_mtcars1 <- boot_permute(mtcars, "mpg")
+
+lobstr::obj_size(mtcars)
+
+lobstr::obj_size(boot_mtcars1)
+
+lobstr::obj_sizes(mtcars, boot_mtcars1)
+```
+
+
+4.  How much time does `ll_poisson2()` save compared to `ll_poisson1()`?
     Use `bench::mark()` to see how much faster the optimisation occurs.
     How does changing the length of `x` change the results?
 
-## Function factories + functionals {#functional-factories}
+```{r}
+ll_poisson1 <- function(x) {
+  n <- length(x)
+  
+  function(lambda) {
+    log(lambda) * sum(x) - n * lambda - sum(lfactorial(x))
+  }
+}
+
+ll_poisson2 <- function(x) {
+  n <- length(x)
+  sum_x <- sum(x)
+  c <- sum(lfactorial(x))
+  
+  function(lambda) {
+    log(lambda) * sum_x - n * lambda - c
+  }
+}
+
+x1 <- c(41, 30, 31, 38, 29, 24, 30, 29, 31, 38)
+```
+
+```{r}
+bench::mark(
+  llp1 = optimise(ll_poisson1(x1), c(0, 100), maximum = TRUE),
+  llp2 = optimise(ll_poisson2(x1), c(0, 100), maximum = TRUE)
+)
+```
+
+```{r}
+bench_poisson <- function(x_length) {
+  x <- rpois(x_length, 100L)
+  
+  bench::mark(
+    llp1 = optimise(ll_poisson1(x), c(0, 100), maximum = TRUE),
+    llp2 = optimise(ll_poisson2(x), c(0, 100), maximum = TRUE),
+    time_unit = "ms"
+  )
+}
+
+performances <- map_dfr(10^(1:5), bench_poisson)
+
+df_perf <- tibble(
+  x_length = rep(10^(1:5), each = 2),
+  method   = rep(attr(performances$expression, "description"), 5),
+  median   = performances$median
+)
+
+ggplot(df_perf, aes(x_length, median, col = method)) +
+  geom_point(size = 2) +
+  geom_line(linetype = 2) +
+  scale_x_log10() +
+  labs(
+    x = "Length of x",
+    y = "Execution Time (ms)",
+    color = "Method"
+  ) +
+  theme(legend.position = "top")
+```
+
+
+## 10.5 Function factories + functionals {#functional-factories}
 
 To finish off the chapter, I'll show how you might combine functionals and function factories to turn data into many functions. The following code creates many specially named power functions by iterating over a list of arguments:
 
@@ -317,7 +447,7 @@ One downside of the current construction is that you have to prefix every functi
 
 You'll learn an alternative approach to the same problem in Section \@ref(new-function). Instead of using a function factory, you could construct the function with quasiquotation. This requires additional knowledge, but generates functions with readable bodies, and avoids accidentally capturing large objects in the enclosing scope. We use that idea in Section \@ref(tag-functions) when we work on tools for generating HTML from R.
 
-### Exercises
+### 10.5.1 Exercises
 
 1. Which of the following commands is equivalent to `with(x, f(z))`?
 
@@ -326,8 +456,26 @@ You'll learn an alternative approach to the same problem in Section \@ref(new-fu
     (c) `x$f(z)`.
     (d) `f(z)`.
     (e) It depends.
+    
+> (e) It depends.
 
-1. Compare and contrast the effects of `env_bind()` vs. `attach()` for the 
+```{r}
+f <- mean
+z <- 1
+x <- list(f = mean, z = 1)
+
+identical(with(x, f(z)), x$f(x$z))
+
+identical(with(x, f(z)), f(x$z))
+
+identical(with(x, f(z)), x$f(z))
+
+identical(with(x, f(z)), f(z))
+
+```
+
+
+2. Compare and contrast the effects of `env_bind()` vs. `attach()` for the 
    following code.
    
     ```{r}
@@ -344,3 +492,28 @@ You'll learn an alternative approach to the same problem in Section \@ref(new-fu
     mean <- function(x) stop("Hi!") 
     env_unbind(globalenv(), names(funs))
     ```
+
+
+```{r}
+attach(funs)
+
+attach(funs)
+
+attach(funs)
+
+head(search())
+
+detach(funs)
+
+detach(funs)
+
+detach(funs)
+
+head(search())
+```
+
+```{r}
+env_bind(globalenv(), !!!funs)
+head(search())
+```
+
