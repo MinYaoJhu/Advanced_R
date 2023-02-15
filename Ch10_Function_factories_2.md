@@ -12,6 +12,54 @@ output:
 library(rlang)
 library(ggplot2)
 library(scales)
+library(purrr)
+```
+
+```
+## 
+## Attaching package: 'purrr'
+```
+
+```
+## The following object is masked from 'package:scales':
+## 
+##     discard
+```
+
+```
+## The following objects are masked from 'package:rlang':
+## 
+##     %@%, flatten, flatten_chr, flatten_dbl, flatten_int, flatten_lgl,
+##     flatten_raw, invoke, splice
+```
+
+```r
+library(tidyverse)
+```
+
+```
+## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2
+## ──
+```
+
+```
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
+## ✔ readr   2.1.3      ✔ forcats 1.0.0 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ purrr::%@%()         masks rlang::%@%()
+## ✖ readr::col_factor()  masks scales::col_factor()
+## ✖ purrr::discard()     masks scales::discard()
+## ✖ dplyr::filter()      masks stats::filter()
+## ✖ purrr::flatten()     masks rlang::flatten()
+## ✖ purrr::flatten_chr() masks rlang::flatten_chr()
+## ✖ purrr::flatten_dbl() masks rlang::flatten_dbl()
+## ✖ purrr::flatten_int() masks rlang::flatten_int()
+## ✖ purrr::flatten_lgl() masks rlang::flatten_lgl()
+## ✖ purrr::flatten_raw() masks rlang::flatten_raw()
+## ✖ purrr::invoke()      masks rlang::invoke()
+## ✖ dplyr::lag()         masks stats::lag()
+## ✖ purrr::splice()      masks rlang::splice()
 ```
 
 
@@ -117,7 +165,7 @@ head(boot_mtcars1())
 ```
 
 ```
-## [1] 15.5 15.5 27.3 19.2 19.7 21.5
+## [1] 15.2 32.4 21.4 19.7 21.0 15.2
 ```
 
 ```r
@@ -125,7 +173,7 @@ head(boot_mtcars1())
 ```
 
 ```
-## [1] 33.9 19.7 26.0 16.4 19.2 21.4
+## [1] 30.4 19.7 15.2 14.7 33.9 18.7
 ```
 
 The advantage of a function factory is more clear with a parametric bootstrap where we have to first fit a model. We can do this setup step once, when the factory is called, rather than once every time we generate the bootstrap:
@@ -148,7 +196,7 @@ head(boot_mtcars2())
 ```
 
 ```
-## [1] 22.36284 24.38414 26.63215 17.32171 15.17328 16.51064
+## [1] 29.26369 20.03675 27.35032 18.01670 18.84990 17.76576
 ```
 
 ```r
@@ -156,7 +204,7 @@ head(boot_mtcars2())
 ```
 
 ```
-## [1] 18.73946 26.08351 26.05930 17.32171 18.84990 15.82067
+## [1] 25.74698 20.03675 25.03800 20.05240 21.25010 19.66013
 ```
 
 I use `rm(mod)` because linear model objects are quite large (they include complete copies of the model matrix and input data) and I want to keep the manufactured function as small as possible.
@@ -343,6 +391,24 @@ These advantages get bigger in more complex MLE problems, where you have multipl
 1.  In `boot_model()`, why don't I need to force the evaluation of `df` 
     or `model`?
     
+> In `boot_model()`, we use df and formula in lm() before returning the function, so we don’t need to force the evaluation of df or model.
+    
+
+```r
+boot_model <- function(df, formula) {
+  mod <- lm(formula, data = df)
+  fitted <- unname(fitted(mod))
+  resid <- unname(resid(mod))
+  rm(mod)
+  
+  function() {
+    fitted + sample(resid)
+  }
+} 
+```
+
+
+    
 2.  Why might you formulate the Box-Cox transformation like this?
 
     
@@ -358,12 +424,145 @@ These advantages get bigger in more complex MLE problems, where you have multipl
     }
     ```
 
+
+```r
+AirPassengers
+```
+
+```
+##      Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+## 1949 112 118 132 129 121 135 148 148 136 119 104 118
+## 1950 115 126 141 135 125 149 170 170 158 133 114 140
+## 1951 145 150 178 163 172 178 199 199 184 162 146 166
+## 1952 171 180 193 181 183 218 230 242 209 191 172 194
+## 1953 196 196 236 235 229 243 264 272 237 211 180 201
+## 1954 204 188 235 227 234 264 302 293 259 229 203 229
+## 1955 242 233 267 269 270 315 364 347 312 274 237 278
+## 1956 284 277 317 313 318 374 413 405 355 306 271 306
+## 1957 315 301 356 348 355 422 465 467 404 347 305 336
+## 1958 340 318 362 348 363 435 491 505 404 359 310 337
+## 1959 360 342 406 396 420 472 548 559 463 407 362 405
+## 1960 417 391 419 461 472 535 622 606 508 461 390 432
+```
+
+```r
+boxcox_airpassengers <- boxcox3(AirPassengers)
+
+plot(boxcox_airpassengers(0))
+```
+
+![](Ch10_Function_factories_2_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+
+```r
+plot(boxcox_airpassengers(1))
+```
+
+![](Ch10_Function_factories_2_files/figure-html/unnamed-chunk-16-2.png)<!-- -->
+
+```r
+plot(boxcox_airpassengers(2))
+```
+
+![](Ch10_Function_factories_2_files/figure-html/unnamed-chunk-16-3.png)<!-- -->
+
+```r
+plot(boxcox_airpassengers(3))
+```
+
+![](Ch10_Function_factories_2_files/figure-html/unnamed-chunk-16-4.png)<!-- -->
+
 3.  Why don't you need to worry that `boot_permute()` stores a copy of the 
     data inside the function that it generates?
+    
+
+```r
+boot_permute <- function(df, var) {
+  n <- nrow(df)
+  force(var)
+  
+  function() {
+    col <- df[[var]]
+    col[sample(n, replace = TRUE)]
+  }
+}
+```
+
+We don’t need to worry that it stores a copy of the data, because it actually doesn’t store one; it’s just a name that points to the same underlying object in memory.
+
+
+```r
+boot_mtcars1 <- boot_permute(mtcars, "mpg")
+
+lobstr::obj_size(mtcars)
+```
+
+```
+## 7.21 kB
+```
+
+```r
+lobstr::obj_size(boot_mtcars1)
+```
+
+```
+## 20.23 kB
+```
+
+```r
+lobstr::obj_sizes(mtcars, boot_mtcars1)
+```
+
+```
+## *  7.21 kB
+## * 13.02 kB
+```
+
 
 4.  How much time does `ll_poisson2()` save compared to `ll_poisson1()`?
     Use `bench::mark()` to see how much faster the optimisation occurs.
     How does changing the length of `x` change the results?
+
+
+```r
+ll_poisson1 <- function(x) {
+  n <- length(x)
+  
+  function(lambda) {
+    log(lambda) * sum(x) - n * lambda - sum(lfactorial(x))
+  }
+}
+
+ll_poisson2 <- function(x) {
+  n <- length(x)
+  sum_x <- sum(x)
+  c <- sum(lfactorial(x))
+  
+  function(lambda) {
+    log(lambda) * sum_x - n * lambda - c
+  }
+}
+
+x1 <- c(41, 30, 31, 38, 29, 24, 30, 29, 31, 38)
+```
+
+
+```r
+library(bench)
+
+bench::mark(
+  llp1 = optimise(ll_poisson1(x1), c(0, 100), maximum = TRUE),
+  llp2 = optimise(ll_poisson2(x1), c(0, 100), maximum = TRUE)
+)
+```
+
+```
+## # A tibble: 2 × 6
+##   expression      min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 llp1         32.2µs   51.3µs    18056.        0B     6.18
+## 2 llp2         15.5µs   22.8µs    39289.        0B    11.8
+```
+
 
 ## 10.5 Function factories + functionals {#functional-factories}
 
@@ -395,8 +594,8 @@ funs$root
 ## function(x) {
 ##     x ^ exp
 ##   }
-## <bytecode: 0x0000013546673008>
-## <environment: 0x000001354ac544c8>
+## <bytecode: 0x000001a4b63975f8>
+## <environment: 0x000001a4bbed8b40>
 ```
 
 This idea extends in a straightforward way if your function factory takes two (replace `map()` with `map2()`) or more (replace with `pmap()`) arguments.
@@ -487,6 +686,116 @@ You'll learn an alternative approach to the same problem in Section \@ref(new-fu
     (c) `x$f(z)`.
     (d) `f(z)`.
     (e) It depends.
+    
+> (e) It depends.
+
+
+```r
+z <- 100 
+x <- list(f = funs, z = 100)
+```
+
+
+
+```r
+    with(funs, root(x$z))
+```
+
+```
+## [1] 10
+```
+    (a) `x$f(x$z)`.
+
+
+```r
+funs$root(x$z)
+```
+
+```
+## [1] 10
+```
+
+    (b) `f(x$z)`.
+    
+
+```r
+attach(funs)
+root(x$z)
+```
+
+```
+## [1] 10
+```
+
+```r
+detach(funs)
+```
+
+(c) `x$f(z)`.
+
+
+```r
+funs$root(100)
+```
+
+```
+## [1] 10
+```
+
+(d) `f(z)`.
+
+
+```r
+attach(funs)
+root(100)
+```
+
+```
+## [1] 10
+```
+
+```r
+detach(funs)
+```
+
+
+
+```r
+f <- mean
+z <- 1
+x <- list(f = mean, z = 1)
+
+identical(with(x, f(z)), x$f(x$z))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+identical(with(x, f(z)), f(x$z))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+identical(with(x, f(z)), x$f(z))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+identical(with(x, f(z)), f(z))
+```
+
+```
+## [1] TRUE
+```
+
 
 2. Compare and contrast the effects of `env_bind()` vs. `attach()` for the 
    following code.
@@ -515,3 +824,88 @@ You'll learn an alternative approach to the same problem in Section \@ref(new-fu
     mean <- function(x) stop("Hi!") 
     env_unbind(globalenv(), names(funs))
     ```
+
+
+
+```r
+attach(funs)
+```
+
+```
+## The following objects are masked from package:base:
+## 
+##     mean, sum
+```
+
+```r
+attach(funs)
+```
+
+```
+## The following objects are masked from funs (pos = 3):
+## 
+##     mean, sum
+## 
+## The following objects are masked from package:base:
+## 
+##     mean, sum
+```
+
+```r
+attach(funs)
+```
+
+```
+## The following objects are masked from funs (pos = 3):
+## 
+##     mean, sum
+```
+
+```
+## The following objects are masked from funs (pos = 4):
+## 
+##     mean, sum
+```
+
+```
+## The following objects are masked from package:base:
+## 
+##     mean, sum
+```
+
+```r
+head(search())
+```
+
+```
+## [1] ".GlobalEnv"      "funs"            "funs"            "funs"           
+## [5] "package:bench"   "package:forcats"
+```
+
+```r
+detach(funs)
+
+detach(funs)
+
+detach(funs)
+
+head(search())
+```
+
+```
+## [1] ".GlobalEnv"      "package:bench"   "package:forcats" "package:stringr"
+## [5] "package:dplyr"   "package:readr"
+```
+
+
+```r
+env_bind(globalenv(), !!!funs)
+head(search())
+```
+
+```
+## [1] ".GlobalEnv"      "package:bench"   "package:forcats" "package:stringr"
+## [5] "package:dplyr"   "package:readr"
+```
+
+

@@ -11,6 +11,8 @@ output:
 library(rlang)
 library(ggplot2)
 library(scales)
+library(purrr)
+library(tidyverse)
 ```
 
 ```{r}
@@ -244,7 +246,7 @@ These advantages get bigger in more complex MLE problems, where you have multipl
 1.  In `boot_model()`, why don't I need to force the evaluation of `df` 
     or `model`?
     
-> because we use df and formula in lm() before returning the function.
+> In `boot_model()`, we use df and formula in lm() before returning the function, so we don’t need to force the evaluation of df or model.
     
 ```{r}
 boot_model <- function(df, formula) {
@@ -276,6 +278,8 @@ boot_model <- function(df, formula) {
     ```
 
 ```{r}
+AirPassengers
+
 boxcox_airpassengers <- boxcox3(AirPassengers)
 
 plot(boxcox_airpassengers(0))
@@ -285,7 +289,6 @@ plot(boxcox_airpassengers(3))
 
 
 ```
-
 
 3.  Why don't you need to worry that `boot_permute()` stores a copy of the 
     data inside the function that it generates?
@@ -301,6 +304,8 @@ boot_permute <- function(df, var) {
   }
 }
 ```
+
+We don’t need to worry that it stores a copy of the data, because it actually doesn’t store one; it’s just a name that points to the same underlying object in memory.
 
 ```{r}
 boot_mtcars1 <- boot_permute(mtcars, "mpg")
@@ -340,41 +345,12 @@ x1 <- c(41, 30, 31, 38, 29, 24, 30, 29, 31, 38)
 ```
 
 ```{r}
+library(bench)
+
 bench::mark(
   llp1 = optimise(ll_poisson1(x1), c(0, 100), maximum = TRUE),
   llp2 = optimise(ll_poisson2(x1), c(0, 100), maximum = TRUE)
 )
-```
-
-```{r}
-bench_poisson <- function(x_length) {
-  x <- rpois(x_length, 100L)
-  
-  bench::mark(
-    llp1 = optimise(ll_poisson1(x), c(0, 100), maximum = TRUE),
-    llp2 = optimise(ll_poisson2(x), c(0, 100), maximum = TRUE),
-    time_unit = "ms"
-  )
-}
-
-performances <- map_dfr(10^(1:5), bench_poisson)
-
-df_perf <- tibble(
-  x_length = rep(10^(1:5), each = 2),
-  method   = rep(attr(performances$expression, "description"), 5),
-  median   = performances$median
-)
-
-ggplot(df_perf, aes(x_length, median, col = method)) +
-  geom_point(size = 2) +
-  geom_line(linetype = 2) +
-  scale_x_log10() +
-  labs(
-    x = "Length of x",
-    y = "Execution Time (ms)",
-    color = "Method"
-  ) +
-  theme(legend.position = "top")
 ```
 
 
@@ -460,6 +436,44 @@ You'll learn an alternative approach to the same problem in Section \@ref(new-fu
 > (e) It depends.
 
 ```{r}
+z <- 100 
+x <- list(f = funs, z = 100)
+```
+
+
+```{r}
+    with(funs, root(x$z))
+```
+    (a) `x$f(x$z)`.
+
+```{r}
+funs$root(x$z)
+```
+
+    (b) `f(x$z)`.
+    
+```{r}
+attach(funs)
+root(x$z)
+detach(funs)
+```
+
+(c) `x$f(z)`.
+
+```{r}
+funs$root(100)
+```
+
+(d) `f(z)`.
+
+```{r}
+attach(funs)
+root(100)
+detach(funs)
+```
+
+
+```{r}
 f <- mean
 z <- 1
 x <- list(f = mean, z = 1)
@@ -516,4 +530,5 @@ head(search())
 env_bind(globalenv(), !!!funs)
 head(search())
 ```
+
 

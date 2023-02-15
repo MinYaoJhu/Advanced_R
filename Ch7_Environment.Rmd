@@ -28,26 +28,25 @@ If you can answer the following questions correctly, you already know the most i
 * The environment has a parent environment.
 * Environments follow reference semantics.
 
-> after reading: There are four ways: every object in an environment must have a name;
-    order doesn't matter; environments have parents; environments have
-    reference semantics.
+> after reading: There are four ways: 
+* every object in an environment must have a name;
+* order doesn't matter; 
+* environments have parents; 
+* environments have reference semantics.
 
 2.  What is the parent of the global environment? What is the only 
     environment that doesn't have a parent?
     
 > before reading: I don't know. :)
 
-> after reading: The parent of the global environment is the last package that you
-    loaded. The only environment that doesn't have a parent is the empty
-    environment.
+> after reading: The parent of the global environment is the last package that you loaded. The only environment that doesn't have a parent is the empty environment.
     
 3.  What is the enclosing environment of a function? Why is it 
     important?
     
 > before reading: I don't know. :)
 
-> after reading: The enclosing environment of a function is the environment where it
-    was created. It determines where a function looks for variables.
+> after reading: The enclosing environment of a function is the environment where it was created. It determines where a function looks for variables.
 
 4.  How do you determine the environment from which a function was called?
 
@@ -59,8 +58,9 @@ If you can answer the following questions correctly, you already know the most i
 
 > before reading: `<-` creates a binding. I don't know `<<-`.
 
-> after reading: `<-` always creates a binding in the current environment; `<<-`
-    rebinds an existing name in a parent of the current environment.
+> after reading: `<-` always creates a binding in the current environment; `<<-` rebinds an existing name in a parent of the current environment.
+
+> The usual assignment operator, <-, always creates a binding in the current environment. The super assignment operator, <<- rebinds an existing name found in a parent environment.
 
 
 ### Outline {-}
@@ -183,7 +183,7 @@ To compare environments, you need to use `identical()` and not `==`. This is bec
 ```{r, error = TRUE}
 identical(global_env(), current_env())
 
-#global_env() == current_env()
+global_env() == current_env()
 ```
 
 ```{r}
@@ -553,6 +553,7 @@ new_env_poke <- function (env = caller_env(), nm, value, inherit = FALSE, create
 > rebind() will carry out an assignment when it finds an existing binding in the current environment or parent environment. If rebind() doesn’t find an existing variable, rebind() will NOT create a new one in the global environment.
 
 > Super assignment, <<-, never creates a variable in the current environment, but instead modifies an existing variable found in a parent environment. If <<- doesn’t find an existing variable, it will create one in the global environment. This is usually undesirable, because global variables introduce non-obvious dependencies between functions. 
+
 > The operators <<- and ->> are normally only used in functions, and cause a search to be made through parent environments for an existing definition of the variable being assigned. If such a variable is found (and its binding is not locked) then its value is redefined, otherwise assignment takes place in the global environment.
 
 
