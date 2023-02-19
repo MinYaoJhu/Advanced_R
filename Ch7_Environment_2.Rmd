@@ -244,13 +244,17 @@ You'll learn more about function factories in Section \@ref(factory-fundamentals
 search_envs()
 ```
 
-> search_envs() returns the environments on the search path as a list.
+> search_envs() returns the environments on the search path as a list, which is “a chain of environments containing exported functions of attached packages”.
+
+> Every time you attach a new package, this search path will grow. The search path ends with the base-environment. The global environment is included, because functions present in the global environment will always be part of the search path.
 
 ```{r}
 env_parents(global_env())
 ```
 
 > env_parents() returns the list of all parents, including the empty environment.
+
+> env_parents(global_env()) will list all the ancestors of the global environment, therefore the global environment itself is not included. This also includes the “ultimate ancestor,” the empty environment. This environment is not considered part of the search path because it contains no objects.
 
 2.  Draw a diagram that shows the enclosing environments of this function:
     
@@ -266,6 +270,8 @@ env_parents(global_env())
     }
     f1(1)
     ```
+
+> We can also inspect the binding of the environments, adding print statements to the function definition. Please note that these print statements will be evaluated at execution time. Therefore, the execution of f1(1) will print different results each time we run it.
 
 ```{r}
     f1 <- function(x1) {
@@ -283,6 +289,7 @@ env_parents(global_env())
     env_print()
 ```
 
+> When f1 is defined it binds its parent environment, which is the global environment. But f2 will only be created at runtime of f1 and will therefore bind f1’s execution environment. The value 1 will also bind to the name x1 at execution time. The same holds true for x2, f3 and x3.
 
 ```{r, echo = FALSE, out.width = NULL}
 knitr::include_graphics("diagrams/environments/Advanced_R_7.4.5_Exercises.png")
@@ -295,6 +302,8 @@ knitr::include_graphics("diagrams/environments/Advanced_R_7.4.5_Exercises.png")
 ```{r}
 #?str
 ```
+
+> To solve this problem, we need to write a function that takes the name of a function and looks for that function returning both the function and the environment that it was found in.
 
 ```{r}
 fget <- function(name, env = caller_env()) {
@@ -336,6 +345,10 @@ fstr <- function(fun_name, env = caller_env()) {
 ```{r}
 # Test
 fstr("mean")
+```
+
+```{r}
+fstr("str")
 ```
 
 
@@ -474,6 +487,8 @@ ls()
 ```{r}
 env_names(current_env())
 ```
+
+> We can implement this dynamic scoping behaviour by explicitly referencing the caller environment. Please note that this approach returns also variables starting with a dot, an option that ls() usually requires.
 
 ```{r}
 new_ls <- function(env = caller_env()) {

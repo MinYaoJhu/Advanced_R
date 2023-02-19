@@ -133,7 +133,7 @@ sd
 ## function (x, na.rm = FALSE) 
 ## sqrt(var(if (is.vector(x) || is.factor(x)) x else as.double(x), 
 ##     na.rm = na.rm))
-## <bytecode: 0x00000157b96a5ad0>
+## <bytecode: 0x000001d3621e0e50>
 ## <environment: namespace:stats>
 ```
 
@@ -257,7 +257,7 @@ env_print(e)
 ```
 
 ```
-## <environment: 0x00000157bd6f1ad8>
+## <environment: 0x000001d361c17d38>
 ## Parent: <environment: global>
 ## Bindings:
 ## • a: <dbl>
@@ -288,7 +288,7 @@ plus_one
 
 ```
 ## function(y) x + y
-## <environment: 0x00000157bae9afc0>
+## <environment: 0x000001d3660d48f8>
 ```
 
 <img src="diagrams/environments/closure.png" width="507" />
@@ -330,7 +330,9 @@ search_envs()
 ## [[10]] $ <env: package:base>
 ```
 
-> search_envs() returns the environments on the search path as a list.
+> search_envs() returns the environments on the search path as a list, which is “a chain of environments containing exported functions of attached packages”.
+
+> Every time you attach a new package, this search path will grow. The search path ends with the base-environment. The global environment is included, because functions present in the global environment will always be part of the search path.
 
 
 ```r
@@ -352,6 +354,8 @@ env_parents(global_env())
 
 > env_parents() returns the list of all parents, including the empty environment.
 
+> env_parents(global_env()) will list all the ancestors of the global environment, therefore the global environment itself is not included. This also includes the “ultimate ancestor,” the empty environment. This environment is not considered part of the search path because it contains no objects.
+
 2.  Draw a diagram that shows the enclosing environments of this function:
     
     
@@ -367,6 +371,8 @@ env_parents(global_env())
     }
     f1(1)
     ```
+
+> We can also inspect the binding of the environments, adding print statements to the function definition. Please note that these print statements will be evaluated at execution time. Therefore, the execution of f1(1) will print different results each time we run it.
 
 
 ```r
@@ -385,12 +391,12 @@ env_parents(global_env())
 ```
 
 ```
-## <environment: 0x00000157be0faea0>
-## Parent: <environment: 0x00000157be0fb060>
+## <environment: 0x000001d366bf2508>
+## Parent: <environment: 0x000001d366bf26c8>
 ## Bindings:
 ## • f3: <fn>
 ## • x2: <dbl>
-## <environment: 0x00000157be0fb060>
+## <environment: 0x000001d366bf26c8>
 ## Parent: <environment: global>
 ## Bindings:
 ## • f2: <fn>
@@ -416,6 +422,7 @@ env_parents(global_env())
 ## • f1: <fn>
 ```
 
+> When f1 is defined it binds its parent environment, which is the global environment. But f2 will only be created at runtime of f1 and will therefore bind f1’s execution environment. The value 1 will also bind to the name x1 at execution time. The same holds true for x2, f3 and x3.
 
 <img src="diagrams/environments/Advanced_R_7.4.5_Exercises.png" width="3000" />
 
@@ -427,6 +434,8 @@ env_parents(global_env())
 ```r
 #?str
 ```
+
+> To solve this problem, we need to write a function that takes the name of a function and looks for that function returning both the function and the environment that it was found in.
 
 
 ```r
@@ -479,6 +488,23 @@ fstr("mean")
 ## 
 ## $namespace
 ## <environment: namespace:base>
+```
+
+
+```r
+fstr("str")
+```
+
+```
+## $environment
+## <environment: package:utils>
+## attr(,"name")
+## [1] "package:utils"
+## attr(,"path")
+## [1] "C:/Users/myj23/AppData/Local/Programs/R/R-4.2.2/library/utils"
+## 
+## $namespace
+## <environment: namespace:utils>
 ```
 
 
@@ -648,7 +674,7 @@ ls
 ##     }
 ##     else all.names
 ## }
-## <bytecode: 0x00000157b7f7f9d0>
+## <bytecode: 0x000001d3628ee930>
 ## <environment: namespace:base>
 ```
 
@@ -671,6 +697,8 @@ env_names(current_env())
 ##  [1] "plus_one" "h2"       "y"        "e"        "f"        "g"       
 ##  [7] "fget"     "h"        "fstr"     "plus"     "f1"
 ```
+
+> We can implement this dynamic scoping behaviour by explicitly referencing the caller environment. Please note that this approach returns also variables starting with a dot, an option that ls() usually requires.
 
 
 ```r
