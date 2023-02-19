@@ -467,8 +467,8 @@ taking a look at it outside of <code>map_dbl()</code>:</p>
 safe_sum</code></pre>
 <pre><code>## function (...) 
 ## capture_error(.f(...), otherwise, quiet)
-## &lt;bytecode: 0x000001880094d4b8&gt;
-## &lt;environment: 0x000001880094d020&gt;</code></pre>
+## &lt;bytecode: 0x000001c388eb5678&gt;
+## &lt;environment: 0x000001c388eb51e0&gt;</code></pre>
 <p>Like all function operators, <code>safely()</code> takes a function
 and returns a wrapped function which we can call as usual:</p>
 <pre class="r"><code>str(safe_sum(x[[1]]))</code></pre>
@@ -631,10 +631,10 @@ positive integer). A naive version is slow because, for example,
 }
 system.time(fib(23))</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.03    0.00    0.03</code></pre>
+##    0.01    0.02    0.04</code></pre>
 <pre class="r"><code>system.time(fib(24))</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.04    0.00    0.04</code></pre>
+##    0.05    0.00    0.04</code></pre>
 <p>Memoising <code>fib()</code> makes the implementation much faster
 because each value is computed only once:</p>
 <pre class="r"><code>fib2 &lt;- memoise::memoise(function(n) {
@@ -643,7 +643,7 @@ because each value is computed only once:</p>
 })
 system.time(fib2(23))</code></pre>
 <pre><code>##    user  system elapsed 
-##       0       0       0</code></pre>
+##    0.02    0.00    0.02</code></pre>
 <p>And future calls can rely on previous computations:</p>
 <pre class="r"><code>system.time(fib2(24))</code></pre>
 <pre><code>##    user  system elapsed 

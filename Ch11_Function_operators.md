@@ -135,8 +135,8 @@ safe_sum
 ```
 ## function (...) 
 ## capture_error(.f(...), otherwise, quiet)
-## <bytecode: 0x000001880094d4b8>
-## <environment: 0x000001880094d020>
+## <bytecode: 0x000001c388eb5678>
+## <environment: 0x000001c388eb51e0>
 ```
 
 Like all function operators, `safely()` takes a function and returns a wrapped function which we can call as usual:
@@ -371,7 +371,7 @@ system.time(fib(23))
 
 ```
 ##    user  system elapsed 
-##    0.03    0.00    0.03
+##    0.01    0.02    0.04
 ```
 
 ```r
@@ -380,7 +380,7 @@ system.time(fib(24))
 
 ```
 ##    user  system elapsed 
-##    0.04    0.00    0.04
+##    0.05    0.00    0.04
 ```
 
 Memoising `fib()` makes the implementation much faster because each value is computed only once:
@@ -396,7 +396,7 @@ system.time(fib2(23))
 
 ```
 ##    user  system elapsed 
-##       0       0       0
+##    0.02    0.00    0.02
 ```
 
 And future calls can rely on previous computations:
