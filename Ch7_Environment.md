@@ -28,26 +28,25 @@ If you can answer the following questions correctly, you already know the most i
 * The environment has a parent environment.
 * Environments follow reference semantics.
 
-> after reading: There are four ways: every object in an environment must have a name;
-    order doesn't matter; environments have parents; environments have
-    reference semantics.
+> after reading: There are four ways: 
+* every object in an environment must have a name;
+* order doesn't matter; 
+* environments have parents; 
+* environments have reference semantics.
 
 2.  What is the parent of the global environment? What is the only 
     environment that doesn't have a parent?
     
 > before reading: I don't know. :)
 
-> after reading: The parent of the global environment is the last package that you
-    loaded. The only environment that doesn't have a parent is the empty
-    environment.
+> after reading: The parent of the global environment is the last package that you loaded. The only environment that doesn't have a parent is the empty environment.
     
 3.  What is the enclosing environment of a function? Why is it 
     important?
     
 > before reading: I don't know. :)
 
-> after reading: The enclosing environment of a function is the environment where it
-    was created. It determines where a function looks for variables.
+> after reading: The enclosing environment of a function is the environment where it was created. It determines where a function looks for variables.
 
 4.  How do you determine the environment from which a function was called?
 
@@ -59,8 +58,9 @@ If you can answer the following questions correctly, you already know the most i
 
 > before reading: `<-` creates a binding. I don't know `<<-`.
 
-> after reading: `<-` always creates a binding in the current environment; `<<-`
-    rebinds an existing name in a parent of the current environment.
+> after reading: `<-` always creates a binding in the current environment; `<<-` rebinds an existing name in a parent of the current environment.
+
+> The usual assignment operator, <-, always creates a binding in the current environment. The super assignment operator, <<- rebinds an existing name found in a parent environment.
 
 
 ### Outline {-}
@@ -152,7 +152,7 @@ e1
 ```
 
 ```
-## <environment: 0x000002708742fcc0>
+## <environment: 0x0000028be664d2b8>
 ```
 
 Instead, we'll use `env_print()` which gives us a little more information:
@@ -163,7 +163,7 @@ env_print(e1)
 ```
 
 ```
-## <environment: 0x000002708742fcc0>
+## <environment: 0x0000028be664d2b8>
 ## Parent: <environment: global>
 ## Bindings:
 ## • a: <lgl>
@@ -215,7 +215,11 @@ identical(global_env(), current_env())
 ```
 
 ```r
-#global_env() == current_env()
+global_env() == current_env()
+```
+
+```
+## Error in global_env() == current_env(): comparison (==) is possible only for atomic and list types
 ```
 
 
@@ -284,7 +288,7 @@ env_parent(e2b)
 ```
 
 ```
-## <environment: 0x000002708bd5be00>
+## <environment: 0x0000028be9422390>
 ```
 
 ```r
@@ -300,8 +304,8 @@ env_print(e2b)
 ```
 
 ```
-## <environment: 0x000002708bda8720>
-## Parent: <environment: 0x000002708bd5be00>
+## <environment: 0x0000028be9471270>
+## Parent: <environment: 0x0000028be9422390>
 ## Bindings:
 ## • a: <dbl>
 ## • b: <dbl>
@@ -313,7 +317,7 @@ env_print(e2a)
 ```
 
 ```
-## <environment: 0x000002708bd5be00>
+## <environment: 0x0000028be9422390>
 ## Parent: <environment: global>
 ## Bindings:
 ## • d: <dbl>
@@ -338,7 +342,7 @@ env_parents(e2b)
 ```
 
 ```
-## [[1]]   <env: 0x000002708bd5be00>
+## [[1]]   <env: 0x0000028be9422390>
 ## [[2]] $ <env: global>
 ```
 
@@ -347,7 +351,7 @@ env_parents(e2d)
 ```
 
 ```
-## [[1]]   <env: 0x0000027088bbd150>
+## [[1]]   <env: 0x0000028be7f3ba10>
 ## [[2]] $ <env: empty>
 ```
 
@@ -359,7 +363,7 @@ env_parents(e2b, last = empty_env())
 ```
 
 ```
-##  [[1]]   <env: 0x000002708bd5be00>
+##  [[1]]   <env: 0x0000028be9422390>
 ##  [[2]] $ <env: global>
 ##  [[3]] $ <env: package:rlang>
 ##  [[4]] $ <env: package:stats>
@@ -383,7 +387,7 @@ parent.env(e2b)
 ```
 
 ```
-## <environment: 0x000002708bd5be00>
+## <environment: 0x0000028be9422390>
 ```
 
 ```r
@@ -391,7 +395,7 @@ parent.env(e2d)
 ```
 
 ```
-## <environment: 0x0000027088bbd150>
+## <environment: 0x0000028be7f3ba10>
 ```
 
 
@@ -448,7 +452,7 @@ e3
 ```
 
 ```
-## <environment: 0x000002708bb167a0>
+## <environment: 0x0000028be9137e88>
 ```
 
 ```r
@@ -456,7 +460,7 @@ env_print(e3)
 ```
 
 ```
-## <environment: 0x000002708bb167a0>
+## <environment: 0x0000028be9137e88>
 ## Parent: <environment: global>
 ## Bindings:
 ## • x: <dbl>
@@ -646,7 +650,7 @@ There are two more exotic variants of `env_bind()`:
     ```
     
     ```
-    ## [1] 0.08357573
+    ## [1] 0.336545
     ```
     
     ```r
@@ -654,7 +658,7 @@ There are two more exotic variants of `env_bind()`:
     ```
     
     ```
-    ## [1] 0.9709415
+    ## [1] 0.70128
     ```
 
 ```r
@@ -790,7 +794,7 @@ env_print(e7_2)
 ```
 
 ```
-## <environment: 0x000002708b2ff140>
+## <environment: 0x0000028be8b50588>
 ## Parent: <environment: global>
 ## Bindings:
 ## • loop: <env>
@@ -802,8 +806,8 @@ lobstr::ref(e7_2)
 ```
 
 ```
-## █ [1:0x2708b2ff140] <env> 
-## └─loop = [1:0x2708b2ff140]
+## █ [1:0x28be8b50588] <env> 
+## └─loop = [1:0x28be8b50588]
 ```
 
 
@@ -823,9 +827,9 @@ lobstr::ref(e7_2)
 ```
 
 ```
-## █ [1:0x2708c1d52f8] <env> 
-## └─loop = █ [2:0x2708c22c740] <env> 
-##          └─dedoop = [1:0x2708c1d52f8]
+## █ [1:0x28be99325b0] <env> 
+## └─loop = █ [2:0x28be998d038] <env> 
+##          └─dedoop = [1:0x28be99325b0]
 ```
 
 ```r
@@ -833,9 +837,9 @@ lobstr::ref(e7_3)
 ```
 
 ```
-## █ [1:0x2708c22c740] <env> 
-## └─dedoop = █ [2:0x2708c1d52f8] <env> 
-##            └─loop = [1:0x2708c22c740]
+## █ [1:0x28be998d038] <env> 
+## └─dedoop = █ [2:0x28be99325b0] <env> 
+##            └─loop = [1:0x28be998d038]
 ```
 
 
@@ -869,7 +873,7 @@ getAnywhere(env_poke)
 ##     invisible(.Call(ffi_env_poke, env = env, nm = nm, values = value, 
 ##         inherit = inherit, create = create))
 ## }
-## <bytecode: 0x0000027087f812b8>
+## <bytecode: 0x0000028be7327ef8>
 ## <environment: namespace:rlang>
 ```
 
@@ -925,6 +929,7 @@ new_env_poke <- function (env = caller_env(), nm, value, inherit = FALSE, create
 > rebind() will carry out an assignment when it finds an existing binding in the current environment or parent environment. If rebind() doesn’t find an existing variable, rebind() will NOT create a new one in the global environment.
 
 > Super assignment, <<-, never creates a variable in the current environment, but instead modifies an existing variable found in a parent environment. If <<- doesn’t find an existing variable, it will create one in the global environment. This is usually undesirable, because global variables introduce non-obvious dependencies between functions. 
+
 > The operators <<- and ->> are normally only used in functions, and cause a search to be made through parent environments for an existing definition of the variable being assigned. If such a variable is found (and its binding is not locked) then its value is redefined, otherwise assignment takes place in the global environment.
 
 
@@ -1054,6 +1059,28 @@ f2 <- function(..., env = caller_env()) {
     
 
 ```r
+where
+```
+
+```
+## function(name, env = caller_env()) {
+##   if (identical(env, empty_env())) {
+##     # Base case
+##     stop("Can't find ", name, call. = FALSE)
+##   } else if (env_has(env, name)) {
+##     # Success case
+##     env
+##   } else {
+##     # Recursive case
+##     where(name, env_parent(env))
+##   }
+## }
+## <bytecode: 0x0000028be8b7b0a8>
+```
+
+    
+
+```r
 where <- function(name, env = caller_env()) {
   if (identical(env, empty_env())) {
     # Base case
@@ -1074,6 +1101,7 @@ new_where <- function(name, env = caller_env(), results = list()) {
   if (identical(env, empty_env())) {
     # Base case
     results
+    
   } else {
     if (env_has(env, name)) {
     # Success case
@@ -1089,16 +1117,16 @@ new_where <- function(name, env = caller_env(), results = list()) {
 ```r
 # Test
 e1a <- env(empty_env(), a = 1, b = 2)
-e1b <- env(e1a, b = 10, c = 11)
-e1c <- env(e1b, a = 12, d = 13)
+e1b <- env(e1a, b = 3, c = 4)
+e1c <- env(e1b, a = 5, d = 6)
 
 lobstr::ref(e1a)
 ```
 
 ```
-## █ [1:0x2708c4c1bf0] <env> 
-## ├─a = [2:0x2708cdc7df8] <dbl> 
-## └─b = [3:0x2708cdc7dc0] <dbl>
+## █ [1:0x28be6d49240] <env> 
+## ├─a = [2:0x28be6a24df0] <dbl> 
+## └─b = [3:0x28be6a24e28] <dbl>
 ```
 
 ```r
@@ -1106,9 +1134,9 @@ lobstr::ref(e1b)
 ```
 
 ```
-## █ [1:0x2708c555580] <env> 
-## ├─b = [2:0x2708cdc0740] <dbl> 
-## └─c = [3:0x2708cdc0708] <dbl>
+## █ [1:0x28be6c9da90] <env> 
+## ├─b = [2:0x28be695abb0] <dbl> 
+## └─c = [3:0x28be695abe8] <dbl>
 ```
 
 ```r
@@ -1116,9 +1144,9 @@ lobstr::ref(e1c)
 ```
 
 ```
-## █ [1:0x2708c601920] <env> 
-## ├─a = [2:0x2708ce5e4a8] <dbl> 
-## └─d = [3:0x2708ce5e470] <dbl>
+## █ [1:0x28be6b3bfe0] <env> 
+## ├─a = [2:0x28be679b380] <dbl> 
+## └─d = [3:0x28be679b3f0] <dbl>
 ```
 
 ```r
@@ -1126,7 +1154,7 @@ where("a", e1c)
 ```
 
 ```
-## <environment: 0x000002708c601920>
+## <environment: 0x0000028be6b3bfe0>
 ```
 
 ```r
@@ -1135,10 +1163,10 @@ new_where("a", e1c)
 
 ```
 ## [[1]]
-## <environment: 0x000002708c601920>
+## <environment: 0x0000028be6b3bfe0>
 ## 
 ## [[2]]
-## <environment: 0x000002708c4c1bf0>
+## <environment: 0x0000028be6d49240>
 ```
 
 
@@ -1180,8 +1208,16 @@ fget("mean")
 ```
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x0000027087d07890>
+## <bytecode: 0x0000028be709e550>
 ## <environment: namespace:base>
+```
+
+```r
+fget("sum")
+```
+
+```
+## function (..., na.rm = FALSE)  .Primitive("sum")
 ```
 
 ```r
@@ -1207,7 +1243,7 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
       }
     }
     if (inherits == FALSE) {
-      stop("inherits = FALSE.")
+      stop("Could not find a function in current env.")
       }
   }
   
@@ -1218,16 +1254,23 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
 # Test
 mean <- 10
 #new_fget("mean", inherits = FALSE)
-#Error in new_fget("mean", inherits = FALSE) : inherits = FALSE.
-
-new_fget("mean")
+#Error in new_fget("mean", inherits = FALSE) : Could not find a function in current env.
+new_fget("mean", inherits = TRUE)
 ```
 
 ```
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x0000027087d07890>
+## <bytecode: 0x0000028be709e550>
 ## <environment: namespace:base>
+```
+
+```r
+new_fget("sum")
+```
+
+```
+## function (..., na.rm = FALSE)  .Primitive("sum")
 ```
 
 ```r

@@ -747,7 +747,7 @@ fget <- function(name, env = caller_env()) {
 mean <- 10
 fget("mean")
 fget("sum")
-fget("meanx")
+#fget("meanx")
 #Error: Could not find a function called meanx.
 ```
 
@@ -778,11 +778,11 @@ new_fget <- function(name, env = caller_env(),inherits = TRUE) {
 
 # Test
 mean <- 10
-new_fget("mean", inherits = FALSE)
-#Error in new_fget("mean", inherits = FALSE) : inherits = FALSE.
-new_fget("sum", inherits = FALSE)
-new_fget("mean")
-new_fget("meanx")
+#new_fget("mean", inherits = FALSE)
+#Error in new_fget("mean", inherits = FALSE) : Could not find a function in current env.
+new_fget("mean", inherits = TRUE)
+new_fget("sum")
+#new_fget("meanx")
 #Error: Could not find a function called meanx.
 ```
 
