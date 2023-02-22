@@ -271,7 +271,22 @@ combnV(4, 1:4, sum)
     
 2.  Read the source code for `possibly()`. How does it work?
 
+```{r}
+possibly
+```
+
+> The main functionality of possibly() is provided by base::tryCatch(). In this part the supplied function (.f) gets wrapped and the error and interrupt handling are specified.
+
+
 3.  Read the source code for `safely()`. How does it work?
+
+```{r}
+safely
+```
+
+```{r}
+purrr:::capture_error
+```
 
 
 ## Case study: Creating your own function operators {#fo-case-study}
@@ -371,7 +386,7 @@ walk2(
 
 The pipe works well here because I've carefully chosen the function names to yield an (almost) readable sentence: take `download.file` then (add) a dot every 10 iterations, then delay by 0.1s. The more clearly you can express the intent of your code through function names, the more easily others (including future you!) can read and understand the code.
 
-### Exercises
+### 11.3.1 Exercises
 
 1.  Weigh the pros and cons of 
     `download.file %>% dot_every(10) %>% delay_by(0.1)` versus
@@ -431,7 +446,14 @@ walk2(urls, path, download.file, quiet = TRUE)
 3.  Create a function operator that reports whenever a file is created or 
     deleted in the working directory, using `dir()` and `setdiff()`. What other 
     global function effects might you want to track?
-    
+
+>We start with a function that reports the difference between two vectors containing file names:
+
+```{r}
+dir
+```
+
+
 ```{r}
 dir_compare <- function(old, new) {
   if (setequal(old, new)) {
@@ -449,13 +471,15 @@ dir_compare <- function(old, new) {
   message(paste(changes, collapse = "\n"))
 }
 
-
-# test
 dir_compare(c("x", "y"), c("x", "y"))
-
+#> NULL
 dir_compare(c("x", "y"), c("x", "a"))
-
+#>  * 'a' was added
+#>  * 'y' was removed
 ```
+
+
+> Then we wrap it up in a function operator
 
 ```{r}
 track_dir <- function(f) {
@@ -469,6 +493,8 @@ track_dir <- function(f) {
 }
 ```
 
+> And try it out by creating wrappers around file.create() and file.remove():
+
 ```{r}
 file_create <- track_dir(file.create)
 file_remove <- track_dir(file.remove)
@@ -481,6 +507,7 @@ file_remove("delete_me")
 #> [1] TRUE
 ```
 
+>To create a more serious version of track_dir() one might provide optionality to set the full.names and recursive arguments of dir() to TRUE. This would enable to also track the creation/deletion of hidden files and files in folders contained in the working directory.
 
 4.  Write a function operator that logs a timestamp and message to a file 
     every time a function is run.
