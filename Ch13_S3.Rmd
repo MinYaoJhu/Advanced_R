@@ -133,12 +133,69 @@ s3_get_method(weighted.mean.Date)
 1.  Describe the difference between `t.test()` and `t.data.frame()`.
     When is each function called?
 
+```{r}
+ftype(t.test)
+ftype(t.data.frame)
+```
+
+> t.test() is a generic function in stats. Performs one and two sample t-tests on vectors of data.
+
+> t.data.frame() is a method in base. Given a matrix or data.frame x, t returns the transpose of x.
+
 2.  Make a list of commonly used base R functions that contain `.` in their
     name but are not S3 methods.
+    
+```{r}
+library(rlist)
+```
+
+    
+```{r}
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+funs <- Filter(is.function, objs)
+funs_df <- as.list(funs)
+head(funs_df)
+str(funs_df)
+
+funs_df_name <- as.data.frame(names(funs_df))
+funs_df_name$names <- funs_df_name[[1]]
+
+str(funs_df_name)
+
+funs_df_filtered <- dplyr::filter(funs_df_name, grepl('.',names))
+funs_df_filtered
+
+```
+
+```{r}
+# Some base R functions with point.separated names
+install.packages
+read.csv
+
+list.files
+download.file
+
+data.frame
+as.character
+Sys.Date
+
+all.equal
+
+do.call
+on.exit
+```
+
+
 
 3.  What does the `as.data.frame.data.frame()` method do? Why is
     it confusing? How could you avoid this confusion in your own
     code?
+    
+> as.data.frame is a generic function with many methods, and users and packages can supply further methods. For classes that act as vectors, often a copy of as.data.frame.vector will work as the method.
+
+> the amount of .’s makes it difficult to separate the generic- and the class-part of the name. 
+
+> We could avoid this confusion by applying a different naming convention (e.g. “snake_case”) for our class and function names. Snake case (stylized as snake_case) refers to the style of writing in which each space is replaced with an underscore (_) character, and the first letter of each word is written in lowercase. 
 
 4.  Describe the difference in behaviour in these two calls.
 
@@ -149,6 +206,23 @@ s3_get_method(weighted.mean.Date)
     mean(some_days)
     mean(unclass(some_days))
     ```
+    
+```{r}
+ftype(mean)
+```
+> mean() is a generic function, which will select the appropriate method based on the class of the input.
+
+```{r}
+class(some_days)
+```
+
+> some_days has the class Date and mean.Date(some_days) will be used to calculate the mean date of some_days.
+
+```{r}
+class(unclass(some_days))
+```
+
+> After unclass() has removed the class attribute from some_date, some_days become "numeric". `mean(unclass(some_days))` then calculates the mean of the underlying double number.
 
 5.  What class of object does the following code return? What base type is it 
     built on? What attributes does it use?
@@ -158,6 +232,24 @@ s3_get_method(weighted.mean.Date)
     x
     ```
 
+```{r}
+class(x)
+```
+
+> It returns an object of the class ecdf (empirical cumulative distribution function) with the superclasses stepfun and function.
+
+```{r}
+typeof(x)
+```
+
+> The ecdf object is built on the base type closure (a function). 
+
+```{r}
+attributes(x)
+```
+
+> The expression, which was used to create it (rpois(100, 10)), is stored in the call attribute.
+
 6.  What class of object does the following code return? What base type is it 
     built on? What attributes does it use?
 
@@ -165,6 +257,24 @@ s3_get_method(weighted.mean.Date)
     x <- table(rpois(100, 5))
     x
     ```
+
+```{r}
+class(x)
+```
+
+> This code returns a table object.
+
+```{r}
+typeof(x)
+```
+
+> it is built upon the integer type.
+
+```{r}
+attributes(x)
+```
+
+> The attribute dimnames is used to name the elements of the integer vector.
 
 ## 13.3 Classes {#s3-classes}
 \index{S3!classes} 
@@ -412,19 +522,321 @@ For more complicated classes, you should feel free to go beyond these patterns t
     frame built on? What attributes does it use? What are the restrictions
     placed on the individual elements? What about the names?
 
+```{r}
+typeof(funs_df_filtered)
+attributes(funs_df_filtered)
+class(funs_df_filtered)
+```
+
+> Data frames are built on named lists of vectors, which all have the same length.
+
+> Besides the class and the column names (names), the row.names are their only further attribute. This must be a character vector with the same length as the other vectors.
+
+> We need to provide the number of rows as an input to make it possible to create data frames with 0 columns but multiple rows.
+
+>.set_row_names(n) generates that form for automatic row names of length n, to be assigned to attr(a data frame, "row.names").
+
+```{r}
+new_data.frame <- function(x, n, row.names = NULL) {
+  
+  # Check if the underlying object is a list
+  stopifnot(is.list(x))
+  
+  # Check all inputs are the same length 
+  # (This check also allows that x has length 0)
+  stopifnot(all(lengths(x) == n))
+  
+  if (is.null(row.names)) {
+    
+    # Use special row names helper from base R
+    # .set_row_names(n) generates that form for automatic row names 
+    # of length n, to be assigned to attr(<a data frame>, "row.names").
+    row.names <- .set_row_names(n)
+    
+    
+  } else {
+    
+    # Otherwise check that they're a character vector with the correct length
+    stopifnot(is.character(row.names), length(row.names) == n)
+  }
+  
+  structure(
+    x,
+    class = "data.frame",
+    row.names = row.names
+  )
+}
+```
+
+```{r}
+# Test
+x <- list(a = 1, b = 2)
+x
+```
+
+```{r}
+new_data.frame(x, n = 1)
+```
+
+```{r}
+new_data.frame(x, n = 1, row.names = "l1")
+```
+
+```{r}
+# Create a data frame with 0 columns and 2 rows
+new_data.frame(list(), n = 2)
+#> data frame with 0 columns and 2 rows
+```
+
+
+
 2.  Enhance my `factor()` helper to have better behaviour when one or
     more `values` is not found in `levels`. What does `base::factor()` do
     in this situation?
+    
+```{r}
+factor
+```
+
+```{r}
+base::factor(c("a", "b", "c"), levels = c("a", "b"))
+```
+
+```{r}
+new_factor <- function(x = integer(), levels = character()) {
+  stopifnot(is.integer(x))
+  stopifnot(is.character(levels))
+
+  structure(
+    x,
+    levels = levels,
+    class = "factor"
+  )
+}
+```
+
+```{r}
+validate_factor <- function(x) {
+  values <- unclass(x)
+  levels <- attr(x, "levels")
+
+  if (!all(!is.na(values) & values > 0)) {
+    stop(
+      "All `x` values must be non-missing and greater than zero",
+      call. = FALSE
+    )
+  }
+
+  if (length(levels) < max(values)) {
+    stop(
+      "There must be at least as many `levels` as possible values in `x`",
+      call. = FALSE
+    )
+  }
+
+  x
+}
+```
+
+```{r}
+factor <- function(x = character(), levels = unique(x)) {
+  ind <- match(x, levels)
+  validate_factor(new_factor(ind, levels))
+}
+
+```
+
+```{r}
+# The levels argument is optional. 
+# If it's not provided, the function will use the unique values of x as the levels.
+factor2 <- function(x, levels = unique(x)) {
+  
+  # uses match() to create a new factor with the same levels as x, 
+  # but with the values in the order of the levels argument.
+  new_levels <- match(x, levels)
+  
+  # Error if levels don't include all values
+  # uses setdiff() to find any values in x that are not in the levels argument.
+  missing <- unique(setdiff(x, levels))
+  
+  # If there are any missing values, the function stops with an error message.
+  if (length(missing) > 0) {
+    stop(
+      "The following values do not occur in the levels of x: ",
+      paste0("'", missing, "'", collapse = ", "), ".", 
+      call. = FALSE
+    )
+  }
+  
+  # uses validate_factor() to make sure the new factor is valid.
+  validate_factor(new_factor(new_levels, levels))
+}
+```
+
+```{r eval=FALSE}
+# Test
+factor2(c("a", "b", "c", "d"), levels = c("a", "b"))
+```
+
+
 
 3.  Carefully read the source code of `factor()`. What does it do that
     my constructor does not?
+    
+```{r}
+base::factor
+```
+
+> 1. If the input is NULL, then return NULL.
+
+> 2. If the input is not a character, then convert it to a character.
+
+> 3. If the levels argument is not provided, then get the unique values of the input.
+
+> 4. If the labels argument is not provided, then use the unique values of the input as the labels.
+
+> 5. If the labels argument is provided, then use the labels argument as the labels.
+
+> 6. If the labels argument is a single value, then use the labels argument as a prefix for the labels.
+
+> 7. If the labels argument is a vector of values, then use the labels argument as the labels.
+
+> 8. If the labels argument is a vector of values, then the length of the labels argument must be equal to the length of the levels argument.
+
+> 9. If the labels argument is a vector of values, then the length of the labels argument must be equal to the length of the unique
+
+```{r}
+new_factor <- function(x = integer(), levels = character()) {
+  stopifnot(is.integer(x))
+  stopifnot(is.character(levels))
+
+  structure(
+    x,
+    levels = levels,
+    class = "factor"
+  )
+}
+```
     
 4.  Factors have an optional "contrasts" attribute. Read the help for `C()`, 
     and briefly describe the purpose of the attribute. What type should it 
     have? Rewrite the `new_factor()` constructor to include this attribute.
 
+> Sets the "contrasts" attribute for the factor.
+
+```{r}
+## reset contrasts to defaults, sets the default contrasts to be used for all factors.
+options(contrasts = c("contr.treatment", "contr.poly"))
+
+## creates a new factor tens, which is a polynomial contrast of the factor tension.
+tens <- with(warpbreaks, C(tension, poly, 1))
+
+## shows the attributes of the new factor tens.
+attributes(tens)
+
+
+## tension SHOULD be an ordered factor, but as it is not we can use
+## shows the use of the new factor tens in an ANOVA.
+aov(breaks ~ wool + tens + tension, data = warpbreaks)
+
+## show the use of ...  The default contrast is contr.treatment here
+summary(lm(breaks ~ wool + C(tension, base = 2), data = warpbreaks))
+
+
+# following on from help(esoph)
+model3 <- glm(cbind(ncases, ncontrols) ~ agegp + C(tobgp, , 1) +
+     C(alcgp, , 1), data = esoph, family = binomial())
+summary(model3)
+```
+
+> Our updated new_factor() constructor gets a contrasts argument, which accepts a numeric matrix or NULL (default).
+
+```{r}
+updated_new_factor <- function(x = integer(), levels = character(), contrasts = NULL) {
+  
+  # checks that x is an integer vector.
+  stopifnot(is.integer(x))
+  
+  # checks that levels is a character vector.
+  stopifnot(is.character(levels))
+  
+  # checks that contrasts is a numeric matrix.
+  if (!is.null(contrasts)) {
+    stopifnot(is.matrix(contrasts) && is.numeric(contrasts))
+  }
+  
+  # returns a factor with the given levels and contrasts.
+  structure(
+    x,
+    levels = levels,
+    class = "factor",
+    contrasts = contrasts
+  )
+}
+```
+
 5.  Read the documentation for `utils::as.roman()`. How would you write a
     constructor for this class? Does it need a validator? What might a helper 
     do?
 
+```{r}
+utils::as.roman
+```
+
+> Simple manipulation of (a small set of) integer numbers as roman numerals.
+
+> as.roman creates objects of class "roman" which are internally represented as integers, and have suitable methods for printing, formatting, subsetting, coercion, etc, see methods(class = "roman").
+
+> Only numbers between 1 and 3899 have a unique representation as roman numbers, and hence others result in as.roman(NA).
+
+```{r}
+new_roman <- function(x = integer()) {
+  
+  # checking that x is an integer.
+  stopifnot(is.integer(x))
+  
+  # creating a new object of class "roman" with the value of x.
+  structure(x, class = "roman")
+}
+```
+
+```{r}
+validate_roman <- function(x) {
+  
+  # unclasses x, which is a Roman object, and stores the result in values.
+  values <- unclass(x)
+  
+  # checks whether any of the values are less than 1 or greater than 3899. 
+  # If so, it stops with an error message.
+  if (any(values < 1 | values > 3899)) {
+    stop(
+      "Roman numbers must fall between 1 and 3899.",
+      call. = FALSE
+    )
+  }
+  
+  # returns x.
+  x
+}
+```
+
+```{r}
+roman_helper <- function(x = integer()) {
+  
+  # converting the argument to an integer.
+  x <- as.integer(x)
+  
+  # passing the integer to the new_roman function.
+  # passing the result of the new_roman function to the validate_roman function.
+  # returning the result of the validate_roman function.
+  validate_roman(new_roman(x))
+}
+```
+
+```{r eval=FALSE}
+# Test
+roman_helper(c(1, 123, 3899))
+roman_helper(14000)
+roman_helper(0)
+```
 
