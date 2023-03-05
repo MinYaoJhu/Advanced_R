@@ -1,0 +1,430 @@
+---
+title: "Ch13_S3"
+author: "Min-Yao"
+date: "2023-03-05"
+output: html_document
+---
+
+# S3 {#s3}
+
+## 13.1 Introduction
+\index{S3} 
+
+S3 is R's first and simplest OO system. S3 is informal and ad hoc, but there is a certain elegance in its minimalism: you can't take away any part of it and still have a useful OO system. For these reasons, you should use it, unless you have a compelling reason to do otherwise. S3 is the only OO system used in the base and stats packages, and it's the most commonly used system in CRAN packages.
+
+S3 is very flexible, which means it allows you to do things that are quite ill-advised. If you're coming from a strict environment like Java this will seem pretty frightening, but it gives R programmers a tremendous amount of freedom.  It may be very difficult to prevent people from doing something you don't want them to do, but your users will never be held back because there is something you haven't implemented yet. Since S3 has few built-in constraints, the key to its successful use is applying the constraints yourself. This chapter will therefore teach you the conventions you should (almost) always follow.
+
+The goal of this chapter is to show you how the S3 system works, not how to use it effectively to create new classes and generics. I'd recommend coupling the theoretical knowledge from this chapter with the practical knowledge encoded in the [vctrs package](https://vctrs.r-lib.org).
+
+### Outline {-}
+
+* Section \@ref(s3-basics) gives a rapid overview of all the main components 
+  of S3: classes, generics, and methods. You'll also learn about
+  `sloop::s3_dispatch()`, which we'll use throughout the chapter to explore
+  how S3 works.
+  
+* Section \@ref(s3-classes) goes into the details of creating a new S3 class,
+  including the three functions that should accompany most classes: 
+  a constructor, a helper, and a validator.
+  
+* Section \@ref(s3-methods) describes how S3 generics and methods work, 
+  including the basics of method dispatch.
+  
+* Section \@ref(object-styles) discusses the four main styles of S3 objects:
+  vector, record, data frame, and scalar.
+  
+* Section \@ref(s3-inheritance) demonstrates how inheritance works in S3,
+  and shows you what you need to make a class "subclassable".
+  
+* Section \@ref(s3-dispatch) concludes the chapter with a discussion of the
+  finer details of method dispatch including base types, internal generics,
+  group generics, and double dispatch.
+
+### Prerequisites {-}
+
+S3 classes are implemented using attributes, so make sure you're familiar with the details described in Section \@ref(attributes). We'll use existing base S3 vectors for examples and exploration, so make sure that you're familiar with the factor, Date, difftime, POSIXct, and POSIXlt classes described in Section \@ref(s3-atomic-vectors). 
+
+We'll use the [sloop](https://sloop.r-lib.org) package for its interactive helpers.
+
+```{r setup, messages = FALSE}
+library(sloop)
+```
+
+## 13.2 Basics {#s3-basics}
+\index{attributes!class}
+\index{classes!S3}
+\indexc{class()}
+
+An S3 object is a base type with at least a `class` attribute (other attributes may be used to store other data). For example, take the factor. Its base type is the integer vector, it has a `class` attribute of "factor", and a `levels` attribute that stores the possible levels:
+
+```{r}
+f <- factor(c("a", "b", "c"))
+
+typeof(f)
+attributes(f)
+```
+
+You can get the underlying base type by `unclass()`ing it, which strips the class attribute, causing it to lose its special behaviour:
+
+```{r}
+unclass(f)
+```
+
+\index{generics}
+\index{functions!generic}
+
+An S3 object behaves differently from its underlying base type whenever it's passed to a __generic__ (short for generic function). The easiest way to tell if a function is a generic is to use `sloop::ftype()` and look for "generic" in the output:
+
+```{r}
+ftype(print)
+ftype(str)
+ftype(unclass)
+```
+
+A generic function defines an interface, which uses a different implementation depending on the class of an argument (almost always the first argument). Many base R functions are generic, including the important `print()`:
+
+```{r}
+print(f)
+
+# stripping class reverts to integer behaviour
+print(unclass(f))
+```
+
+Beware that `str()` is generic, and some S3 classes use that generic to hide the internal details. For example, the `POSIXlt` class used to represent date-time data is actually built on top of a list, a fact which is hidden by its `str()` method:
+
+```{r}
+time <- strptime(c("2017-01-01", "2020-05-04 03:21"), "%Y-%m-%d")
+str(time)
+
+str(unclass(time))
+```
+
+The generic is a middleman: its job is to define the interface (i.e. the arguments) then find the right implementation for the job. The implementation for a specific class is called a __method__, and the generic finds that method by performing __method dispatch__.
+
+You can use `sloop::s3_dispatch()` to see the process of method dispatch:
+
+```{r}
+s3_dispatch(print(f))
+```
+
+\index{S3!methods}
+We'll come back to the details of dispatch in Section \@ref(method-dispatch), for now note that S3 methods are functions with a special naming scheme, `generic.class()`. For example, the `factor` method for the `print()` generic is called `print.factor()`. You should never call the method directly, but instead rely on the generic to find it for you.
+
+Generally, you can identify a method by the presence of `.` in the function name, but there are a number of important functions in base R that were written before S3, and hence use `.` to join words. If you're unsure, check with `sloop::ftype()`:
+
+```{r}
+ftype(t.test)
+ftype(t.data.frame)
+```
+
+\index{S3!finding source}
+Unlike most functions, you can't see the source code for most S3 methods[^base-s3] just by typing their names. That's because S3 methods are not usually exported: they live only inside the package, and are not available from the global environment. Instead, you can use `sloop::s3_get_method()`, which will work regardless of where the method lives:
+
+```{r, error = TRUE}
+weighted.mean.Date
+
+s3_get_method(weighted.mean.Date)
+```
+
+[^base-s3]: The exceptions are methods found in the base package, like `t.data.frame`, and methods that you've created.
+
+### Exercises
+
+1.  Describe the difference between `t.test()` and `t.data.frame()`.
+    When is each function called?
+
+2.  Make a list of commonly used base R functions that contain `.` in their
+    name but are not S3 methods.
+
+3.  What does the `as.data.frame.data.frame()` method do? Why is
+    it confusing? How could you avoid this confusion in your own
+    code?
+
+4.  Describe the difference in behaviour in these two calls.
+
+    ```{r}
+    set.seed(1014)
+    some_days <- as.Date("2017-01-31") + sample(10, 5)
+
+    mean(some_days)
+    mean(unclass(some_days))
+    ```
+
+5.  What class of object does the following code return? What base type is it 
+    built on? What attributes does it use?
+
+    ```{r}
+    x <- ecdf(rpois(100, 10))
+    x
+    ```
+
+6.  What class of object does the following code return? What base type is it 
+    built on? What attributes does it use?
+
+    ```{r}
+    x <- table(rpois(100, 5))
+    x
+    ```
+
+## 13.3 Classes {#s3-classes}
+\index{S3!classes} 
+\index{attributes!class}
+\indexc{class()}
+
+If you have done object-oriented programming in other languages, you may be surprised to learn that S3 has no formal definition of a class: to make an object an instance of a class, you simply set the __class attribute__. You can do that during creation with `structure()`, or after the fact with `class<-()`: 
+
+```{r}
+# Create and assign class in one step
+x <- structure(list(), class = "my_class")
+
+# Create, then set class
+x <- list()
+class(x) <- "my_class"
+```
+
+You can determine the class of an S3 object with `class(x)`, and see if an object is an instance of a class using `inherits(x, "classname")`.
+
+```{r}
+class(x)
+inherits(x, "my_class")
+inherits(x, "your_class")
+```
+
+The class name can be any string, but I recommend using only letters and `_`. Avoid `.` because (as mentioned earlier) it can be confused with the `.` separator between a generic name and a class name. When using a class in a package, I recommend including the package name in the class name. That ensures you won't accidentally clash with a class defined by another package.
+
+S3 has no checks for correctness which means you can change the class of existing objects:
+
+```{r, error = TRUE}
+# Create a linear model
+mod <- lm(log(mpg) ~ log(disp), data = mtcars)
+class(mod)
+print(mod)
+
+# Turn it into a date (?!)
+class(mod) <- "Date"
+
+# Unsurprisingly this doesn't work very well
+print(mod)
+```
+
+If you've used other OO languages, this might make you feel queasy, but in practice this flexibility causes few problems.  R doesn't stop you from shooting yourself in the foot, but as long as you don't aim the gun at your toes and pull the trigger, you won't have a problem.
+
+To avoid foot-bullet intersections when creating your own class, I recommend that you usually provide three functions:
+
+* A low-level __constructor__, `new_myclass()`, that efficiently creates new
+  objects with the correct structure.
+
+* A __validator__, `validate_myclass()`, that performs more computationally 
+  expensive checks to ensure that the object has correct values.
+
+* A user-friendly __helper__, `myclass()`, that provides a convenient way for
+  others to create objects of your class.
+
+You don't need a validator for very simple classes, and you can skip the helper if the class is for internal use only, but you should always provide a constructor.
+
+### 13.3.1 Constructors {#s3-constructor}
+\index{S3!constructors}
+\index{constructors!S3}
+
+S3 doesn't provide a formal definition of a class, so it has no built-in way to ensure that all objects of a given class have the same structure (i.e. the same base type and the same attributes with the same types). Instead, you must enforce a consistent structure by using a __constructor__.
+
+The constructor should follow three principles:
+
+* Be called `new_myclass()`.
+
+* Have one argument for the base object, and one for each attribute. 
+
+* Check the type of the base object and the types of each attribute.
+
+I'll illustrate these ideas by creating constructors for base classes[^base-constructors] that you're already familiar with. To start, lets make a constructor for the simplest S3 class: `Date`. A `Date` is just a double with a single attribute: its `class` is "Date". This makes for a very simple constructor:
+
+[^base-constructors]: Recent versions of R have `.Date()`, `.difftime()`, `.POSIXct()`, and `.POSIXlt()` constructors but they are internal, not well documented, and do not follow the principles that I recommend.
+
+\indexc{Date}
+```{r}
+new_Date <- function(x = double()) {
+  stopifnot(is.double(x))
+  structure(x, class = "Date")
+}
+
+new_Date(c(-1, 0, 1))
+```
+
+The purpose of constructors is to help you, the developer. That means you can keep them simple, and you don't need to optimise error messages for public consumption. If you expect users to also create objects, you should create a friendly helper function, called `class_name()`, which I'll describe shortly.
+
+A slightly more complicated constructor is that for `difftime`, which is used to represent time differences. It is again built on a double, but has a `units` attribute that must take one of a small set of values:
+
+\indexc{difftime}
+```{r}
+new_difftime <- function(x = double(), units = "secs") {
+  stopifnot(is.double(x))
+  units <- match.arg(units, c("secs", "mins", "hours", "days", "weeks"))
+
+  structure(x,
+    class = "difftime",
+    units = units
+  )
+}
+
+new_difftime(c(1, 10, 3600), "secs")
+new_difftime(52, "weeks")
+```
+
+The constructor is a developer function: it will be called in many places, by an experienced user. That means it's OK to trade a little safety in return for performance, and you should avoid potentially time-consuming checks in the constructor.
+
+### 13.3.2 Validators
+\index{S3!validators}
+\index{validators!S3}
+
+More complicated classes require more complicated checks for validity. Take factors, for example. A constructor only checks that types are correct, making it possible to create malformed factors:
+
+\indexc{factor}
+```{r, error = TRUE}
+new_factor <- function(x = integer(), levels = character()) {
+  stopifnot(is.integer(x))
+  stopifnot(is.character(levels))
+
+  structure(
+    x,
+    levels = levels,
+    class = "factor"
+  )
+}
+
+new_factor(1:5, "a")
+new_factor(0:1, "a")
+```
+
+Rather than encumbering the constructor with complicated checks, it's better to put them in a separate function. Doing so allows you to cheaply create new objects when you know that the values are correct, and easily re-use the checks in other places. 
+
+```{r, error = TRUE}
+validate_factor <- function(x) {
+  values <- unclass(x)
+  levels <- attr(x, "levels")
+
+  if (!all(!is.na(values) & values > 0)) {
+    stop(
+      "All `x` values must be non-missing and greater than zero",
+      call. = FALSE
+    )
+  }
+
+  if (length(levels) < max(values)) {
+    stop(
+      "There must be at least as many `levels` as possible values in `x`",
+      call. = FALSE
+    )
+  }
+
+  x
+}
+
+validate_factor(new_factor(1:5, "a"))
+validate_factor(new_factor(0:1, "a"))
+```
+
+This validator function is called primarily for its side-effects (throwing an error if the object is invalid) so you'd expect it to invisibly return its primary input (as described in Section \@ref(invisible)). However, it's useful for validation methods to return visibly, as we'll see next.
+
+### 13.3.3 Helpers
+\index{S3!helpers}
+\index{helpers!S3}
+
+If you want users to construct objects from your class, you should also provide a helper method that makes their life as easy as possible. A helper should always:
+
+* Have the same name as the class, e.g. `myclass()`.
+
+* Finish by calling the constructor, and the validator, if it exists.
+
+* Create carefully crafted error messages tailored towards an end-user.
+
+* Have a thoughtfully crafted user interface with carefully chosen default
+  values and useful conversions.
+
+The last bullet is the trickiest, and it's hard to give general advice. However, there are three common patterns:
+
+*   Sometimes all the helper needs to do is coerce its inputs to the desired
+    type. For example, `new_difftime()` is very strict, and violates the usual
+    convention that you can use an integer vector wherever you can use a 
+    double vector:
+    
+    ```{r, error = TRUE}
+    new_difftime(1:10)
+    ```
+    
+    It's not the job of the constructor to be flexible, so here we create
+    a helper that just coerces the input to a double.
+    
+    ```{r}
+    difftime <- function(x = double(), units = "secs") {
+      x <- as.double(x)
+      new_difftime(x, units = units)
+    }
+    
+    difftime(1:10)
+    ```
+    \indexc{difftime}
+    
+*   Often, the most natural representation of a complex object is a string.
+    For example, it's very convenient to specify factors with a character 
+    vector. The code below shows a simple version of `factor()`: it takes a
+    character vector, and guesses that the levels should be the unique values. 
+    This is not always correct (since some levels might not be seen in the 
+    data), but it's a useful default.
+    
+    ```{r, error = TRUE}
+    factor <- function(x = character(), levels = unique(x)) {
+      ind <- match(x, levels)
+      validate_factor(new_factor(ind, levels))
+    }
+    
+    factor(c("a", "a", "b"))
+    ```
+    \indexc{factor}
+
+*   Some complex objects are most naturally specified by multiple simple    
+    components. For example, I think it's natural to construct a date-time
+    by supplying the individual components (year, month, day etc). That leads
+    me to this `POSIXct()` helper that resembles the existing `ISODatetime()` 
+    function[^efficient]:
+
+    ```{r}
+    POSIXct <- function(year = integer(), 
+                        month = integer(), 
+                        day = integer(), 
+                        hour = 0L, 
+                        minute = 0L, 
+                        sec = 0, 
+                        tzone = "") {
+      ISOdatetime(year, month, day, hour, minute, sec, tz = tzone)
+    }
+    
+    POSIXct(2020, 1, 1, tzone = "America/New_York")
+    ```
+    \indexc{POSIXct}
+
+[^efficient]: This helper is not efficient: behind the scenes `ISODatetime()` works by pasting the components into a string and then using `strptime()`. A more efficient equivalent is available in `lubridate::make_datetime()`.
+
+For more complicated classes, you should feel free to go beyond these patterns to make life as easy as possible for your users.
+
+### 13.3.4 Exercises
+
+1.  Write a constructor for `data.frame` objects. What base type is a data
+    frame built on? What attributes does it use? What are the restrictions
+    placed on the individual elements? What about the names?
+
+2.  Enhance my `factor()` helper to have better behaviour when one or
+    more `values` is not found in `levels`. What does `base::factor()` do
+    in this situation?
+
+3.  Carefully read the source code of `factor()`. What does it do that
+    my constructor does not?
+    
+4.  Factors have an optional "contrasts" attribute. Read the help for `C()`, 
+    and briefly describe the purpose of the attribute. What type should it 
+    have? Rewrite the `new_factor()` constructor to include this attribute.
+
+5.  Read the documentation for `utils::as.roman()`. How would you write a
+    constructor for this class? Does it need a validator? What might a helper 
+    do?
+
+
