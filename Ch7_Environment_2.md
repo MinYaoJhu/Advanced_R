@@ -133,7 +133,7 @@ sd
 ## function (x, na.rm = FALSE) 
 ## sqrt(var(if (is.vector(x) || is.factor(x)) x else as.double(x), 
 ##     na.rm = na.rm))
-## <bytecode: 0x000001d3621e0e50>
+## <bytecode: 0x000002044d61da88>
 ## <environment: namespace:stats>
 ```
 
@@ -257,7 +257,7 @@ env_print(e)
 ```
 
 ```
-## <environment: 0x000001d361c17d38>
+## <environment: 0x000002044d659c70>
 ## Parent: <environment: global>
 ## Bindings:
 ## • a: <dbl>
@@ -288,7 +288,7 @@ plus_one
 
 ```
 ## function(y) x + y
-## <environment: 0x000001d3660d48f8>
+## <environment: 0x00000204500f3b38>
 ```
 
 <img src="diagrams/environments/closure.png" width="507" />
@@ -391,12 +391,12 @@ env_parents(global_env())
 ```
 
 ```
-## <environment: 0x000001d366bf2508>
-## Parent: <environment: 0x000001d366bf26c8>
+## <environment: 0x0000020450d28bb8>
+## Parent: <environment: 0x0000020450d28d78>
 ## Bindings:
 ## • f3: <fn>
 ## • x2: <dbl>
-## <environment: 0x000001d366bf26c8>
+## <environment: 0x0000020450d28d78>
 ## Parent: <environment: global>
 ## Bindings:
 ## • f2: <fn>
@@ -531,6 +531,9 @@ Let's illustrate this with a simple sequence of calls: `f()` calls `g()` calls `
 
 
 ```r
+# f calls g, which calls h, which calls stop.
+# When an error is thrown, R stops executing the current function 
+# and goes back to the function that called it.
 f <- function(x) {
   g(x = 2)
 }
@@ -581,10 +584,16 @@ Let's create a more complicated example that involves some lazy evaluation. We'l
 
 
 ```r
+# a is a function that takes an argument x and calls b(x)
 a <- function(x) b(x)
+
+# b is a function that takes an argument x and calls c(x)
 b <- function(x) c(x)
+
+# c is a function that takes an argument x and returns x
 c <- function(x) x
 
+# The function a is called with the result of calling f.
 a(f())
 #> █
 #> ├─a(f())
@@ -637,6 +646,8 @@ Looking up variables in the calling stack rather than in the enclosing environme
 1.  Write a function that lists all the variables defined in the environment
     in which it was called. It should return the same results as `ls()`.
 
+> ls shows what data sets and functions a user has defined.
+
 
 ```r
 ls
@@ -674,9 +685,59 @@ ls
 ##     }
 ##     else all.names
 ## }
-## <bytecode: 0x000001d3628ee930>
+## <bytecode: 0x000002044c8dcb00>
 ## <environment: namespace:base>
 ```
+
+
+```r
+function (name, pos = -1L, envir = as.environment(pos), all.names = FALSE, 
+  pattern, sorted = TRUE) 
+{
+  # If the name argument is not missing, 
+  # then it is converted to a character string.
+  if (!missing(name)) {
+    pos <- tryCatch(name, error = function(e) e)
+    if (inherits(pos, "error")) {
+      name <- substitute(name)
+      if (!is.character(name)) 
+        name <- deparse(name)
+      warning(gettextf("%s converted to character string", 
+        sQuote(name)), domain = NA)
+      pos <- name
+    }
+  }
+  
+  # .Internal() function is called with the envir argument 
+  # set to the global environment.
+  all.names <- .Internal(ls(envir, all.names, sorted))
+  # The all.names argument is set to the result of 
+  # the .Internal() function call.
+  
+  # If the pattern argument is not missing, 
+  # then the grep() function is called with the pattern and all.names arguments.
+  if (!missing(pattern)) {
+    if ((ll <- length(grep("[", pattern, fixed = TRUE))) && 
+      ll != length(grep("]", pattern, fixed = TRUE))) {
+      if (pattern == "[") {
+        pattern <- "\\["
+        warning("replaced regular expression pattern '[' by  '\\\\['")
+      }
+      else if (length(grep("[^\\\\]\\[<-", pattern))) {
+        pattern <- sub("\\[<-", "\\\\\\[<-", pattern)
+        warning("replaced '[<-' by '\\\\[<-' in regular expression pattern")
+      }
+    }
+    
+    # The result of the grep() function call is returned.
+    grep(pattern, all.names, value = TRUE)
+  }
+  
+  # If the pattern argument is missing, then all.names is returned.
+  else all.names
+}
+```
+
 
 
 ```r
@@ -764,12 +825,19 @@ As well as powering scoping, environments are also useful data structures in the
 
     
     ```r
+    # Create a new environment called my_env.
     my_env <- new.env(parent = emptyenv())
+    
+    # Set the value of a in my_env to 1.
     my_env$a <- 1
     
+    # Create a function called get_a that returns the value of a in my_env.
     get_a <- function() {
       my_env$a
     }
+    
+    # Create a function called set_a 
+    # that sets the value of a in my_env to the value passed to the function.
     set_a <- function(value) {
       old <- my_env$a
       my_env$a <- value
