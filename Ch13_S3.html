@@ -521,7 +521,7 @@ the method lives:</p>
 <pre class="r"><code>s3_get_method(weighted.mean.Date)</code></pre>
 <pre><code>## function (x, w, ...) 
 ## .Date(weighted.mean(unclass(x), w, ...))
-## &lt;bytecode: 0x0000020584301ff8&gt;
+## &lt;bytecode: 0x000001af0e7716c0&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 <div id="exercises" class="section level3">
 <h3>Exercises</h3>
@@ -571,7 +571,7 @@ head(funs_df)</code></pre>
 ##         stop(&quot;can only subtract numbers from \&quot;Date\&quot; objects&quot;)
 ##     .Date(unclass(as.Date(e1)) - e2)
 ## }
-## &lt;bytecode: 0x00000205838c5358&gt;
+## &lt;bytecode: 0x000001af0dd43390&gt;
 ## &lt;environment: namespace:base&gt;
 ## 
 ## $`-.POSIXt`
@@ -593,7 +593,7 @@ head(funs_df)</code></pre>
 ##     e1 &lt;- as.POSIXct(e1)
 ##     .POSIXct(unclass(e1) - e2, attr(e1, &quot;tzone&quot;))
 ## }
-## &lt;bytecode: 0x00000205838c8dc8&gt;
+## &lt;bytecode: 0x000001af0dd44df0&gt;
 ## &lt;environment: namespace:base&gt;
 ## 
 ## $`!`
@@ -602,13 +602,13 @@ head(funs_df)</code></pre>
 ## $`!.hexmode`
 ## function (a) 
 ## as.hexmode(bitwNot(as.hexmode(a)))
-## &lt;bytecode: 0x00000205838d3eb8&gt;
+## &lt;bytecode: 0x000001af0dd45f90&gt;
 ## &lt;environment: namespace:base&gt;
 ## 
 ## $`!.octmode`
 ## function (a) 
 ## as.octmode(bitwNot(as.octmode(a)))
-## &lt;bytecode: 0x00000205838d3a20&gt;
+## &lt;bytecode: 0x000001af0dd45af8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>str(funs_df)</code></pre>
 <pre><code>## List of 1335
@@ -2685,14 +2685,14 @@ install.packages</code></pre>
 ##         unlink(tmpd, TRUE)
 ##     invisible()
 ## }
-## &lt;bytecode: 0x0000020581d34ba8&gt;
+## &lt;bytecode: 0x000001af0bfe0bb0&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre class="r"><code>read.csv</code></pre>
 <pre><code>## function (file, header = TRUE, sep = &quot;,&quot;, quote = &quot;\&quot;&quot;, dec = &quot;.&quot;, 
 ##     fill = TRUE, comment.char = &quot;&quot;, ...) 
 ## read.table(file = file, header = header, sep = sep, quote = quote, 
 ##     dec = dec, fill = fill, comment.char = comment.char, ...)
-## &lt;bytecode: 0x0000020581b528e8&gt;
+## &lt;bytecode: 0x000001af0be11828&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre class="r"><code>list.files</code></pre>
 <pre><code>## function (path = &quot;.&quot;, pattern = NULL, all.files = FALSE, full.names = FALSE, 
@@ -2700,7 +2700,7 @@ install.packages</code></pre>
 ##     no.. = FALSE) 
 ## .Internal(list.files(path, pattern, all.files, full.names, recursive, 
 ##     ignore.case, include.dirs, no..))
-## &lt;bytecode: 0x0000020583b79f58&gt;
+## &lt;bytecode: 0x000001af0dfe9e30&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>download.file</code></pre>
 <pre><code>## function (url, destfile, method, quiet = FALSE, mode = &quot;w&quot;, cacheOK = TRUE, 
@@ -2756,7 +2756,7 @@ install.packages</code></pre>
 ##         warning(&quot;download had nonzero exit status&quot;)
 ##     invisible(status)
 ## }
-## &lt;bytecode: 0x00000205813c0cf8&gt;
+## &lt;bytecode: 0x000001af0b70aa08&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre class="r"><code>data.frame</code></pre>
 <pre><code>## function (..., row.names = NULL, check.rows = FALSE, check.names = TRUE, 
@@ -2925,19 +2925,19 @@ install.packages</code></pre>
 ##     }
 ##     value
 ## }
-## &lt;bytecode: 0x00000205fecb6008&gt;
+## &lt;bytecode: 0x000001af09a98370&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>as.character</code></pre>
 <pre><code>## function (x, ...)  .Primitive(&quot;as.character&quot;)</code></pre>
 <pre class="r"><code>Sys.Date</code></pre>
 <pre><code>## function () 
 ## as.Date(as.POSIXlt(Sys.time()))
-## &lt;bytecode: 0x0000020583e06240&gt;
+## &lt;bytecode: 0x000001af0e28a0b8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>all.equal</code></pre>
 <pre><code>## function (target, current, ...) 
 ## UseMethod(&quot;all.equal&quot;)
-## &lt;bytecode: 0x0000020584c08818&gt;
+## &lt;bytecode: 0x000001af0f0921c8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>do.call</code></pre>
 <pre><code>## function (what, args, quote = FALSE, envir = parent.frame()) 
@@ -2948,7 +2948,7 @@ install.packages</code></pre>
 ##         args &lt;- lapply(args, enquote)
 ##     .Internal(do.call(what, args, envir))
 ## }
-## &lt;bytecode: 0x00000205814282f0&gt;
+## &lt;bytecode: 0x000001af0b6c12d0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>on.exit</code></pre>
 <pre><code>## function (expr = NULL, add = FALSE, after = TRUE)  .Primitive(&quot;on.exit&quot;)</code></pre>
@@ -3215,6 +3215,9 @@ types are correct, making it possible to create malformed factors:</p>
 
 new_factor(1:5, &quot;a&quot;)</code></pre>
 <pre><code>## Error in as.character.factor(x): malformed factor</code></pre>
+<pre class="r"><code>new_factor(1:2, c(&quot;a&quot;, &quot;b&quot;))</code></pre>
+<pre><code>## [1] a b
+## Levels: a b</code></pre>
 <pre class="r"><code>new_factor(0:1, &quot;a&quot;)</code></pre>
 <pre><code>## Error in as.character.factor(x): malformed factor</code></pre>
 <p>Rather than encumbering the constructor with complicated checks, it’s
@@ -3242,7 +3245,9 @@ and easily re-use the checks in other places.</p>
   x
 }
 
-validate_factor(new_factor(1:5, &quot;a&quot;))</code></pre>
+new_factor(1:5, &quot;a&quot;)</code></pre>
+<pre><code>## Error in as.character.factor(x): malformed factor</code></pre>
+<pre class="r"><code>validate_factor(new_factor(1:5, &quot;a&quot;))</code></pre>
 <pre><code>## Error: There must be at least as many `levels` as possible values in `x`</code></pre>
 <pre class="r"><code>validate_factor(new_factor(0:1, &quot;a&quot;))</code></pre>
 <pre><code>## Error: All `x` values must be non-missing and greater than zero</code></pre>
@@ -3552,13 +3557,15 @@ situation?</li>
   ind &lt;- match(x, levels)
   validate_factor(new_factor(ind, levels))
 }</code></pre>
+<pre class="r"><code>A &lt;- c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;)
+B &lt;- c(&quot;a&quot;, &quot;b&quot;)
+setdiff(A, B)</code></pre>
+<pre><code>## [1] &quot;c&quot; &quot;d&quot;</code></pre>
+<pre class="r"><code>match(A,B)</code></pre>
+<pre><code>## [1]  1  2 NA NA</code></pre>
 <pre class="r"><code># The levels argument is optional. 
 # If it&#39;s not provided, the function will use the unique values of x as the levels.
-factor2 &lt;- function(x, levels = unique(x)) {
-  
-  # uses match() to create a new factor with the same levels as x, 
-  # but with the values in the order of the levels argument.
-  new_levels &lt;- match(x, levels)
+factor2 &lt;- function(x = character(), levels = unique(x)) {
   
   # Error if levels don&#39;t include all values
   # uses setdiff() to find any values in x that are not in the levels argument.
@@ -3567,14 +3574,18 @@ factor2 &lt;- function(x, levels = unique(x)) {
   # If there are any missing values, the function stops with an error message.
   if (length(missing) &gt; 0) {
     stop(
-      &quot;The following values do not occur in the levels of x: &quot;,
+      &quot;The following values are missing in the levels of x: &quot;,
       paste0(&quot;&#39;&quot;, missing, &quot;&#39;&quot;, collapse = &quot;, &quot;), &quot;.&quot;, 
       call. = FALSE
     )
   }
   
+  # uses match() to create a new factor with the same levels as x, 
+  # but with the values in the order of the levels argument.
+  ind &lt;- match(x, levels)
+  
   # uses validate_factor() to make sure the new factor is valid.
-  validate_factor(new_factor(new_levels, levels))
+  validate_factor(new_factor(ind , levels))
 }</code></pre>
 <pre class="r"><code># Test
 factor2(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;), levels = c(&quot;a&quot;, &quot;b&quot;))</code></pre>
@@ -3621,7 +3632,7 @@ it do that my constructor does not?</li>
 ##     class(f) &lt;- c(if (ordered) &quot;ordered&quot;, &quot;factor&quot;)
 ##     f
 ## }
-## &lt;bytecode: 0x00000205fe87fbf0&gt;
+## &lt;bytecode: 0x000001af0aeef7d0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <blockquote>
 <ol style="list-style-type: decimal">
@@ -3816,7 +3827,7 @@ might a helper do?</li>
 <pre class="r"><code>utils::as.roman</code></pre>
 <pre><code>## function (x) 
 ## .as.roman(x, check.range = TRUE)
-## &lt;bytecode: 0x000002058440db40&gt;
+## &lt;bytecode: 0x000001af0ed6da80&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <blockquote>
 <p>Simple manipulation of (a small set of) integer numbers as roman

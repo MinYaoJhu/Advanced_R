@@ -2,7 +2,9 @@
 title: "Ch13_S3"
 author: "Min-Yao"
 date: "2023-03-05"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 # S3 {#s3}
@@ -402,6 +404,7 @@ new_factor <- function(x = integer(), levels = character()) {
 }
 
 new_factor(1:5, "a")
+new_factor(1:2, c("a", "b"))
 new_factor(0:1, "a")
 ```
 
@@ -429,6 +432,7 @@ validate_factor <- function(x) {
   x
 }
 
+new_factor(1:5, "a")
 validate_factor(new_factor(1:5, "a"))
 validate_factor(new_factor(0:1, "a"))
 ```
@@ -647,13 +651,17 @@ factor <- function(x = character(), levels = unique(x)) {
 ```
 
 ```{r}
+A <- c("a", "b", "c", "d")
+B <- c("a", "b")
+setdiff(A, B)
+match(A,B)
+```
+
+
+```{r}
 # The levels argument is optional. 
 # If it's not provided, the function will use the unique values of x as the levels.
-factor2 <- function(x, levels = unique(x)) {
-  
-  # uses match() to create a new factor with the same levels as x, 
-  # but with the values in the order of the levels argument.
-  new_levels <- match(x, levels)
+factor2 <- function(x = character(), levels = unique(x)) {
   
   # Error if levels don't include all values
   # uses setdiff() to find any values in x that are not in the levels argument.
@@ -662,14 +670,18 @@ factor2 <- function(x, levels = unique(x)) {
   # If there are any missing values, the function stops with an error message.
   if (length(missing) > 0) {
     stop(
-      "The following values do not occur in the levels of x: ",
+      "The following values are missing in the levels of x: ",
       paste0("'", missing, "'", collapse = ", "), ".", 
       call. = FALSE
     )
   }
   
+  # uses match() to create a new factor with the same levels as x, 
+  # but with the values in the order of the levels argument.
+  ind <- match(x, levels)
+  
   # uses validate_factor() to make sure the new factor is valid.
-  validate_factor(new_factor(new_levels, levels))
+  validate_factor(new_factor(ind , levels))
 }
 ```
 
