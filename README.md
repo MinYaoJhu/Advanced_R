@@ -5,7 +5,7 @@ Welcome! This Min-Yao's repository includes all of the .rmd files of my notes an
 ## Contact Info
 
 ## [Min-Yao Jhu](mailto:myj23@cam.ac.uk)  
-[LinkedIn](www.linkedin.com/in/min-yao-jhu)
+[LinkedIn](https://www.linkedin.com/in/min-yao-jhu)
 
 ## Thank You!  
 
