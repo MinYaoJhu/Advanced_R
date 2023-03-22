@@ -11,9 +11,9 @@
 
 <meta name="author" content="Min-Yao" />
 
-<meta name="date" content="2023-03-05" />
+<meta name="date" content="2023-03-12" />
 
-<title>Ch13_S3-2</title>
+<title>Ch13_S3-3</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,9 +350,9 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Ch13_S3-2</h1>
+<h1 class="title toc-ignore">Ch13_S3-3</h1>
 <h4 class="author">Min-Yao</h4>
-<h4 class="date">2023-03-05</h4>
+<h4 class="date">2023-03-12</h4>
 
 </div>
 
@@ -362,7 +362,7 @@ library(tidyverse)</code></pre>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 ## ✔ dplyr     1.1.0     ✔ readr     2.1.4
 ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
-## ✔ ggplot2   3.4.1     ✔ tibble    3.2.0
+## ✔ ggplot2   3.4.1     ✔ tibble    3.2.1
 ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
 ## ✔ purrr     1.0.1     
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -385,71 +385,409 @@ library(pryr)</code></pre>
 ## The following objects are masked from &#39;package:sloop&#39;:
 ## 
 ##     ftype, is_s3_generic, is_s3_method, otype</code></pre>
-<div id="s3-methods" class="section level2">
-<h2>13.4 Generics and methods</h2>
+<div id="s3-inheritance" class="section level2">
+<h2>13.6 Inheritance</h2>
 <p> </p>
-<p>The job of an S3 generic is to perform method dispatch, i.e. find the
-specific implementation for a class. Method dispatch is performed by
-<code>UseMethod()</code>, which every generic calls<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.
-<code>UseMethod()</code> takes two arguments: the name of the generic
-function (required), and the argument to use for method dispatch
-(optional). If you omit the second argument, it will dispatch based on
-the first argument, which is almost always what is desired.</p>
-<p>Most generics are very simple, and consist of only a call to
-<code>UseMethod()</code>. Take <code>mean()</code> for example:</p>
-<pre class="r"><code>mean</code></pre>
-<pre><code>## function (x, ...) 
-## UseMethod(&quot;mean&quot;)
-## &lt;bytecode: 0x0000025a01a5d550&gt;
-## &lt;environment: namespace:base&gt;</code></pre>
-<p>Creating your own generic is similarly simple:</p>
-<pre class="r"><code>my_new_generic &lt;- function(x) {
-  UseMethod(&quot;my_new_generic&quot;)
-}</code></pre>
-<p>(If you wonder why we have to repeat <code>my_new_generic</code>
-twice, think back to Section @ref(first-class-functions).)</p>
-<p>You don’t pass any of the arguments of the generic to
-<code>UseMethod()</code>; it uses deep magic to pass to the method
-automatically. The precise process is complicated and frequently
-surprising, so you should avoid doing any computation in a generic. To
-learn the full details, carefully read the Technical Details section in
-<code>?UseMethod</code>.</p>
-<div id="method-dispatch" class="section level3">
-<h3>13.4.1 Method dispatch</h3>
-<p> </p>
-<p>How does <code>UseMethod()</code> work? It basically creates a vector
-of method names,
-<code>paste0(&quot;generic&quot;, &quot;.&quot;, c(class(x), &quot;default&quot;))</code>, and then
-looks for each potential method in turn. We can see this in action with
-<code>sloop::s3_dispatch()</code>. You give it a call to an S3 generic,
-and it lists all the possible methods. For example, what method is
-called when you print a <code>Date</code> object?</p>
-<pre class="r"><code>x &lt;- Sys.Date()
-s3_dispatch(print(x))</code></pre>
-<pre><code>## =&gt; print.Date
-##  * print.default</code></pre>
-<p>The output here is simple:</p>
+<p>S3 classes can share behaviour through a mechanism called
+<strong>inheritance</strong>. Inheritance is powered by three ideas:</p>
 <ul>
-<li><code>=&gt;</code> indicates the method that is called, here
-<code>print.Date()</code></li>
-<li><code>*</code> indicates a method that is defined, but not called,
-here <code>print.default()</code>.</li>
+<li><p>The class can be a character <em>vector</em>. For example, the
+<code>ordered</code> and <code>POSIXct</code> classes have two
+components in their class:</p>
+<pre class="r"><code>class(ordered(&quot;x&quot;))</code></pre>
+<pre><code>## [1] &quot;ordered&quot; &quot;factor&quot;</code></pre>
+<pre class="r"><code>class(Sys.time())</code></pre>
+<pre><code>## [1] &quot;POSIXct&quot; &quot;POSIXt&quot;</code></pre></li>
+<li><p>If a method is not found for the class in the first element of
+the vector, R looks for a method for the second class (and so on):</p>
+<pre class="r"><code>s3_dispatch(print(ordered(&quot;x&quot;)))</code></pre>
+<pre><code>##    print.ordered
+## =&gt; print.factor
+##  * print.default</code></pre>
+<pre class="r"><code>s3_dispatch(print(Sys.time()))</code></pre>
+<pre><code>## =&gt; print.POSIXct
+##    print.POSIXt
+##  * print.default</code></pre></li>
+<li><p>A method can delegate work by calling <code>NextMethod()</code>.
+We’ll come back to that very shortly; for now, note that
+<code>s3_dispatch()</code> reports delegation with
+<code>-&gt;</code>.</p>
+<pre class="r"><code>s3_dispatch(ordered(&quot;x&quot;)[1])</code></pre>
+<pre><code>##    [.ordered
+## =&gt; [.factor
+##    [.default
+## -&gt; [ (internal)</code></pre>
+<pre class="r"><code>s3_dispatch(Sys.time()[1])</code></pre>
+<pre><code>## =&gt; [.POSIXct
+##    [.POSIXt
+##    [.default
+## -&gt; [ (internal)</code></pre></li>
 </ul>
-<p>The “default” class is a special <strong>pseudo-class</strong>. This
-is not a real class, but is included to make it possible to define a
-standard fallback that is found whenever a class-specific method is not
-available.</p>
-<p>The essence of method dispatch is quite simple, but as the chapter
-proceeds you’ll see it get progressively more complicated to encompass
-inheritance, base types, internal generics, and group generics. The code
-below shows a couple of more complicated cases which we’ll come back to
-in Sections @ref(inheritance) and @ref(s3-dispatch).</p>
-<pre class="r"><code>x &lt;- matrix(1:10, nrow = 2)
-s3_dispatch(mean(x))</code></pre>
-<pre><code>##    mean.matrix
-##    mean.integer
+<p>Before we continue we need a bit of vocabulary to describe the
+relationship between the classes that appear together in a class vector.
+We’ll say that <code>ordered</code> is a <strong>subclass</strong> of
+<code>factor</code> because it always appears before it in the class
+vector, and, conversely, we’ll say <code>factor</code> is a
+<strong>superclass</strong> of <code>ordered</code>.</p>
+<p>S3 imposes no restrictions on the relationship between sub- and
+superclasses but your life will be easier if you impose some. I
+recommend that you adhere to two simple principles when creating a
+subclass:</p>
+<ul>
+<li><p>The base type of the subclass should be that same as the
+superclass.</p></li>
+<li><p>The attributes of the subclass should be a superset of the
+attributes of the superclass.</p></li>
+</ul>
+<p><code>POSIXt</code> does not adhere to these principles because
+<code>POSIXct</code> has type double, and <code>POSIXlt</code> has type
+list. This means that <code>POSIXt</code> is not a superclass, and
+illustrates that it’s quite possible to use the S3 inheritance system to
+implement other styles of code sharing (here <code>POSIXt</code> plays a
+role more like an interface), but you’ll need to figure out safe
+conventions yourself. </p>
+<div id="nextmethod" class="section level3">
+<h3>13.6.1 <code>NextMethod()</code></h3>
+<p><code>NextMethod()</code> is the hardest part of inheritance to
+understand, so we’ll start with a concrete example for the most common
+use case: <code>[</code>. We’ll start by creating a simple toy class: a
+<code>secret</code> class that hides its output when printed:</p>
+<pre class="r"><code>new_secret &lt;- function(x = double()) {
+  stopifnot(is.double(x))
+  structure(x, class = &quot;secret&quot;)
+}
+
+print.secret &lt;- function(x, ...) {
+  print(strrep(&quot;x&quot;, nchar(x)))
+  invisible(x)
+}
+
+x &lt;- new_secret(c(15, 1, 456))
+x</code></pre>
+<pre><code>## [1] &quot;xx&quot;  &quot;x&quot;   &quot;xxx&quot;</code></pre>
+<p>This works, but the default <code>[</code> method doesn’t preserve
+the class:</p>
+<pre class="r"><code>s3_dispatch(x[1])</code></pre>
+<pre><code>##    [.secret
+##    [.default
+## =&gt; [ (internal)</code></pre>
+<pre class="r"><code>x[1]</code></pre>
+<pre><code>## [1] 15</code></pre>
+<p>To fix this, we need to provide a <code>[.secret</code> method. How
+could we implement this method? The naive approach won’t work because
+we’ll get stuck in an infinite loop:</p>
+<pre class="r"><code>`[.secret` &lt;- function(x, i) {
+  new_secret(x[i])
+}</code></pre>
+<p>Instead, we need some way to call the underlying <code>[</code> code,
+i.e. the implementation that would get called if we didn’t have a
+<code>[.secret</code> method. One approach would be to
+<code>unclass()</code> the object:</p>
+<pre class="r"><code>`[.secret` &lt;- function(x, i) {
+  x &lt;- unclass(x)
+  new_secret(x[i])
+}
+x[1]</code></pre>
+<pre><code>## [1] &quot;xx&quot;</code></pre>
+<p>This works, but is inefficient because it creates a copy of
+<code>x</code>. A better approach is to use <code>NextMethod()</code>,
+which concisely solves the problem of delegating to the method that
+would have been called if <code>[.secret</code> didn’t exist:</p>
+<pre class="r"><code>`[.secret` &lt;- function(x, i) {
+  new_secret(NextMethod())
+}
+x[1]</code></pre>
+<pre><code>## [1] &quot;xx&quot;</code></pre>
+<p>We can see what’s going on with
+<code>sloop::s3_dispatch()</code>:</p>
+<pre class="r"><code>s3_dispatch(x[1])</code></pre>
+<pre><code>## =&gt; [.secret
+##    [.default
+## -&gt; [ (internal)</code></pre>
+<p>The <code>=&gt;</code> indicates that <code>[.secret</code> is
+called, but that <code>NextMethod()</code> delegates work to the
+underlying internal <code>[</code> method, as shown by the
+<code>-&gt;</code>.</p>
+<p>As with <code>UseMethod()</code>, the precise semantics of
+<code>NextMethod()</code> are complex. In particular, it tracks the list
+of potential next methods with a special variable, which means that
+modifying the object that’s being dispatched upon will have no impact on
+which method gets called next.</p>
+</div>
+<div id="s3-subclassing" class="section level3">
+<h3>13.6.2 Allowing subclassing</h3>
+<p></p>
+<p>When you create a class, you need to decide if you want to allow
+subclasses, because it requires some changes to the constructor and
+careful thought in your methods.</p>
+<p>To allow subclasses, the parent constructor needs to have
+<code>...</code> and <code>class</code> arguments:</p>
+<pre class="r"><code>new_secret &lt;- function(x, ..., class = character()) {
+  stopifnot(is.double(x))
+
+  structure(
+    x,
+    ...,
+    class = c(class, &quot;secret&quot;)
+  )
+}</code></pre>
+<p>Then the subclass constructor can just call to the parent class
+constructor with additional arguments as needed. For example, imagine we
+want to create a supersecret class which also hides the number of
+characters:</p>
+<pre class="r"><code>new_supersecret &lt;- function(x) {
+  new_secret(x, class = &quot;supersecret&quot;)
+}
+
+print.supersecret &lt;- function(x, ...) {
+  print(rep(&quot;xxxxx&quot;, length(x)))
+  invisible(x)
+}
+
+x2 &lt;- new_supersecret(c(15, 1, 456))
+x2</code></pre>
+<pre><code>## [1] &quot;xxxxx&quot; &quot;xxxxx&quot; &quot;xxxxx&quot;</code></pre>
+<p>To allow inheritance, you also need to think carefully about your
+methods, as you can no longer use the constructor. If you do, the method
+will always return the same class, regardless of the input. This forces
+whoever makes a subclass to do a lot of extra work.</p>
+<p>Concretely, this means we need to revise the <code>[.secret</code>
+method. Currently it always returns a <code>secret()</code>, even when
+given a supersecret:</p>
+<pre class="r"><code>`[.secret` &lt;- function(x, ...) {
+  new_secret(NextMethod())
+}
+
+x2[1:3]</code></pre>
+<pre><code>## [1] &quot;xx&quot;  &quot;x&quot;   &quot;xxx&quot;</code></pre>
+<p>We want to make sure that <code>[.secret</code> returns the same
+class as <code>x</code> even if it’s a subclass. As far as I can tell,
+there is no way to solve this problem using base R alone. Instead,
+you’ll need to use the vctrs package, which provides a solution in the
+form of the <code>vctrs::vec_restore()</code> generic. This generic
+takes two inputs: an object which has lost subclass information, and a
+template object to use for restoration.</p>
+<p>Typically <code>vec_restore()</code> methods are quite simple: you
+just call the constructor with appropriate arguments:</p>
+<pre class="r"><code>vec_restore.secret &lt;- function(x, to, ...) new_secret(x)
+vec_restore.supersecret &lt;- function(x, to, ...) new_supersecret(x)</code></pre>
+<p>(If your class has attributes, you’ll need to pass them from
+<code>to</code> into the constructor.)</p>
+<p>Now we can use <code>vec_restore()</code> in the
+<code>[.secret</code> method:</p>
+<pre class="r"><code>`[.secret` &lt;- function(x, ...) {
+  vctrs::vec_restore(NextMethod(), x)
+}
+x2[1:3]</code></pre>
+<pre><code>## [1] &quot;xxxxx&quot; &quot;xxxxx&quot; &quot;xxxxx&quot;</code></pre>
+<p>(I only fully understood this issue quite recently, so at time of
+writing it is not used in the tidyverse. Hopefully by the time you’re
+reading this, it will have rolled out, making it much easier to (e.g.)
+subclass tibbles.)</p>
+<p>If you build your class using the tools provided by the vctrs
+package, <code>[</code> will gain this behaviour automatically. You will
+only need to provide your own <code>[</code> method if you use
+attributes that depend on the data or want non-standard subsetting
+behaviour. See <code>?vctrs::new_vctr</code> for details.</p>
+</div>
+<div id="exercises" class="section level3">
+<h3>13.6.3 Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>How does <code>[.Date</code> support subclasses? How does it fail to
+support subclasses?</li>
+</ol>
+<pre class="r"><code>`[.Date`</code></pre>
+<pre><code>## function (x, ..., drop = TRUE) 
+## {
+##     .Date(NextMethod(&quot;[&quot;), oldClass(x))
+## }
+## &lt;bytecode: 0x0000017fe3d3a088&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<blockquote>
+<p>[.Date calls .Date</p>
+</blockquote>
+<blockquote>
+<p>Many R objects have a class attribute, a character vector giving the
+names of the classes from which the object inherits. (Functions oldClass
+and oldClass&lt;- get and set the attribute, which can also be done
+directly.)</p>
+</blockquote>
+<blockquote>
+<p>Functions oldClass and oldClass&lt;- behave in the same way as
+functions of those names in S-PLUS 5/6, but in R UseMethod dispatches on
+the class as returned by class (with some interpolated classes: see the
+link) rather than oldClass. However, group generics dispatch on the
+oldClass for efficiency, and internal generics only dispatch on objects
+for which is.object is true.</p>
+</blockquote>
+<pre class="r"><code>.Date</code></pre>
+<pre><code>## function (xx, cl = &quot;Date&quot;) 
+## `class&lt;-`(xx, cl)
+## &lt;bytecode: 0x0000017fe3ce6af8&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<blockquote>
+<p>.Date is a constructor for date classes, but it doesn’t check the
+input type</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>R has two classes for representing date time data,
+<code>POSIXct</code> and <code>POSIXlt</code>, which both inherit from
+<code>POSIXt</code>. Which generics have different behaviours for the
+two classes? Which generics share the same behaviour?</li>
+</ol>
+<pre class="r"><code>POSIXt_generics &lt;- s3_methods_class(&quot;POSIXt&quot;)$generic
+str(POSIXt_generics)</code></pre>
+<pre><code>##  chr [1:31] &quot;-&quot; &quot;!=&quot; &quot;+&quot; &quot;&lt;&quot; &quot;&lt;=&quot; &quot;==&quot; &quot;&gt;&quot; &quot;&gt;=&quot; &quot;all.equal&quot; &quot;as.character&quot; ...</code></pre>
+<pre class="r"><code>POSIXct_generics &lt;- s3_methods_class(&quot;POSIXct&quot;)$generic
+str(POSIXct_generics)</code></pre>
+<pre><code>##  chr [1:20] &quot;[&quot; &quot;[[&quot; &quot;[&lt;-&quot; &quot;as.data.frame&quot; &quot;as.Date&quot; &quot;as.list&quot; &quot;as.POSIXlt&quot; ...</code></pre>
+<pre class="r"><code>POSIXlt_generics &lt;- s3_methods_class(&quot;POSIXlt&quot;)$generic
+str(POSIXlt_generics)</code></pre>
+<pre><code>##  chr [1:30] &quot;[&quot; &quot;[[&quot; &quot;[[&lt;-&quot; &quot;[&lt;-&quot; &quot;anyNA&quot; &quot;as.data.frame&quot; &quot;as.Date&quot; ...</code></pre>
+<p>Which generics have different behaviours for the two classes?</p>
+<pre class="r"><code>setdiff(POSIXct_generics,POSIXlt_generics)</code></pre>
+<pre><code>## [1] &quot;as.POSIXlt&quot; &quot;full_seq&quot;   &quot;split&quot;</code></pre>
+<pre class="r"><code>setdiff(POSIXlt_generics,POSIXct_generics)</code></pre>
+<pre><code>##  [1] &quot;[[&lt;-&quot;       &quot;anyNA&quot;      &quot;as.double&quot;  &quot;as.matrix&quot;  &quot;as.POSIXct&quot;
+##  [6] &quot;as.vector&quot;  &quot;duplicated&quot; &quot;is.na&quot;      &quot;length&quot;     &quot;names&quot;     
+## [11] &quot;names&lt;-&quot;    &quot;sort&quot;       &quot;unique&quot;</code></pre>
+<p>Which generics share the same behaviour?</p>
+<pre class="r"><code>intersect(POSIXct_generics,POSIXlt_generics)</code></pre>
+<pre><code>##  [1] &quot;[&quot;             &quot;[[&quot;            &quot;[&lt;-&quot;           &quot;as.data.frame&quot;
+##  [5] &quot;as.Date&quot;       &quot;as.list&quot;       &quot;c&quot;             &quot;format&quot;       
+##  [9] &quot;length&lt;-&quot;      &quot;mean&quot;          &quot;print&quot;         &quot;reclass_date&quot; 
+## [13] &quot;rep&quot;           &quot;summary&quot;       &quot;Summary&quot;       &quot;weighted.mean&quot;
+## [17] &quot;xtfrm&quot;</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li><p>What do you expect this code to return? What does it actually
+return? Why?</p>
+<pre class="r"><code>generic2 &lt;- function(x) UseMethod(&quot;generic2&quot;)
+# The generic function generic2 is defined.
+
+generic2.a1 &lt;- function(x) &quot;a1&quot;
+generic2.a2 &lt;- function(x) &quot;a2&quot;
+# The methods generic2.a1 and generic2.a2 are defined.
+
+generic2.b &lt;- function(x) {
+  class(x) &lt;- &quot;a1&quot;
+  NextMethod()
+}
+# The method generic2.b is defined.
+
+generic2(structure(list(), class = c(&quot;b&quot;, &quot;a2&quot;)))</code></pre>
+<pre><code>## [1] &quot;a2&quot;</code></pre>
+<pre class="r"><code># The generic function generic2 is called with an object of class &quot;b&quot; and &quot;a2&quot;.
+# The method generic2.b is called.
+# The class of the object is changed to &quot;a1&quot;.
+# The next method is called.
+# The method generic2.a1 is called.
+# The result is returned.</code></pre></li>
+</ol>
+<pre class="r"><code>generic2.b &lt;- function(x) {
+  class(x) &lt;- &quot;a1&quot;
+  print(.Class)
+  NextMethod()
+}
+
+generic2(structure(list(), class = c(&quot;b&quot;, &quot;a2&quot;)))</code></pre>
+<pre><code>## [1] &quot;b&quot;  &quot;a2&quot;</code></pre>
+<pre><code>## [1] &quot;a2&quot;</code></pre>
+</div>
+</div>
+<div id="s3-dispatch" class="section level2">
+<h2>13.7 Dispatch details</h2>
+<p></p>
+<p>This chapter concludes with a few additional details about method
+dispatch. It is safe to skip these details if you’re new to S3.</p>
+<div id="implicit-class" class="section level3">
+<h3>13.7.1 S3 and base types</h3>
+<p> </p>
+<p>What happens when you call an S3 generic with a base object, i.e. an
+object with no class? You might think it would dispatch on what
+<code>class()</code> returns:</p>
+<pre class="r"><code>class(matrix(1:5))</code></pre>
+<pre><code>## [1] &quot;matrix&quot; &quot;array&quot;</code></pre>
+<p>But unfortunately dispatch actually occurs on the <strong>implicit
+class</strong>, which has three components:</p>
+<ul>
+<li>The string “array” or “matrix” if the object has dimensions</li>
+<li>The result of <code>typeof()</code> with a few minor tweaks</li>
+<li>The string “numeric” if object is “integer” or “double”</li>
+</ul>
+<p>There is no base function that will compute the implicit class, but
+you can use <code>sloop::s3_class()</code></p>
+<pre class="r"><code>s3_class(matrix(1:5))</code></pre>
+<pre><code>## [1] &quot;matrix&quot;  &quot;integer&quot; &quot;numeric&quot;</code></pre>
+<p>This is used by <code>s3_dispatch()</code>:</p>
+<pre class="r"><code>s3_dispatch(print(matrix(1:5)))</code></pre>
+<pre><code>##    print.matrix
+##    print.integer
+##    print.numeric
+## =&gt; print.default</code></pre>
+<p>This means that the <code>class()</code> of an object does not
+uniquely determine its dispatch:</p>
+<pre class="r"><code>x1 &lt;- 1:5
+class(x1)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>s3_dispatch(mean(x1))</code></pre>
+<pre><code>##    mean.integer
 ##    mean.numeric
 ## =&gt; mean.default</code></pre>
+<pre class="r"><code>x2 &lt;- structure(x1, class = &quot;integer&quot;)
+class(x2)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>s3_dispatch(mean(x2))</code></pre>
+<pre><code>##    mean.integer
+## =&gt; mean.default</code></pre>
+</div>
+<div id="internal-generics" class="section level3">
+<h3>13.7.2 Internal generics</h3>
+<p></p>
+<p>Some base functions, like <code>[</code>, <code>sum()</code>, and
+<code>cbind()</code>, are called <strong>internal generics</strong>
+because they don’t call <code>UseMethod()</code> but instead call the C
+functions <code>DispatchGroup()</code> or <code>DispatchOrEval()</code>.
+<code>s3_dispatch()</code> shows internal generics by including the name
+of the generic followed by <code>(internal)</code>:</p>
+<pre class="r"><code>s3_dispatch(Sys.time()[1])</code></pre>
+<pre><code>## =&gt; [.POSIXct
+##    [.POSIXt
+##    [.default
+## -&gt; [ (internal)</code></pre>
+<p>For performance reasons, internal generics do not dispatch to methods
+unless the class attribute has been set, which means that internal
+generics do not use the implicit class. Again, if you’re ever confused
+about method dispatch, you can rely on <code>s3_dispatch()</code>.</p>
+</div>
+<div id="group-generics" class="section level3">
+<h3>13.7.3 Group generics</h3>
+<p> </p>
+<p>Group generics are the most complicated part of S3 method dispatch
+because they involve both <code>NextMethod()</code> and internal
+generics. Like internal generics, they only exist in base R, and you
+cannot define your own group generic.</p>
+<p>There are four group generics:</p>
+<ul>
+<li><p><strong>Math</strong>: <code>abs()</code>, <code>sign()</code>,
+<code>sqrt()</code>, <code>floor()</code>, <code>cos()</code>,
+<code>sin()</code>, <code>log()</code>, and more (see <code>?Math</code>
+for the complete list).</p></li>
+<li><p><strong>Ops</strong>: <code>+</code>, <code>-</code>,
+<code>*</code>, <code>/</code>, <code>^</code>, <code>%%</code>,
+<code>%/%</code>, <code>&amp;</code>, <code>|</code>, <code>!</code>,
+<code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>,
+<code>&gt;=</code>, and <code>&gt;</code>.</p></li>
+<li><p><strong>Summary</strong>: <code>all()</code>, <code>any()</code>,
+<code>sum()</code>, <code>prod()</code>, <code>min()</code>,
+<code>max()</code>, and <code>range()</code>.</p></li>
+<li><p><strong>Complex</strong>: <code>Arg()</code>,
+<code>Conj()</code>, <code>Im()</code>, <code>Mod()</code>,
+<code>Re()</code>.</p></li>
+</ul>
+<p>Defining a single group generic for your class overrides the default
+behaviour for all of the members of the group. Methods for group
+generics are looked for only if the methods for the specific generic do
+not exist:</p>
 <pre class="r"><code>s3_dispatch(sum(Sys.time()))</code></pre>
 <pre><code>##    sum.POSIXct
 ##    sum.POSIXt
@@ -458,1078 +796,282 @@ s3_dispatch(mean(x))</code></pre>
 ##    Summary.POSIXt
 ##    Summary.default
 ## -&gt; sum (internal)</code></pre>
-<blockquote>
-<p>s3_dispatch() prints a list of all possible function names that will
-be considered for method dispatch. There are four possible states:</p>
-</blockquote>
-<p>=&gt; method exists and is found by UseMethod().</p>
-<p>-&gt; method exists and is used by NextMethod().</p>
-<ul>
-<li>method exists but is not used.</li>
-</ul>
-<p>Nothing (and greyed out in console): method does not exist.</p>
+<p>Most group generics involve a call to <code>NextMethod()</code>. For
+example, take <code>difftime()</code> objects. If you look at the method
+dispatch for <code>abs()</code>, you’ll see there’s a <code>Math</code>
+group generic defined.</p>
+<pre class="r"><code>y &lt;- as.difftime(10, units = &quot;mins&quot;)
+s3_dispatch(abs(y))</code></pre>
+<pre><code>##    abs.difftime
+##    abs.default
+## =&gt; Math.difftime
+##    Math.default
+## -&gt; abs (internal)</code></pre>
+<p><code>Math.difftime</code> basically looks like this:</p>
+<pre class="r"><code>Math.difftime &lt;- function(x, ...) {
+  new_difftime(NextMethod(), units = attr(x, &quot;units&quot;))
+}</code></pre>
+<p>It dispatches to the next method, here the internal default, to
+perform the actual computation, then restore the class and attributes.
+(To better support subclasses of <code>difftime</code> this would need
+to call <code>vec_restore()</code>, as described in Section
+@ref(s3-subclassing).)</p>
+<p>Inside a group generic function a special variable
+<code>.Generic</code> provides the actual generic function called. This
+can be useful when producing error messages, and can sometimes be useful
+if you need to manually re-call the generic with different
+arguments.</p>
 </div>
-<div id="finding-methods" class="section level3">
-<h3>13.4.2 Finding methods</h3>
-<p></p>
-<p><code>sloop::s3_dispatch()</code> lets you find the specific method
-used for a single call. What if you want to find all methods defined for
-a generic or associated with a class? That’s the job of
-<code>sloop::s3_methods_generic()</code> and
-<code>sloop::s3_methods_class()</code>:</p>
-<pre class="r"><code>s3_methods_generic(&quot;mean&quot;)</code></pre>
-<pre><code>## # A tibble: 7 × 4
+<div id="double-dispatch" class="section level3">
+<h3>13.7.4 Double dispatch</h3>
+<p> </p>
+<p>Generics in the Ops group, which includes the two-argument arithmetic
+and Boolean operators like <code>-</code> and <code>&amp;</code>,
+implement a special type of method dispatch. They dispatch on the type
+of <em>both</em> of the arguments, which is called <strong>double
+dispatch</strong>. This is necessary to preserve the commutative
+property of many operators, i.e. <code>a + b</code> should equal
+<code>b + a</code>. Take the following simple example:</p>
+<pre class="r"><code>date &lt;- as.Date(&quot;2017-01-01&quot;)
+integer &lt;- 1L
+
+date + integer</code></pre>
+<pre><code>## [1] &quot;2017-01-02&quot;</code></pre>
+<pre class="r"><code>integer + date</code></pre>
+<pre><code>## [1] &quot;2017-01-02&quot;</code></pre>
+<p>If <code>+</code> dispatched only on the first argument, it would
+return different values for the two cases. To overcome this problem,
+generics in the Ops group use a slightly different strategy from usual.
+Rather than doing a single method dispatch, they do two, one for each
+input. There are three possible outcomes of this lookup:</p>
+<ul>
+<li><p>The methods are the same, so it doesn’t matter which method is
+used.</p></li>
+<li><p>The methods are different, and R falls back to the internal
+method with a warning.</p></li>
+<li><p>One method is internal, in which case R calls the other
+method.</p></li>
+</ul>
+<p>This approach is error prone so if you want to implement robust
+double dispatch for algebraic operators, I recommend using the vctrs
+package. See <code>?vctrs::vec_arith</code> for details.</p>
+</div>
+<div id="exercises-1" class="section level3">
+<h3>13.7.5 Exercises</h3>
+<ol style="list-style-type: decimal">
+<li><p>Explain the differences in dispatch below:</p>
+<pre class="r"><code>length.integer &lt;- function(x) 10
+
+x1 &lt;- 1:5
+class(x1)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>s3_dispatch(length(x1))</code></pre>
+<pre><code>##  * length.integer
+##    length.numeric
+##    length.default
+## =&gt; length (internal)</code></pre>
+<pre class="r"><code>x2 &lt;- structure(x1, class = &quot;integer&quot;)
+class(x2)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>s3_dispatch(length(x2))</code></pre>
+<pre><code>## =&gt; length.integer
+##    length.default
+##  * length (internal)</code></pre></li>
+</ol>
+<p>=&gt; method exists and is found by UseMethod(). -&gt; method exists
+and is used by NextMethod(). * method exists but is not used. Nothing
+(and greyed out in console): method does not exist.</p>
+<blockquote>
+<p>in the first case, the class of x1 is created implicitly and inherits
+from the numeric class.</p>
+</blockquote>
+<pre class="r"><code>attr(x1, &quot;class&quot;)</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>s3_class(x1)  # implicit</code></pre>
+<pre><code>## [1] &quot;integer&quot; &quot;numeric&quot;</code></pre>
+<blockquote>
+<p>in the second case, the class of x2 is set explicitly.</p>
+</blockquote>
+<pre class="r"><code>attr(x2, &quot;class&quot;)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>s3_class(x2)  # explicit</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<blockquote>
+<p>length() is an internal generic and internal generics only dispatch
+to methods when the class attribute has been set, i.e. internal generics
+do not use implicit classes.</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>What classes have a method for the <code>Math</code> group generic
+in base R? Read the source code. How do the methods work?</li>
+</ol>
+<pre class="r"><code># ?Math</code></pre>
+<p>Group “Math”:</p>
+<p>abs, sign, sqrt, floor, ceiling, trunc, round, signif</p>
+<p>exp, log, expm1, log1p, cos, sin, tan, cospi, sinpi, tanpi, acos,
+asin, atan, cosh, sinh, tanh, acosh, asinh, atanh</p>
+<p>lgamma, gamma, digamma, trigamma</p>
+<p>cumsum, cumprod, cummax, cummin</p>
+<pre class="r"><code>s3_methods_generic(&quot;Math&quot;)</code></pre>
+<pre><code>## # A tibble: 8 × 4
 ##   generic class      visible source             
 ##   &lt;chr&gt;   &lt;chr&gt;      &lt;lgl&gt;   &lt;chr&gt;              
-## 1 mean    Date       TRUE    base               
-## 2 mean    default    TRUE    base               
-## 3 mean    difftime   TRUE    base               
-## 4 mean    POSIXct    TRUE    base               
-## 5 mean    POSIXlt    TRUE    base               
-## 6 mean    quosure    FALSE   registered S3method
-## 7 mean    vctrs_vctr FALSE   registered S3method</code></pre>
-<pre class="r"><code>s3_methods_class(&quot;ordered&quot;)</code></pre>
-<pre><code>## # A tibble: 6 × 4
-##   generic       class   visible source             
-##   &lt;chr&gt;         &lt;chr&gt;   &lt;lgl&gt;   &lt;chr&gt;              
-## 1 as.data.frame ordered TRUE    base               
-## 2 Ops           ordered TRUE    base               
-## 3 relevel       ordered FALSE   registered S3method
-## 4 scale_type    ordered FALSE   registered S3method
-## 5 Summary       ordered TRUE    base               
-## 6 type_sum      ordered FALSE   registered S3method</code></pre>
-</div>
-<div id="s3-arguments" class="section level3">
-<h3>13.4.3 Creating methods</h3>
-<p> </p>
-<p>There are two wrinkles to be aware of when you create a new
-method:</p>
-<ul>
-<li><p>First, you should only ever write a method if you own the generic
-or the class. R will allow you to define a method even if you don’t, but
-it is exceedingly bad manners. Instead, work with the author of either
-the generic or the class to add the method in their code.</p></li>
-<li><p>A method must have the same arguments as its generic. This is
-enforced in packages by <code>R CMD check</code>, but it’s good practice
-even if you’re not creating a package.</p>
-<p>There is one exception to this rule: if the generic has
-<code>...</code>, the method can contain a superset of the arguments.
-This allows methods to take arbitrary additional arguments. The downside
-of using <code>...</code>, however, is that any misspelled arguments
-will be silently swallowed<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, as mentioned in Section
-@ref(fun-dot-dot-dot).</p></li>
-</ul>
-</div>
-<div id="exercises" class="section level3">
-<h3>13.4.4 Exercises</h3>
-<ol style="list-style-type: decimal">
-<li><p>Read the source code for <code>t()</code> and
-<code>t.test()</code> and confirm that <code>t.test()</code> is an S3
-generic and not an S3 method. What happens if you create an object with
-class <code>test</code> and call <code>t()</code> with it? Why?</p>
-<pre class="r"><code>x &lt;- structure(1:10, class = &quot;test&quot;)
-t(x)</code></pre></li>
-</ol>
-<pre class="r"><code>t</code></pre>
-<pre><code>## function (x) 
-## UseMethod(&quot;t&quot;)
-## &lt;bytecode: 0x0000025a04620f98&gt;
-## &lt;environment: namespace:base&gt;</code></pre>
-<pre class="r"><code>t.test</code></pre>
+## 1 Math    data.frame TRUE    base               
+## 2 Math    Date       TRUE    base               
+## 3 Math    difftime   TRUE    .GlobalEnv         
+## 4 Math    factor     TRUE    base               
+## 5 Math    POSIXt     TRUE    base               
+## 6 Math    quosure    FALSE   registered S3method
+## 7 Math    vctrs_sclr FALSE   registered S3method
+## 8 Math    vctrs_vctr FALSE   registered S3method</code></pre>
+<pre class="r"><code>Math.data.frame</code></pre>
 <pre><code>## function (x, ...) 
-## UseMethod(&quot;t.test&quot;)
-## &lt;bytecode: 0x0000025a00f76658&gt;
-## &lt;environment: namespace:stats&gt;</code></pre>
-<pre class="r"><code>s3_methods_generic(&quot;t.test&quot;)</code></pre>
-<pre><code>## # A tibble: 2 × 4
-##   generic class   visible source             
-##   &lt;chr&gt;   &lt;chr&gt;   &lt;lgl&gt;   &lt;chr&gt;              
-## 1 t.test  default FALSE   registered S3method
-## 2 t.test  formula FALSE   registered S3method</code></pre>
-<pre class="r"><code>s3_methods_class(&quot;t.test&quot;)</code></pre>
-<pre><code>## # A tibble: 0 × 4
-## # … with 4 variables: generic &lt;chr&gt;, class &lt;chr&gt;, visible &lt;lgl&gt;, source &lt;chr&gt;</code></pre>
-<pre class="r"><code>s3_dispatch(t.test(1:10, y = c(7:20)))</code></pre>
-<pre><code>##    t.test.integer
-##    t.test.numeric
-## =&gt; t.test.default</code></pre>
-<pre class="r"><code>ftype(t.test)</code></pre>
-<pre><code>## [1] &quot;s3&quot;      &quot;generic&quot;</code></pre>
-<pre class="r"><code>s3_dispatch(t(x))</code></pre>
-<pre><code>## =&gt; t.test
-##  * t.default</code></pre>
-<pre class="r"><code>tools::nonS3methods(&quot;stats&quot;)</code></pre>
-<pre><code>## [1] &quot;anova.lmlist&quot;        &quot;expand.model.frame&quot;  &quot;fitted.values&quot;      
-## [4] &quot;influence.measures&quot;  &quot;lag.plot&quot;            &quot;t.test&quot;             
-## [7] &quot;plot.spec.phase&quot;     &quot;plot.spec.coherency&quot;</code></pre>
-<blockquote>
-<p><code>t.test()</code> is an S3 generic and not an S3 method.</p>
-</blockquote>
-<blockquote>
-<p>When we create an object with class test, t() dispatches to the
-t.default() method. This happens, because UseMethod() simply searches
-for functions named paste0(“generic”, “.”, c(class(x), “default”)).</p>
-</blockquote>
-<pre class="r"><code>x &lt;- structure(1:10, class = &quot;test&quot;)
-
-t(x)</code></pre>
-<pre><code>##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
-## [1,]    1    2    3    4    5    6    7    8    9    10
-## attr(,&quot;class&quot;)
-## [1] &quot;test&quot;</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>What generics does the <code>table</code> class have methods
-for?</li>
-</ol>
-<pre class="r"><code>s3_methods_class(&quot;table&quot;)</code></pre>
-<pre><code>## # A tibble: 11 × 4
-##    generic       class visible source             
-##    &lt;chr&gt;         &lt;chr&gt; &lt;lgl&gt;   &lt;chr&gt;              
-##  1 [             table TRUE    base               
-##  2 aperm         table TRUE    base               
-##  3 as.data.frame table TRUE    base               
-##  4 as_tibble     table FALSE   registered S3method
-##  5 Axis          table FALSE   registered S3method
-##  6 lines         table FALSE   registered S3method
-##  7 plot          table FALSE   registered S3method
-##  8 points        table FALSE   registered S3method
-##  9 print         table TRUE    base               
-## 10 summary       table TRUE    base               
-## 11 tail          table FALSE   registered S3method</code></pre>
-<ol start="3" style="list-style-type: decimal">
-<li>What generics does the <code>ecdf</code> class have methods
-for?</li>
-</ol>
-<pre class="r"><code>s3_methods_class(&quot;ecdf&quot;)</code></pre>
-<pre><code>## # A tibble: 4 × 4
-##   generic  class visible source             
-##   &lt;chr&gt;    &lt;chr&gt; &lt;lgl&gt;   &lt;chr&gt;              
-## 1 plot     ecdf  TRUE    stats              
-## 2 print    ecdf  FALSE   registered S3method
-## 3 quantile ecdf  FALSE   registered S3method
-## 4 summary  ecdf  FALSE   registered S3method</code></pre>
-<ol start="4" style="list-style-type: decimal">
-<li>Which base generic has the greatest number of defined methods?</li>
-</ol>
-<pre class="r"><code>nrow(s3_methods_generic(&quot;plot&quot;))</code></pre>
-<pre><code>## [1] 34</code></pre>
-<pre class="r"><code>nrow(s3_methods_generic(&quot;print&quot;))</code></pre>
-<pre><code>## [1] 314</code></pre>
-<pre class="r"><code>nrow(s3_methods_generic(&quot;quantile&quot;))</code></pre>
-<pre><code>## [1] 5</code></pre>
-<pre class="r"><code>nrow(s3_methods_generic(&quot;summary&quot;))</code></pre>
-<pre><code>## [1] 44</code></pre>
-<pre class="r"><code>base_function &lt;- ls(all.names = TRUE, env = baseenv()) %&gt;% 
-  mget(envir = baseenv()) %&gt;% 
-  keep(is_function) %&gt;% 
-  names()
-
-str(base_function)</code></pre>
-<pre><code>##  chr [1:1335] &quot;-&quot; &quot;-.Date&quot; &quot;-.POSIXt&quot; &quot;!&quot; &quot;!.hexmode&quot; &quot;!.octmode&quot; &quot;!=&quot; &quot;$&quot; ...</code></pre>
-<pre class="r"><code>s3_generic &lt;- base_function %&gt;% 
-  keep(is_s3_generic)
-
-str(s3_generic)</code></pre>
-<pre><code>##  chr [1:172] &quot;-&quot; &quot;!=&quot; &quot;$&quot; &quot;$&lt;-&quot; &quot;%%&quot; &quot;%/%&quot; &quot;&amp;&quot; &quot;*&quot; &quot;/&quot; &quot;[&quot; &quot;[[&quot; &quot;[[&lt;-&quot; ...</code></pre>
-<pre class="r"><code>n_meth_s3_generic &lt;- s3_generic %&gt;% 
-  map(~ set_names(nrow(s3_methods_generic(.x)), .x)) %&gt;% 
-  flatten_dfr() 
-
-n_meth_s3_generic</code></pre>
-<pre><code>## # A tibble: 1 × 172
-##     `-`  `!=`   `$` `$&lt;-`  `%%` `%/%`   `&amp;`   `*`   `/`   `[`  `[[` `[[&lt;-` `[&lt;-`
-##   &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;  &lt;int&gt; &lt;int&gt;
-## 1     4     3    17    14     1     1     3     2     2    60    25     16    21
-## # … with 159 more variables: `^` &lt;int&gt;, `|` &lt;int&gt;, `+` &lt;int&gt;, `&lt;` &lt;int&gt;,
-## #   `&lt;=` &lt;int&gt;, `==` &lt;int&gt;, `&gt;` &lt;int&gt;, `&gt;=` &lt;int&gt;, abs &lt;int&gt;, acos &lt;int&gt;,
-## #   acosh &lt;int&gt;, all &lt;int&gt;, all.equal &lt;int&gt;, any &lt;int&gt;, anyDuplicated &lt;int&gt;,
-## #   anyNA &lt;int&gt;, aperm &lt;int&gt;, Arg &lt;int&gt;, as.array &lt;int&gt;, as.call &lt;int&gt;,
-## #   as.character &lt;int&gt;, as.complex &lt;int&gt;, as.data.frame &lt;int&gt;, as.Date &lt;int&gt;,
-## #   as.double &lt;int&gt;, as.environment &lt;int&gt;, as.expression &lt;int&gt;,
-## #   as.function &lt;int&gt;, as.integer &lt;int&gt;, as.list &lt;int&gt;, as.logical &lt;int&gt;, …</code></pre>
-<pre class="r"><code>str(n_meth_s3_generic)</code></pre>
-<pre><code>## tibble [1 × 172] (S3: tbl_df/tbl/data.frame)
-##  $ -                       : int 4
-##  $ !=                      : int 3
-##  $ $                       : int 17
-##  $ $&lt;-                     : int 14
-##  $ %%                      : int 1
-##  $ %/%                     : int 1
-##  $ &amp;                       : int 3
-##  $ *                       : int 2
-##  $ /                       : int 2
-##  $ [                       : int 60
-##  $ [[                      : int 25
-##  $ [[&lt;-                    : int 16
-##  $ [&lt;-                     : int 21
-##  $ ^                       : int 1
-##  $ |                       : int 3
-##  $ +                       : int 5
-##  $ &lt;                       : int 3
-##  $ &lt;=                      : int 3
-##  $ ==                      : int 3
-##  $ &gt;                       : int 3
-##  $ &gt;=                      : int 3
-##  $ abs                     : int 0
-##  $ acos                    : int 0
-##  $ acosh                   : int 0
-##  $ all                     : int 0
-##  $ all.equal               : int 12
-##  $ any                     : int 0
-##  $ anyDuplicated           : int 6
-##  $ anyNA                   : int 5
-##  $ aperm                   : int 2
-##  $ Arg                     : int 0
-##  $ as.array                : int 1
-##  $ as.call                 : int 0
-##  $ as.character            : int 41
-##  $ as.complex              : int 0
-##  $ as.data.frame           : int 33
-##  $ as.Date                 : int 8
-##  $ as.double               : int 6
-##  $ as.environment          : int 1
-##  $ as.expression           : int 1
-##  $ as.function             : int 1
-##  $ as.integer              : int 2
-##  $ as.list                 : int 17
-##  $ as.logical              : int 3
-##  $ as.matrix               : int 8
-##  $ as.null                 : int 1
-##  $ as.numeric              : int 0
-##  $ as.POSIXct              : int 12
-##  $ as.POSIXlt              : int 14
-##  $ as.raw                  : int 0
-##  $ as.single               : int 1
-##  $ as.table                : int 2
-##  $ as.vector               : int 5
-##  $ asin                    : int 0
-##  $ asinh                   : int 0
-##  $ atan                    : int 0
-##  $ atanh                   : int 0
-##  $ by                      : int 2
-##  $ c                       : int 19
-##  $ cbind                   : int 4
-##  $ ceiling                 : int 0
-##  $ chol                    : int 1
-##  $ close                   : int 5
-##  $ conditionCall           : int 1
-##  $ conditionMessage        : int 5
-##  $ Conj                    : int 0
-##  $ cos                     : int 0
-##  $ cosh                    : int 0
-##  $ cospi                   : int 0
-##  $ cummax                  : int 0
-##  $ cummin                  : int 0
-##  $ cumprod                 : int 0
-##  $ cumsum                  : int 0
-##  $ cut                     : int 4
-##  $ determinant             : int 1
-##  $ diff                    : int 6
-##  $ digamma                 : int 0
-##  $ dim                     : int 3
-##  $ dim&lt;-                   : int 2
-##  $ dimnames                : int 3
-##  $ dimnames&lt;-              : int 4
-##  $ droplevels              : int 2
-##  $ duplicated              : int 9
-##  $ exp                     : int 0
-##  $ expm1                   : int 0
-##  $ floor                   : int 0
-##  $ flush                   : int 1
-##  $ format                  : int 138
-##  $ gamma                   : int 0
-##  $ getDLLRegisteredRoutines: int 2
-##  $ Im                      : int 0
-##  $ is.array                : int 0
-##  $ is.finite               : int 1
-##  $ is.infinite             : int 1
-##  $ is.matrix               : int 0
-##  $ is.na                   : int 5
-##  $ is.na&lt;-                 : int 5
-##  $ is.nan                  : int 1
-##  $ is.numeric              : int 3
-##   [list output truncated]</code></pre>
-<pre class="r"><code>long_n_meth_s3_generic &lt;- n_meth_s3_generic %&gt;% 
-  pivot_longer(
-    everything(), 
-    names_to = &quot;generic_name&quot;, 
-    values_to = &quot;n_methods&quot;)
-
-long_n_meth_s3_generic</code></pre>
-<pre><code>## # A tibble: 172 × 2
-##    generic_name n_methods
-##    &lt;chr&gt;            &lt;int&gt;
-##  1 -                    4
-##  2 !=                   3
-##  3 $                   17
-##  4 $&lt;-                 14
-##  5 %%                   1
-##  6 %/%                  1
-##  7 &amp;                    3
-##  8 *                    2
-##  9 /                    2
-## 10 [                   60
-## # … with 162 more rows</code></pre>
-<pre class="r"><code>long_n_meth_s3_generic %&gt;% 
-  arrange(desc(n_methods)) %&gt;% 
-  head()</code></pre>
-<pre><code>## # A tibble: 6 × 2
-##   generic_name n_methods
-##   &lt;chr&gt;            &lt;int&gt;
-## 1 print              314
-## 2 format             138
-## 3 [                   60
-## 4 summary             44
-## 5 as.character        41
-## 6 plot                34</code></pre>
-<pre class="r"><code>long_n_meth_s3_generic %&gt;% 
-  filter(n_methods == max(n_methods))</code></pre>
-<pre><code>## # A tibble: 1 × 2
-##   generic_name n_methods
-##   &lt;chr&gt;            &lt;int&gt;
-## 1 print              314</code></pre>
-<ol start="5" style="list-style-type: decimal">
-<li>Carefully read the documentation for <code>UseMethod()</code> and
-explain why the following code returns the results that it does. What
-two usual rules of function evaluation does <code>UseMethod()</code>
-violate?</li>
-</ol>
-<pre class="r"><code>g &lt;- function(x,y) {
-  x &lt;- 10
-  y &lt;- 10
-  UseMethod(&quot;g&quot;,y)
-}
-g.default &lt;- function(x,y) c(x = x, y = y)
-g.factor &lt;- function(x,y) cat(&quot;factor&quot;)
-
-x &lt;- 1
-y &lt;- 1
-g(x, factor(c(&quot;a&quot;,&quot;b&quot;)))</code></pre>
-<pre><code>##  x y1 y2 
-##  1  1  2</code></pre>
-<pre class="r"><code>s3_dispatch(g(x, factor(c(&quot;a&quot;,&quot;b&quot;))))</code></pre>
-<pre><code>##    g.double
-##    g.numeric
-## =&gt; g.default</code></pre>
-<pre class="r"><code>g &lt;- function(x) {
-  x &lt;- 10
-  y &lt;- 10
-  UseMethod(&quot;g&quot;)
-}
-g.default &lt;- function(x) c(x = x, y = y)
-
-x &lt;- 1
-y &lt;- 1
-g(x)</code></pre>
-<pre><code>##  x  y 
-##  1 10</code></pre>
-<pre class="r"><code>s3_dispatch(g(x))</code></pre>
-<pre><code>##    g.double
-##    g.numeric
-## =&gt; g.default</code></pre>
-<pre class="r"><code>g &lt;- function(x) {
-  x &lt;- 10
-  y &lt;- 10
-  g2(x)
-}
-
-g2 &lt;- function(x) c(x = x, y = y)
-
-x &lt;- 1
-y &lt;- 1
-g(x)</code></pre>
-<pre><code>##  x  y 
-## 10  1</code></pre>
-<pre class="r"><code>g2(x)</code></pre>
-<pre><code>## x y 
-## 1 1</code></pre>
-<pre class="r"><code>g.default(x)</code></pre>
-<pre><code>## x y 
-## 1 1</code></pre>
-<blockquote>
-<p>because UseMethod() calls g.default() in a special way so that
-variables defined inside the generic are available to methods.</p>
-</blockquote>
-<blockquote>
-<p>The exception are arguments supplied to the function: they are passed
-on as is and cannot be affected by code inside the generic.</p>
-</blockquote>
-<p><code>UseMethod()</code></p>
-<blockquote>
-<p>R possesses a simple generic function mechanism which can be used for
-an object-oriented style of programming. Method dispatch takes place
-based on the class(es) of the first argument to the generic function or
-of the object supplied as an argument to UseMethod or NextMethod.</p>
-</blockquote>
-<blockquote>
-<p>UseMethod(generic, object)</p>
-</blockquote>
-<blockquote>
-<p>An R object is a data object which has a class attribute (and this
-can be tested by is.object). A class attribute is a character vector
-giving the names of the classes from which the object inherits. If the
-object does not have a class attribute, it has an implicit class.
-Matrices and arrays have class “matrix” or”array” followed by the class
-of the underlying vector. Most vectors have class the result of mode(x),
-except that integer vectors have class c(“integer”, “numeric”) and real
-vectors have class c(“double”, “numeric”).</p>
-</blockquote>
-<blockquote>
-<p>When a function calling UseMethod(“fun”) is applied to an object with
-class attribute c(“first”, “second”), the system searches for a function
-called fun.first and, if it finds it, applies it to the object. If no
-such function is found a function called fun.second is tried. If no
-class name produces a suitable function, the function fun.default is
-used, if it exists, or an error results.</p>
-</blockquote>
-<blockquote>
-<p>UseMethod is a primitive function but uses standard argument
-matching. It is not the only means of dispatch of methods, for there are
-internal generic and group generic functions. UseMethod currently
-dispatches on the implicit class even for arguments that are not
-objects, but the other means of dispatch do not.</p>
-</blockquote>
-<pre class="r"><code>g &lt;- function(x) {
-  x &lt;- 10
-  y &lt;- 10
-  UseMethod(&quot;g&quot;)
-}
-
-g.factor &lt;- function(x) cat(&quot;FACTOR\n&quot;)
-g.integer &lt;- function(x) cat(&quot;INTEGER\n&quot;)
-g.default &lt;- function(x) cat(&quot;NOT THOSE\n&quot;)
-x &lt;- factor(&quot;A&quot;)
-x2 &lt;- 1L
-
-g(x)</code></pre>
-<pre><code>## FACTOR</code></pre>
-<pre class="r"><code>g(x2)</code></pre>
-<pre><code>## INTEGER</code></pre>
-<pre class="r"><code>g(list())</code></pre>
-<pre><code>## NOT THOSE</code></pre>
-<pre class="r"><code>g(c())</code></pre>
-<pre><code>## NOT THOSE</code></pre>
-<pre class="r"><code>g.default(x)</code></pre>
-<pre><code>## NOT THOSE</code></pre>
-<ol start="6" style="list-style-type: decimal">
-<li>What are the arguments to <code>[</code>? Why is this a hard
-question to answer?</li>
-</ol>
-<pre class="r"><code>ftype(`[`)</code></pre>
-<pre><code>## [1] &quot;primitive&quot; &quot;generic&quot;</code></pre>
-<pre class="r"><code>pryr::show_c_source(.Primitive(&quot;[&quot;))</code></pre>
-<pre><code>## [ is implemented by do_subset with op = 1</code></pre>
-<pre><code>## Please visit https://github.com/search?q=SEXP%20attribute_hidden%20do_subset+repo:wch/r-source&amp;type=Code</code></pre>
-<pre class="r"><code>s3_methods_generic(&quot;[&quot;)</code></pre>
-<pre><code>## # A tibble: 60 × 4
-##    generic class                 visible source             
-##    &lt;chr&gt;   &lt;chr&gt;                 &lt;lgl&gt;   &lt;chr&gt;              
-##  1 [       acf                   FALSE   registered S3method
-##  2 [       arrow                 FALSE   registered S3method
-##  3 [       AsIs                  TRUE    base               
-##  4 [       bibentry              FALSE   registered S3method
-##  5 [       check_details_changes FALSE   registered S3method
-##  6 [       cli_doc               FALSE   registered S3method
-##  7 [       data.frame            TRUE    base               
-##  8 [       Date                  TRUE    base               
-##  9 [       difftime              TRUE    base               
-## 10 [       Dlist                 TRUE    base               
-## # … with 50 more rows</code></pre>
-<pre class="r"><code>names(formals(`[.Date`))</code></pre>
-<pre><code>## [1] &quot;x&quot;    &quot;...&quot;  &quot;drop&quot;</code></pre>
-<pre class="r"><code>names(formals(`[.data.frame`))</code></pre>
-<pre><code>## [1] &quot;x&quot;    &quot;i&quot;    &quot;j&quot;    &quot;drop&quot;</code></pre>
-<blockquote>
-<p>the arguments vary with the class of x.</p>
-</blockquote>
-<pre class="r"><code>visible &lt;- s3_methods_generic(&quot;[&quot;) %&gt;%
-  filter(visible)
-visible</code></pre>
-<pre><code>## # A tibble: 17 × 4
-##    generic class           visible source
-##    &lt;chr&gt;   &lt;chr&gt;           &lt;lgl&gt;   &lt;chr&gt; 
-##  1 [       AsIs            TRUE    base  
-##  2 [       data.frame      TRUE    base  
-##  3 [       Date            TRUE    base  
-##  4 [       difftime        TRUE    base  
-##  5 [       Dlist           TRUE    base  
-##  6 [       DLLInfoList     TRUE    base  
-##  7 [       factor          TRUE    base  
-##  8 [       hexmode         TRUE    base  
-##  9 [       listof          TRUE    base  
-## 10 [       noquote         TRUE    base  
-## 11 [       numeric_version TRUE    base  
-## 12 [       octmode         TRUE    base  
-## 13 [       POSIXct         TRUE    base  
-## 14 [       POSIXlt         TRUE    base  
-## 15 [       simple.list     TRUE    base  
-## 16 [       table           TRUE    base  
-## 17 [       warnings        TRUE    base</code></pre>
-<pre class="r"><code>visible_args &lt;- visible %&gt;% 
-  mutate(
-    method = paste0(&quot;[.&quot;, class),
-    argnames = purrr::map(method, ~ names(formals(.x))),
-    args = purrr::map(method, ~ formals(.x)),
-    args = purrr::map2(
-      argnames, args,
-      ~ paste(.x, .y, sep = &quot; = &quot;)
-    ),
-    args = purrr::set_names(args, method)
-  ) 
-
-visible_args</code></pre>
-<pre><code>## # A tibble: 17 × 7
-##    generic class           visible source method            argnames  args      
-##    &lt;chr&gt;   &lt;chr&gt;           &lt;lgl&gt;   &lt;chr&gt;  &lt;chr&gt;             &lt;list&gt;    &lt;named li&gt;
-##  1 [       AsIs            TRUE    base   [.AsIs            &lt;chr [3]&gt; &lt;chr [3]&gt; 
-##  2 [       data.frame      TRUE    base   [.data.frame      &lt;chr [4]&gt; &lt;chr [4]&gt; 
-##  3 [       Date            TRUE    base   [.Date            &lt;chr [3]&gt; &lt;chr [3]&gt; 
-##  4 [       difftime        TRUE    base   [.difftime        &lt;chr [3]&gt; &lt;chr [3]&gt; 
-##  5 [       Dlist           TRUE    base   [.Dlist           &lt;chr [3]&gt; &lt;chr [3]&gt; 
-##  6 [       DLLInfoList     TRUE    base   [.DLLInfoList     &lt;chr [2]&gt; &lt;chr [2]&gt; 
-##  7 [       factor          TRUE    base   [.factor          &lt;chr [3]&gt; &lt;chr [3]&gt; 
-##  8 [       hexmode         TRUE    base   [.hexmode         &lt;chr [2]&gt; &lt;chr [2]&gt; 
-##  9 [       listof          TRUE    base   [.listof          &lt;chr [3]&gt; &lt;chr [3]&gt; 
-## 10 [       noquote         TRUE    base   [.noquote         &lt;chr [2]&gt; &lt;chr [2]&gt; 
-## 11 [       numeric_version TRUE    base   [.numeric_version &lt;chr [3]&gt; &lt;chr [3]&gt; 
-## 12 [       octmode         TRUE    base   [.octmode         &lt;chr [2]&gt; &lt;chr [2]&gt; 
-## 13 [       POSIXct         TRUE    base   [.POSIXct         &lt;chr [3]&gt; &lt;chr [3]&gt; 
-## 14 [       POSIXlt         TRUE    base   [.POSIXlt         &lt;chr [4]&gt; &lt;chr [4]&gt; 
-## 15 [       simple.list     TRUE    base   [.simple.list     &lt;chr [3]&gt; &lt;chr [3]&gt; 
-## 16 [       table           TRUE    base   [.table           &lt;chr [5]&gt; &lt;chr [5]&gt; 
-## 17 [       warnings        TRUE    base   [.warnings        &lt;chr [2]&gt; &lt;chr [2]&gt;</code></pre>
-<pre class="r"><code>str(visible_args)</code></pre>
-<pre><code>## tibble [17 × 7] (S3: tbl_df/tbl/data.frame)
-##  $ generic : chr [1:17] &quot;[&quot; &quot;[&quot; &quot;[&quot; &quot;[&quot; ...
-##  $ class   : chr [1:17] &quot;AsIs&quot; &quot;data.frame&quot; &quot;Date&quot; &quot;difftime&quot; ...
-##  $ visible : logi [1:17] TRUE TRUE TRUE TRUE TRUE TRUE ...
-##  $ source  : chr [1:17] &quot;base&quot; &quot;base&quot; &quot;base&quot; &quot;base&quot; ...
-##  $ method  : chr [1:17] &quot;[.AsIs&quot; &quot;[.data.frame&quot; &quot;[.Date&quot; &quot;[.difftime&quot; ...
-##  $ argnames:List of 17
-##   ..$ : chr [1:3] &quot;x&quot; &quot;i&quot; &quot;...&quot;
-##   ..$ : chr [1:4] &quot;x&quot; &quot;i&quot; &quot;j&quot; &quot;drop&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;...&quot; &quot;drop&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;...&quot; &quot;drop&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;i&quot; &quot;...&quot;
-##   ..$ : chr [1:2] &quot;x&quot; &quot;...&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;...&quot; &quot;drop&quot;
-##   ..$ : chr [1:2] &quot;x&quot; &quot;i&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;i&quot; &quot;...&quot;
-##   ..$ : chr [1:2] &quot;x&quot; &quot;...&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;i&quot; &quot;j&quot;
-##   ..$ : chr [1:2] &quot;x&quot; &quot;i&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;...&quot; &quot;drop&quot;
-##   ..$ : chr [1:4] &quot;x&quot; &quot;i&quot; &quot;j&quot; &quot;drop&quot;
-##   ..$ : chr [1:3] &quot;x&quot; &quot;i&quot; &quot;...&quot;
-##   ..$ : chr [1:5] &quot;x&quot; &quot;i&quot; &quot;j&quot; &quot;...&quot; ...
-##   ..$ : chr [1:2] &quot;x&quot; &quot;...&quot;
-##  $ args    :List of 17
-##   ..$ [.AsIs           : chr [1:3] &quot;x = &quot; &quot;i = &quot; &quot;... = &quot;
-##   ..$ [.data.frame     : chr [1:4] &quot;x = &quot; &quot;i = &quot; &quot;j = &quot; &quot;drop = if (missing(i)) TRUE else length(cols) == 1&quot;
-##   ..$ [.Date           : chr [1:3] &quot;x = &quot; &quot;... = &quot; &quot;drop = TRUE&quot;
-##   ..$ [.difftime       : chr [1:3] &quot;x = &quot; &quot;... = &quot; &quot;drop = TRUE&quot;
-##   ..$ [.Dlist          : chr [1:3] &quot;x = &quot; &quot;i = &quot; &quot;... = &quot;
-##   ..$ [.DLLInfoList    : chr [1:2] &quot;x = &quot; &quot;... = &quot;
-##   ..$ [.factor         : chr [1:3] &quot;x = &quot; &quot;... = &quot; &quot;drop = FALSE&quot;
-##   ..$ [.hexmode        : chr [1:2] &quot;x = &quot; &quot;i = &quot;
-##   ..$ [.listof         : chr [1:3] &quot;x = &quot; &quot;i = &quot; &quot;... = &quot;
-##   ..$ [.noquote        : chr [1:2] &quot;x = &quot; &quot;... = &quot;
-##   ..$ [.numeric_version: chr [1:3] &quot;x = &quot; &quot;i = &quot; &quot;j = &quot;
-##   ..$ [.octmode        : chr [1:2] &quot;x = &quot; &quot;i = &quot;
-##   ..$ [.POSIXct        : chr [1:3] &quot;x = &quot; &quot;... = &quot; &quot;drop = TRUE&quot;
-##   ..$ [.POSIXlt        : chr [1:4] &quot;x = &quot; &quot;i = &quot; &quot;j = &quot; &quot;drop = TRUE&quot;
-##   ..$ [.simple.list    : chr [1:3] &quot;x = &quot; &quot;i = &quot; &quot;... = &quot;
-##   ..$ [.table          : chr [1:5] &quot;x = &quot; &quot;i = &quot; &quot;j = &quot; &quot;... = &quot; ...
-##   ..$ [.warnings       : chr [1:2] &quot;x = &quot; &quot;... = &quot;</code></pre>
-<blockquote>
-<p>pull() is similar to $. It’s mostly useful because it looks a little
-nicer in pipes, it also works with remote data frames, and it can
-optionally name the output.</p>
-</blockquote>
-<pre class="r"><code>visible_args %&gt;%
-  pull(args) </code></pre>
-<pre><code>## $`[.AsIs`
-## [1] &quot;x = &quot;   &quot;i = &quot;   &quot;... = &quot;
-## 
-## $`[.data.frame`
-## [1] &quot;x = &quot;                                              
-## [2] &quot;i = &quot;                                              
-## [3] &quot;j = &quot;                                              
-## [4] &quot;drop = if (missing(i)) TRUE else length(cols) == 1&quot;
-## 
-## $`[.Date`
-## [1] &quot;x = &quot;        &quot;... = &quot;      &quot;drop = TRUE&quot;
-## 
-## $`[.difftime`
-## [1] &quot;x = &quot;        &quot;... = &quot;      &quot;drop = TRUE&quot;
-## 
-## $`[.Dlist`
-## [1] &quot;x = &quot;   &quot;i = &quot;   &quot;... = &quot;
-## 
-## $`[.DLLInfoList`
-## [1] &quot;x = &quot;   &quot;... = &quot;
-## 
-## $`[.factor`
-## [1] &quot;x = &quot;         &quot;... = &quot;       &quot;drop = FALSE&quot;
-## 
-## $`[.hexmode`
-## [1] &quot;x = &quot; &quot;i = &quot;
-## 
-## $`[.listof`
-## [1] &quot;x = &quot;   &quot;i = &quot;   &quot;... = &quot;
-## 
-## $`[.noquote`
-## [1] &quot;x = &quot;   &quot;... = &quot;
-## 
-## $`[.numeric_version`
-## [1] &quot;x = &quot; &quot;i = &quot; &quot;j = &quot;
-## 
-## $`[.octmode`
-## [1] &quot;x = &quot; &quot;i = &quot;
-## 
-## $`[.POSIXct`
-## [1] &quot;x = &quot;        &quot;... = &quot;      &quot;drop = TRUE&quot;
-## 
-## $`[.POSIXlt`
-## [1] &quot;x = &quot;        &quot;i = &quot;        &quot;j = &quot;        &quot;drop = TRUE&quot;
-## 
-## $`[.simple.list`
-## [1] &quot;x = &quot;   &quot;i = &quot;   &quot;... = &quot;
-## 
-## $`[.table`
-## [1] &quot;x = &quot;        &quot;i = &quot;        &quot;j = &quot;        &quot;... = &quot;      &quot;drop = TRUE&quot;
-## 
-## $`[.warnings`
-## [1] &quot;x = &quot;   &quot;... = &quot;</code></pre>
-</div>
-</div>
-<div id="object-styles" class="section level2">
-<h2>13.5 Object styles</h2>
-<p></p>
-<p>So far I’ve focussed on vector style classes like <code>Date</code>
-and <code>factor</code>. These have the key property that
-<code>length(x)</code> represents the number of observations in the
-vector. There are three variants that do not have this property:</p>
-<ul>
-<li><p>Record style objects use a list of equal-length vectors to
-represent individual components of the object. The best example of this
-is <code>POSIXlt</code>, which underneath the hood is a list of 11
-date-time components like year, month, and day. Record style classes
-override <code>length()</code> and subsetting methods to conceal this
-implementation detail.</p>
-<pre class="r"><code>x &lt;- as.POSIXlt(ISOdatetime(2020, 1, 1, 0, 0, 1:3))
-x</code></pre>
-<pre><code>## [1] &quot;2020-01-01 00:00:01 GMT&quot; &quot;2020-01-01 00:00:02 GMT&quot;
-## [3] &quot;2020-01-01 00:00:03 GMT&quot;</code></pre>
-<pre class="r"><code>length(x)</code></pre>
-<pre><code>## [1] 3</code></pre>
-<pre class="r"><code>length(unclass(x))</code></pre>
-<pre><code>## [1] 11</code></pre>
-<pre class="r"><code>x[[1]] # the first date time</code></pre>
-<pre><code>## [1] &quot;2020-01-01 00:00:01 GMT&quot;</code></pre>
-<pre class="r"><code>unclass(x)[[1]] # the first component, the number of seconds</code></pre>
-<pre><code>## [1] 1 2 3</code></pre></li>
-<li><p>Data frames are similar to record style objects in that both use
-lists of equal length vectors. However, data frames are conceptually two
-dimensional, and the individual components are readily exposed to the
-user. The number of observations is the number of rows, not the
-length:</p>
-<pre class="r"><code>x &lt;- data.frame(x = 1:100, y = 1:100)
-length(x)</code></pre>
-<pre><code>## [1] 2</code></pre>
-<pre class="r"><code>nrow(x)</code></pre>
-<pre><code>## [1] 100</code></pre></li>
-<li><p>Scalar objects typically use a list to represent a single thing.
-For example, an <code>lm</code> object is a list of length 12 but it
-represents one model.</p>
-<pre class="r"><code>mod &lt;- lm(mpg ~ wt, data = mtcars)
-length(mod)</code></pre>
-<pre><code>## [1] 12</code></pre>
-<p>Scalar objects can also be built on top of functions, calls, and
-environments<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>. This is less generally useful, but you can
-see applications in <code>stats::ecdf()</code>, R6 (Chapter @ref(r6)),
-and <code>rlang::quo()</code> (Chapter @ref(quasiquotation)). </p></li>
-</ul>
-<p>Unfortunately, describing the appropriate use of each of these object
-styles is beyond the scope of this book. However, you can learn more
-from the documentation of the vctrs package (<a href="https://vctrs.r-lib.org" class="uri">https://vctrs.r-lib.org</a>);
-the package also provides constructors and helpers that make
-implementation of the different styles easier.</p>
-<div id="exercises-1" class="section level3">
-<h3>13.5.1 Exercises</h3>
-<ol style="list-style-type: decimal">
-<li>Categorise the objects returned by <code>lm()</code>,
-<code>factor()</code>, <code>table()</code>, <code>as.Date()</code>,
-<code>as.POSIXct()</code> <code>ecdf()</code>, <code>ordered()</code>,
-<code>I()</code> into the styles described above.</li>
-</ol>
-<ul>
-<li>Vector style objects: <code>factor()</code>, <code>table()</code>,
-<code>as.Date()</code>, <code>ordered()</code></li>
-</ul>
-<blockquote>
-<p>For vector style classes, length(x) represents the number of
-observations.</p>
-</blockquote>
-<pre class="r"><code>factor &lt;- factor(letters[1:20])
-str(factor)</code></pre>
-<pre><code>##  Factor w/ 20 levels &quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...</code></pre>
-<pre class="r"><code>length(factor)</code></pre>
-<pre><code>## [1] 20</code></pre>
-<pre class="r"><code>table &lt;- table(letters[1:20])
-str(table)</code></pre>
-<pre><code>##  &#39;table&#39; int [1:20(1d)] 1 1 1 1 1 1 1 1 1 1 ...
-##  - attr(*, &quot;dimnames&quot;)=List of 1
-##   ..$ : chr [1:20] &quot;a&quot; &quot;b&quot; &quot;c&quot; &quot;d&quot; ...</code></pre>
-<pre class="r"><code>length(table)</code></pre>
-<pre><code>## [1] 20</code></pre>
-<pre class="r"><code>x &lt;- c(&quot;1jan1960&quot;, &quot;2jan1960&quot;, &quot;31mar1960&quot;, &quot;30jul1960&quot;)
-z &lt;- as.Date(x, &quot;%d%b%Y&quot;)
-
-str(z)</code></pre>
-<pre><code>##  Date[1:4], format: &quot;1960-01-01&quot; &quot;1960-01-02&quot; &quot;1960-03-31&quot; &quot;1960-07-30&quot;</code></pre>
-<pre class="r"><code>length(z)</code></pre>
-<pre><code>## [1] 4</code></pre>
-<pre class="r"><code>length(unclass(z))</code></pre>
-<pre><code>## [1] 4</code></pre>
-<pre class="r"><code>ordered &lt;- ordered(rnorm(12))
-str(ordered)</code></pre>
-<pre><code>##  Ord.factor w/ 12 levels &quot;-0.641315339864117&quot;&lt;..: 6 9 3 4 1 7 11 8 2 5 ...</code></pre>
-<pre class="r"><code>length(ordered)</code></pre>
-<pre><code>## [1] 12</code></pre>
-<ul>
-<li>Record style objects: <code>as.POSIXct()</code></li>
-</ul>
-<blockquote>
-<p>Record style objects use a list of equal length elements to represent
-individual components.</p>
-</blockquote>
-<pre class="r"><code>now &lt;- as.POSIXlt(z)
-
-str(now)</code></pre>
-<pre><code>##  POSIXlt[1:4], format: &quot;1960-01-01&quot; &quot;1960-01-02&quot; &quot;1960-03-31&quot; &quot;1960-07-30&quot;</code></pre>
-<pre class="r"><code>length(now)</code></pre>
-<pre><code>## [1] 4</code></pre>
-<pre class="r"><code>length(unclass(now))</code></pre>
-<pre><code>## [1] 9</code></pre>
-<ul>
-<li>Data frame objects: NA</li>
-</ul>
-<blockquote>
-<p>For data frames and matrices, the observations are represented by the
-rows.</p>
-</blockquote>
-<ul>
-<li>Scalar objects: <code>lm()</code>, <code>ecdf()</code></li>
-</ul>
-<blockquote>
-<p>Scalar style objects use a list to represent a single thing.</p>
-</blockquote>
-<pre class="r"><code>mod &lt;- lm(mpg ~ wt, data = mtcars)
-str(mod)</code></pre>
-<pre><code>## List of 12
-##  $ coefficients : Named num [1:2] 37.29 -5.34
-##   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;(Intercept)&quot; &quot;wt&quot;
-##  $ residuals    : Named num [1:32] -2.28 -0.92 -2.09 1.3 -0.2 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##  $ effects      : Named num [1:32] -113.65 -29.116 -1.661 1.631 0.111 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;(Intercept)&quot; &quot;wt&quot; &quot;&quot; &quot;&quot; ...
-##  $ rank         : int 2
-##  $ fitted.values: Named num [1:32] 23.3 21.9 24.9 20.1 18.9 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##  $ assign       : int [1:2] 0 1
-##  $ qr           :List of 5
-##   ..$ qr   : num [1:32, 1:2] -5.657 0.177 0.177 0.177 0.177 ...
-##   .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. ..$ : chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##   .. .. ..$ : chr [1:2] &quot;(Intercept)&quot; &quot;wt&quot;
-##   .. ..- attr(*, &quot;assign&quot;)= int [1:2] 0 1
-##   ..$ qraux: num [1:2] 1.18 1.05
-##   ..$ pivot: int [1:2] 1 2
-##   ..$ tol  : num 1e-07
-##   ..$ rank : int 2
-##   ..- attr(*, &quot;class&quot;)= chr &quot;qr&quot;
-##  $ df.residual  : int 30
-##  $ xlevels      : Named list()
-##  $ call         : language lm(formula = mpg ~ wt, data = mtcars)
-##  $ terms        :Classes &#39;terms&#39;, &#39;formula&#39;  language mpg ~ wt
-##   .. ..- attr(*, &quot;variables&quot;)= language list(mpg, wt)
-##   .. ..- attr(*, &quot;factors&quot;)= int [1:2, 1] 0 1
-##   .. .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. .. ..$ : chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##   .. .. .. ..$ : chr &quot;wt&quot;
-##   .. ..- attr(*, &quot;term.labels&quot;)= chr &quot;wt&quot;
-##   .. ..- attr(*, &quot;order&quot;)= int 1
-##   .. ..- attr(*, &quot;intercept&quot;)= int 1
-##   .. ..- attr(*, &quot;response&quot;)= int 1
-##   .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
-##   .. ..- attr(*, &quot;predvars&quot;)= language list(mpg, wt)
-##   .. ..- attr(*, &quot;dataClasses&quot;)= Named chr [1:2] &quot;numeric&quot; &quot;numeric&quot;
-##   .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##  $ model        :&#39;data.frame&#39;:   32 obs. of  2 variables:
-##   ..$ mpg: num [1:32] 21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
-##   ..$ wt : num [1:32] 2.62 2.88 2.32 3.21 3.44 ...
-##   ..- attr(*, &quot;terms&quot;)=Classes &#39;terms&#39;, &#39;formula&#39;  language mpg ~ wt
-##   .. .. ..- attr(*, &quot;variables&quot;)= language list(mpg, wt)
-##   .. .. ..- attr(*, &quot;factors&quot;)= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. .. .. ..$ : chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##   .. .. .. .. ..$ : chr &quot;wt&quot;
-##   .. .. ..- attr(*, &quot;term.labels&quot;)= chr &quot;wt&quot;
-##   .. .. ..- attr(*, &quot;order&quot;)= int 1
-##   .. .. ..- attr(*, &quot;intercept&quot;)= int 1
-##   .. .. ..- attr(*, &quot;response&quot;)= int 1
-##   .. .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
-##   .. .. ..- attr(*, &quot;predvars&quot;)= language list(mpg, wt)
-##   .. .. ..- attr(*, &quot;dataClasses&quot;)= Named chr [1:2] &quot;numeric&quot; &quot;numeric&quot;
-##   .. .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##  - attr(*, &quot;class&quot;)= chr &quot;lm&quot;</code></pre>
-<pre class="r"><code>length(mod)</code></pre>
-<pre><code>## [1] 12</code></pre>
-<pre class="r"><code>x &lt;- rnorm(12)
-Fn &lt;- ecdf(x)
-str(Fn)</code></pre>
-<pre><code>## function (v)  
-##  - attr(*, &quot;class&quot;)= chr [1:3] &quot;ecdf&quot; &quot;stepfun&quot; &quot;function&quot;
-##  - attr(*, &quot;call&quot;)= language ecdf(x)</code></pre>
-<pre class="r"><code>length(Fn)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<blockquote>
-<p><code>I(x)</code> depends on the input</p>
-</blockquote>
-<blockquote>
-<p>Change the class of an object to indicate that it should be treated
-‘as is’.</p>
-</blockquote>
-<ol start="2" style="list-style-type: decimal">
-<li>What would a constructor function for <code>lm</code> objects,
-<code>new_lm()</code>, look like? Use <code>?lm</code> and
-experimentation to figure out the required fields and their types.</li>
-</ol>
-<pre class="r"><code>lm</code></pre>
-<pre><code>## function (formula, data, subset, weights, na.action, method = &quot;qr&quot;, 
-##     model = TRUE, x = FALSE, y = FALSE, qr = TRUE, singular.ok = TRUE, 
-##     contrasts = NULL, offset, ...) 
 ## {
-##     ret.x &lt;- x
-##     ret.y &lt;- y
-##     cl &lt;- match.call()
-##     mf &lt;- match.call(expand.dots = FALSE)
-##     m &lt;- match(c(&quot;formula&quot;, &quot;data&quot;, &quot;subset&quot;, &quot;weights&quot;, &quot;na.action&quot;, 
-##         &quot;offset&quot;), names(mf), 0L)
-##     mf &lt;- mf[c(1L, m)]
-##     mf$drop.unused.levels &lt;- TRUE
-##     mf[[1L]] &lt;- quote(stats::model.frame)
-##     mf &lt;- eval(mf, parent.frame())
-##     if (method == &quot;model.frame&quot;) 
-##         return(mf)
-##     else if (method != &quot;qr&quot;) 
-##         warning(gettextf(&quot;method = &#39;%s&#39; is not supported. Using &#39;qr&#39;&quot;, 
-##             method), domain = NA)
-##     mt &lt;- attr(mf, &quot;terms&quot;)
-##     y &lt;- model.response(mf, &quot;numeric&quot;)
-##     w &lt;- as.vector(model.weights(mf))
-##     if (!is.null(w) &amp;&amp; !is.numeric(w)) 
-##         stop(&quot;&#39;weights&#39; must be a numeric vector&quot;)
-##     offset &lt;- model.offset(mf)
-##     mlm &lt;- is.matrix(y)
-##     ny &lt;- if (mlm) 
-##         nrow(y)
-##     else length(y)
-##     if (!is.null(offset)) {
-##         if (!mlm) 
-##             offset &lt;- as.vector(offset)
-##         if (NROW(offset) != ny) 
-##             stop(gettextf(&quot;number of offsets is %d, should equal %d (number of observations)&quot;, 
-##                 NROW(offset), ny), domain = NA)
-##     }
-##     if (is.empty.model(mt)) {
-##         x &lt;- NULL
-##         z &lt;- list(coefficients = if (mlm) matrix(NA_real_, 0, 
-##             ncol(y)) else numeric(), residuals = y, fitted.values = 0 * 
-##             y, weights = w, rank = 0L, df.residual = if (!is.null(w)) sum(w != 
-##             0) else ny)
-##         if (!is.null(offset)) {
-##             z$fitted.values &lt;- offset
-##             z$residuals &lt;- y - offset
-##         }
+##     mode.ok &lt;- vapply(x, function(x) is.numeric(x) || is.logical(x) || 
+##         is.complex(x), NA)
+##     if (all(mode.ok)) {
+##         x[] &lt;- lapply(X = x, FUN = .Generic, ...)
+##         return(x)
 ##     }
 ##     else {
-##         x &lt;- model.matrix(mt, mf, contrasts)
-##         z &lt;- if (is.null(w)) 
-##             lm.fit(x, y, offset = offset, singular.ok = singular.ok, 
-##                 ...)
-##         else lm.wfit(x, y, w, offset = offset, singular.ok = singular.ok, 
-##             ...)
+##         vnames &lt;- names(x)
+##         if (is.null(vnames)) 
+##             vnames &lt;- seq_along(x)
+##         stop(&quot;non-numeric-alike variable(s) in data frame: &quot;, 
+##             paste(vnames[!mode.ok], collapse = &quot;, &quot;))
 ##     }
-##     class(z) &lt;- c(if (mlm) &quot;mlm&quot;, &quot;lm&quot;)
-##     z$na.action &lt;- attr(mf, &quot;na.action&quot;)
-##     z$offset &lt;- offset
-##     z$contrasts &lt;- attr(x, &quot;contrasts&quot;)
-##     z$xlevels &lt;- .getXlevels(mt, mf)
-##     z$call &lt;- cl
-##     z$terms &lt;- mt
-##     if (model) 
-##         z$model &lt;- mf
-##     if (ret.x) 
-##         z$x &lt;- x
-##     if (ret.y) 
-##         z$y &lt;- y
-##     if (!qr) 
-##         z$qr &lt;- NULL
-##     z
 ## }
-## &lt;bytecode: 0x0000025a09f03390&gt;
-## &lt;environment: namespace:stats&gt;</code></pre>
-<pre class="r"><code>mod &lt;- lm(mpg ~ wt, data = mtcars)
-typeof(mod)</code></pre>
-<pre><code>## [1] &quot;list&quot;</code></pre>
-<pre class="r"><code>length(mod)</code></pre>
-<pre><code>## [1] 12</code></pre>
-<pre class="r"><code>summary(mod)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = mpg ~ wt, data = mtcars)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -4.5432 -2.3647 -0.1252  1.4096  6.8727 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  37.2851     1.8776  19.858  &lt; 2e-16 ***
-## wt           -5.3445     0.5591  -9.559 1.29e-10 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 3.046 on 30 degrees of freedom
-## Multiple R-squared:  0.7528, Adjusted R-squared:  0.7446 
-## F-statistic: 91.38 on 1 and 30 DF,  p-value: 1.294e-10</code></pre>
-<pre class="r"><code>str(mod)</code></pre>
-<pre><code>## List of 12
-##  $ coefficients : Named num [1:2] 37.29 -5.34
-##   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;(Intercept)&quot; &quot;wt&quot;
-##  $ residuals    : Named num [1:32] -2.28 -0.92 -2.09 1.3 -0.2 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##  $ effects      : Named num [1:32] -113.65 -29.116 -1.661 1.631 0.111 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;(Intercept)&quot; &quot;wt&quot; &quot;&quot; &quot;&quot; ...
-##  $ rank         : int 2
-##  $ fitted.values: Named num [1:32] 23.3 21.9 24.9 20.1 18.9 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##  $ assign       : int [1:2] 0 1
-##  $ qr           :List of 5
-##   ..$ qr   : num [1:32, 1:2] -5.657 0.177 0.177 0.177 0.177 ...
-##   .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. ..$ : chr [1:32] &quot;Mazda RX4&quot; &quot;Mazda RX4 Wag&quot; &quot;Datsun 710&quot; &quot;Hornet 4 Drive&quot; ...
-##   .. .. ..$ : chr [1:2] &quot;(Intercept)&quot; &quot;wt&quot;
-##   .. ..- attr(*, &quot;assign&quot;)= int [1:2] 0 1
-##   ..$ qraux: num [1:2] 1.18 1.05
-##   ..$ pivot: int [1:2] 1 2
-##   ..$ tol  : num 1e-07
-##   ..$ rank : int 2
-##   ..- attr(*, &quot;class&quot;)= chr &quot;qr&quot;
-##  $ df.residual  : int 30
-##  $ xlevels      : Named list()
-##  $ call         : language lm(formula = mpg ~ wt, data = mtcars)
-##  $ terms        :Classes &#39;terms&#39;, &#39;formula&#39;  language mpg ~ wt
-##   .. ..- attr(*, &quot;variables&quot;)= language list(mpg, wt)
-##   .. ..- attr(*, &quot;factors&quot;)= int [1:2, 1] 0 1
-##   .. .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. .. ..$ : chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##   .. .. .. ..$ : chr &quot;wt&quot;
-##   .. ..- attr(*, &quot;term.labels&quot;)= chr &quot;wt&quot;
-##   .. ..- attr(*, &quot;order&quot;)= int 1
-##   .. ..- attr(*, &quot;intercept&quot;)= int 1
-##   .. ..- attr(*, &quot;response&quot;)= int 1
-##   .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
-##   .. ..- attr(*, &quot;predvars&quot;)= language list(mpg, wt)
-##   .. ..- attr(*, &quot;dataClasses&quot;)= Named chr [1:2] &quot;numeric&quot; &quot;numeric&quot;
-##   .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##  $ model        :&#39;data.frame&#39;:   32 obs. of  2 variables:
-##   ..$ mpg: num [1:32] 21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
-##   ..$ wt : num [1:32] 2.62 2.88 2.32 3.21 3.44 ...
-##   ..- attr(*, &quot;terms&quot;)=Classes &#39;terms&#39;, &#39;formula&#39;  language mpg ~ wt
-##   .. .. ..- attr(*, &quot;variables&quot;)= language list(mpg, wt)
-##   .. .. ..- attr(*, &quot;factors&quot;)= int [1:2, 1] 0 1
-##   .. .. .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. .. .. ..$ : chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##   .. .. .. .. ..$ : chr &quot;wt&quot;
-##   .. .. ..- attr(*, &quot;term.labels&quot;)= chr &quot;wt&quot;
-##   .. .. ..- attr(*, &quot;order&quot;)= int 1
-##   .. .. ..- attr(*, &quot;intercept&quot;)= int 1
-##   .. .. ..- attr(*, &quot;response&quot;)= int 1
-##   .. .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
-##   .. .. ..- attr(*, &quot;predvars&quot;)= language list(mpg, wt)
-##   .. .. ..- attr(*, &quot;dataClasses&quot;)= Named chr [1:2] &quot;numeric&quot; &quot;numeric&quot;
-##   .. .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mpg&quot; &quot;wt&quot;
-##  - attr(*, &quot;class&quot;)= chr &quot;lm&quot;</code></pre>
-<pre class="r"><code>attributes(mod)</code></pre>
-<pre><code>## $names
-##  [1] &quot;coefficients&quot;  &quot;residuals&quot;     &quot;effects&quot;       &quot;rank&quot;         
-##  [5] &quot;fitted.values&quot; &quot;assign&quot;        &quot;qr&quot;            &quot;df.residual&quot;  
-##  [9] &quot;xlevels&quot;       &quot;call&quot;          &quot;terms&quot;         &quot;model&quot;        
-## 
-## $class
-## [1] &quot;lm&quot;</code></pre>
-<pre class="r"><code>new_lm &lt;- function(coefficients, 
-                   residuals, 
-                   effects, 
-                   rank, 
-                   fitted.values, 
-                   assign,
-                   qr, 
-                   df.residual, 
-                   xlevels, 
-                   call, 
-                   terms, 
-                   model) {
-  
-  stopifnot(is.double(coefficients), 
-            is.double(residuals), 
-            is.double(effects), 
-            is.integer(rank), 
-            is.double(fitted.values),
-            is.integer(assign), 
-            is.list(qr), 
-            is.integer(df.residual),
-            is.list(xlevels), 
-            is.language(call), 
-            is.language(terms),
-            is.list(model)
-  )
-  
-  structure(
-    list(
-      coefficients = coefficients,
-      residuals = residuals,
-      effects = effects,
-      rank = rank, 
-      fitted.values = fitted.values,
-      assign = assign,
-      qr = qr,
-      df.residual = df.residual,
-      xlevels = xlevels,
-      call = call,
-      terms = terms, 
-      model = model
-    ),
-    class = &quot;lm&quot;
-  )
+## &lt;bytecode: 0x0000017fe6a9d238&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>function (x, ...) 
+{
+    mode.ok &lt;- vapply(x, function(x) is.numeric(x) || is.logical(x) || 
+        is.complex(x), NA)
+    # It checks if all the variables in the data frame are numeric, logical, or complex.
+    
+    if (all(mode.ok)) {
+        x[] &lt;- lapply(X = x, FUN = .Generic, ...)
+        return(x)
+        # If they are, it applies the function to each variable.
+    }
+    else {
+        vnames &lt;- names(x)
+        if (is.null(vnames)) 
+            vnames &lt;- seq_along(x)
+        stop(&quot;non-numeric-alike variable(s) in data frame: &quot;, 
+            paste(vnames[!mode.ok], collapse = &quot;, &quot;))
+        # If they aren&#39;t, it throws an error.
+    }
 }</code></pre>
-</div>
-</div>
-<div class="footnotes footnotes-end-of-document">
-<hr />
-<ol>
-<li id="fn1"><p>The exception is internal generics, which are
-implemented in C, and are the topic of Section
-@ref(internal-generics).<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>See <a href="https://github.com/hadley/ellipsis" class="uri">https://github.com/hadley/ellipsis</a> for an experimental
-way of warning when methods fail to use all the arguments in
-<code>...</code>, providing a potential resolution of this issue.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
-<li id="fn3"><p>You can also build an object on top of a pairlist, but I
-have yet to find a good reason to do so.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<pre class="r"><code>Math.data.frame &lt;- function(x) &quot;hello&quot;</code></pre>
+<pre class="r"><code>abs(mtcars)</code></pre>
+<pre><code>## [1] &quot;hello&quot;</code></pre>
+<pre class="r"><code>exp(mtcars)</code></pre>
+<pre><code>## [1] &quot;hello&quot;</code></pre>
+<pre class="r"><code>lgamma(mtcars)</code></pre>
+<pre><code>## [1] &quot;hello&quot;</code></pre>
+<pre class="r"><code>Math.data.frame &lt;- function(x, ...) {
+  .Generic
+}</code></pre>
+<pre class="r"><code>abs(mtcars)</code></pre>
+<pre><code>## [1] &quot;abs&quot;</code></pre>
+<pre class="r"><code>exp(mtcars)</code></pre>
+<pre><code>## [1] &quot;exp&quot;</code></pre>
+<pre class="r"><code>lgamma(mtcars)</code></pre>
+<pre><code>## [1] &quot;lgamma&quot;</code></pre>
+<pre class="r"><code>rm(Math.data.frame)</code></pre>
+<pre class="r"><code>Math.factor</code></pre>
+<pre><code>## function (x, ...) 
+## stop(gettextf(&quot;%s not meaningful for factors&quot;, sQuote(.Generic)))
+## &lt;bytecode: 0x0000017fe6aacde8&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>function (x, ...) 
+  # The function is called with the arguments x and ...
+  
+stop(gettextf(&quot;%s not meaningful for factors&quot;, sQuote(.Generic)))</code></pre>
+<pre><code>## function (x, ...) 
+##   # The function is called with the arguments x and ...
+##   
+## stop(gettextf(&quot;%s not meaningful for factors&quot;, sQuote(.Generic)))</code></pre>
+<pre class="r"><code># The function calls stop() with the result of gettextf()
+# gettextf() is called with the arguments &quot;%s not meaningful for factors&quot; and sQuote(.Generic)
+# sQuote() is called with the argument .Generic
+# The function returns the result of stop()</code></pre>
+<blockquote>
+<p>gettextf is a convenience function which provides C-style string
+formatting with possible translation of the format string.</p>
+</blockquote>
+<ol start="3" style="list-style-type: decimal">
+<li><code>Math.difftime()</code> is more complicated than I described.
+Why?</li>
 </ol>
+<blockquote>
+<p>Math.difftime() as defined in Advanced R:</p>
+</blockquote>
+<pre class="r"><code>Math.difftime &lt;- function(x, ...) {
+  new_difftime(NextMethod(), units = attr(x, &quot;units&quot;))
+}
+rm(Math.difftime)</code></pre>
+<blockquote>
+<p>Math.difftime() as defined in the {base} package:</p>
+</blockquote>
+<pre class="r"><code>Math.difftime</code></pre>
+<pre><code>## function (x, ...) 
+## {
+##     switch(.Generic, abs = , sign = , floor = , ceiling = , trunc = , 
+##         round = , signif = {
+##             units &lt;- attr(x, &quot;units&quot;)
+##             .difftime(NextMethod(), units)
+##         }, stop(gettextf(&quot;&#39;%s&#39; not defined for \&quot;difftime\&quot; objects&quot;, 
+##             .Generic), domain = NA))
+## }
+## &lt;bytecode: 0x0000017fe663f428&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>function (x, ...) 
+  # The function takes two arguments, x and ...
+{
+  # The switch function is used to determine which function to use.
+  # The switch function takes two arguments, the first is the generic function, and the second is a list of functions to use.
+    switch(.Generic, abs = , sign = , floor = , ceiling = , trunc = , 
+        round = , signif = {
+            units &lt;- attr(x, &quot;units&quot;)
+            .difftime(NextMethod(), units)
+        }, stop(gettextf(&quot;&#39;%s&#39; not defined for \&quot;difftime\&quot; objects&quot;, 
+            .Generic), domain = NA))
+}</code></pre>
+<pre><code>## function (x, ...) 
+##   # The function takes two arguments, x and ...
+## {
+##   # The switch function is used to determine which function to use.
+##   # The switch function takes two arguments, the first is the generic function, and the second is a list of functions to use.
+##     switch(.Generic, abs = , sign = , floor = , ceiling = , trunc = , 
+##         round = , signif = {
+##             units &lt;- attr(x, &quot;units&quot;)
+##             .difftime(NextMethod(), units)
+##         }, stop(gettextf(&quot;&#39;%s&#39; not defined for \&quot;difftime\&quot; objects&quot;, 
+##             .Generic), domain = NA))
+## }</code></pre>
+<ol style="list-style-type: decimal">
+<li><p>The first function in the list is abs, which is used to take the
+absolute value of the difftime object.</p></li>
+<li><p>The second function in the list is sign, which is used to
+determine the sign of the difftime object.</p></li>
+<li><p>The third function in the list is floor, which is used to round
+the difftime object down.</p></li>
+<li><p>The fourth function in the list is ceiling, which is used to
+round the difftime object up.</p></li>
+<li><p>The fifth function in the list is trunc, which is used to
+truncate the difftime object.</p></li>
+<li><p>The sixth function in the list is round, which is used to round
+the difftime object.</p></li>
+<li><p>The seventh function in the list is signif, which is used to
+round the difftime object to a specified number of significant
+digits.</p></li>
+<li><p>The last function in the list is stop, which is used to stop the
+function if the generic function is not defined for difftime
+objects.</p></li>
+</ol>
+</div>
 </div>
 
 

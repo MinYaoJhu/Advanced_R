@@ -64,6 +64,16 @@ f <- factor(c("a", "b", "c"))
 
 typeof(f)
 attributes(f)
+
+
+typeof(unclass(f))
+attributes(unclass(f))
+
+c <- c("a", "b", "c")
+
+typeof(c)
+attributes(c)
+
 ```
 
 You can get the underlying base type by `unclass()`ing it, which strips the class attribute, causing it to lose its special behaviour:

@@ -149,6 +149,11 @@ ftype(t.test)
 ```
 
 ```{r}
+s3_dispatch(t(x))
+```
+
+
+```{r}
 tools::nonS3methods("stats")
 ```
 
@@ -240,6 +245,22 @@ long_n_meth_s3_generic %>%
     of function evaluation does `UseMethod()` violate?
 
 ```{r}
+g <- function(x,y) {
+  x <- 10
+  y <- 10
+  UseMethod("g",y)
+}
+g.default <- function(x,y) c(x = x, y = y)
+g.factor <- function(x,y) cat("factor")
+
+x <- 1
+y <- 1
+g(x, factor(c("a","b")))
+
+s3_dispatch(g(x, factor(c("a","b"))))
+```
+
+```{r}
 g <- function(x) {
   x <- 10
   y <- 10
@@ -250,6 +271,23 @@ g.default <- function(x) c(x = x, y = y)
 x <- 1
 y <- 1
 g(x)
+
+s3_dispatch(g(x))
+```
+
+```{r}
+g <- function(x) {
+  x <- 10
+  y <- 10
+  g2(x)
+}
+
+g2 <- function(x) c(x = x, y = y)
+
+x <- 1
+y <- 1
+g(x)
+g2(x)
 ```
 
 ```{r}
@@ -270,6 +308,28 @@ g.default(x)
 > When a function calling UseMethod("fun") is applied to an object with class attribute c("first", "second"), the system searches for a function called fun.first and, if it finds it, applies it to the object. If no such function is found a function called fun.second is tried. If no class name produces a suitable function, the function fun.default is used, if it exists, or an error results.
 
 > UseMethod is a primitive function but uses standard argument matching. It is not the only means of dispatch of methods, for there are internal generic and group generic functions. UseMethod currently dispatches on the implicit class even for arguments that are not objects, but the other means of dispatch do not.
+
+```{r}
+g <- function(x) {
+  x <- 10
+  y <- 10
+  UseMethod("g")
+}
+
+g.factor <- function(x) cat("FACTOR\n")
+g.integer <- function(x) cat("INTEGER\n")
+g.default <- function(x) cat("NOT THOSE\n")
+x <- factor("A")
+x2 <- 1L
+
+g(x)
+g(x2)
+g(list())
+g(c())
+
+g.default(x)
+
+```
 
 6.  What are the arguments to `[`? Why is this a hard question to answer?
 
