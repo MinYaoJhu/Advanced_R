@@ -633,8 +633,8 @@ hadley4$age <- 20
 > To fulfil this requirement, we make balance a private field. The user has to use the $deposit() and $withdraw() methods which have access to the balance field.
 
 ```{r}
-BankAccountStrict2 <- R6Class(
-  classname = "BankAccountStrict2",
+BankAccountStrictError <- R6Class(
+  classname = "BankAccountStrictError",
   public = list(
     deposit = function(dep = 0) {
       private$balance <- private$balance + dep
@@ -661,10 +661,10 @@ BankAccountStrict2 <- R6Class(
 To test our new class, we create an instance and try to go into overdraft.
 
 ```{r, error = TRUE}
-my_account_strict_2 <- BankAccountStrict2$new()
+my_account_strict_error <- BankAccountStrictError$new()
 
-my_account_strict_2$deposit(5)
-my_account_strict_2$withdraw(10)
+my_account_strict_error$deposit(5)
+my_account_strict_error$withdraw(10)
 ```
 
 
@@ -764,11 +764,11 @@ x$previous
 4.  Can subclasses access private fields/methods from their parent? Perform
     an experiment to find out.
     
-> To find out if private fields/methods can be accessed from subclasses, we first create a class A with a private field apple and a private method juice(). Afterwards, an instance of a subclass B is created and calls the applejuice() methods, which tries to access the apple field and the juice() method from its superclass A.
+> To find out if private fields/methods can be accessed from subclasses, we first create a class "ParentClass" with a private field apple and a private method juice(). Afterwards, an instance of a subclass "SubClass" is created and calls the applejuice() methods, which tries to access the apple field and the juice() method from its superclass A.
 
 ```{r}
-A <- R6Class(
-  classname = "A",
+ParentClass <- R6Class(
+  classname = "ParentClass",
   private = list(
     field = "apple",
     method = function() {
@@ -777,9 +777,9 @@ A <- R6Class(
   )
 )
 
-B <- R6Class(
-  classname = "B",
-  inherit = A,
+SubClass <- R6Class(
+  classname = "SubClass",
+  inherit = ParentClass,
   public = list(
     test = function() {
       cat("Field:  ", super$field, "\n", sep = "")
@@ -788,7 +788,7 @@ B <- R6Class(
   )
 )
 
-B$new()$test()
+SubClass$new()$test()
 ```
 
 > We conclude that subclasses can access private methods from their superclasses, but not private fields.
@@ -942,7 +942,7 @@ db_a$file$path == db_b$file$path
     line using `cat()` in `$append_line()`, and close the connection in
     `$finalize()`.
     
-> Our FileWriter class will create a connection to a file at initialization. Therefore, we open a connection to a user specified file during the initialisation. Note that we need to set open = "a" in file() to open connection for appending text. Otherwise, cat() would only work when applied to files, but not with connections as explicitly asked for in the exercise. Further, we add the append_line() method and a close() statement as finalizer.
+> Our WriteFile class will create a connection to a file at initialization. Therefore, we open a connection to a user specified file during the initialisation. Note that we need to set open = "a" in file() to open connection for appending text. Otherwise, cat() would only work when applied to files, but not with connections as explicitly asked for in the exercise. Further, we add the append_line() method and a close() statement as finalizer.
 
 Arguments
 
@@ -965,8 +965,8 @@ Open for writing in text mode.
 Open for appending in text mode.
 
 ```{r}
-FileWriter <- R6::R6Class(
-  classname = "FileWriter",
+WriteFile <- R6::R6Class(
+  classname = "WriteFile",
   public = list(
     con = NULL,
     initialize = function(filename) {
@@ -988,7 +988,7 @@ FileWriter <- R6::R6Class(
 
 ```{r}
 tmp_file <- tempfile()
-test_writer <- FileWriter$new(tmp_file)
+test_writer <- WriteFile$new(tmp_file)
 
 readLines(tmp_file)
 ```
