@@ -358,9 +358,9 @@ display: none;
 
 
 <div id="r6" class="section level1">
-<h1>R6</h1>
+<h1>14 R6</h1>
 <div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<h2>14.1 Introduction</h2>
 <p></p>
 <p>This chapter describes the R6 OOP system. R6 has two special
 properties:</p>
@@ -412,7 +412,7 @@ these terms, brush up your vocab by reading Section
 </div>
 </div>
 <div id="r6-classes" class="section level2">
-<h2>Classes and methods</h2>
+<h2>14.2 Classes and methods</h2>
 <p> </p>
 <p>R6 only needs a single function call to create both the class and its
 methods: <code>R6::R6Class()</code>. This is the only function from the
@@ -437,9 +437,11 @@ the current object via <code>self$</code>.<a href="#fn2" class="footnote-ref" id
     invisible(self)
   })
 )</code></pre>
+<blockquote>
 <p>You should always assign the result of <code>R6Class()</code> into a
 variable with the same name as the class, because <code>R6Class()</code>
 returns an R6 object that defines the class:</p>
+</blockquote>
 <pre class="r"><code>Accumulator</code></pre>
 <pre><code>## &lt;Accumulator&gt; object generator
 ##   Public:
@@ -467,7 +469,7 @@ opposed to variables and functions, I’ll prefix their names with
 <code>$</code>. For example, the <code>Accumulate</code> class has field
 <code>$sum</code> and method <code>$add()</code>.</p>
 <div id="method-chaining" class="section level3">
-<h3>Method chaining</h3>
+<h3>14.2.1 Method chaining</h3>
 <p></p>
 <p><code>$add()</code> is called primarily for its side-effect of
 updating <code>$sum</code>.</p>
@@ -495,7 +497,7 @@ is deeply related to the pipe, and we’ll discuss the pros and cons of
 each approach in Section @ref(tradeoffs-pipe).</p>
 </div>
 <div id="r6-important-methods" class="section level3">
-<h3>Important methods</h3>
+<h3>14.2.2 Important methods</h3>
 <p> </p>
 <p>There are two important methods that should be defined for most
 classes: <code>$initialize()</code> and <code>$print()</code>. They’re
@@ -567,7 +569,7 @@ results of method calls aren’t any different, make sure you’ve
 re-constructed R6 objects with the new class.</p>
 </div>
 <div id="adding-methods-after-creation" class="section level3">
-<h3>Adding methods after creation</h3>
+<h3>14.2.3 Adding methods after creation</h3>
 <p></p>
 <p>Instead of continuously creating new classes, it’s also possible to
 modify the fields and methods of an existing class. This is useful when
@@ -585,7 +587,7 @@ Accumulator$set(&quot;public&quot;, &quot;add&quot;, function(x = 1) {
 they are not retrospectively added to existing objects.</p>
 </div>
 <div id="inheritance" class="section level3">
-<h3>Inheritance</h3>
+<h3>14.2.4 Inheritance</h3>
 <p> </p>
 <p>To inherit behaviour from an existing class, provide the class object
 to the <code>inherit</code> argument:</p>
@@ -611,7 +613,7 @@ S3, as discussed in Section @ref(s3-inheritance).) Any methods which are
 not overridden will use the implementation in the parent class.</p>
 </div>
 <div id="introspection" class="section level3">
-<h3>Introspection</h3>
+<h3>14.2.5 Introspection</h3>
 <p></p>
 <p>Every R6 object has an S3 class that reflects its hierarchy of R6
 classes. This means that the easiest way to determine the class (and all
@@ -632,12 +634,93 @@ that you shouldn’t touch; we’ll come back to <code>$clone()</code> in
 Section @ref(r6-semantics).</p>
 </div>
 <div id="exercises" class="section level3">
-<h3>Exercises</h3>
+<h3>14.2.6 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Create a bank account R6 class that stores a balance and allows
-you to deposit and withdraw money. Create a subclass that throws an
-error if you attempt to go into overdraft. Create another subclass that
-allows you to go into overdraft, but charges you a fee.</p></li>
+<li>Create a bank account R6 class that stores a balance and allows you
+to deposit and withdraw money. Create a subclass that throws an error if
+you attempt to go into overdraft. Create another subclass that allows
+you to go into overdraft, but charges you a fee.</li>
+</ol>
+<pre class="r"><code>BankAccount &lt;- R6Class(
+  classname = &quot;BankAccount&quot;, 
+  public = list(
+    balance = 0,
+    deposit = function(dep = 0) {
+      self$balance &lt;- self$balance + dep
+      invisible(self)
+    },
+    withdraw = function(draw) {
+      self$balance &lt;- self$balance - draw
+      invisible(self)
+    }
+  )
+)</code></pre>
+<blockquote>
+<p>Test</p>
+</blockquote>
+<pre class="r"><code>my_account &lt;- BankAccount$new()
+my_account$balance</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>my_account$
+  deposit(5)$
+  withdraw(15)$
+  balance</code></pre>
+<pre><code>## [1] -10</code></pre>
+<blockquote>
+<p>create the first subclass that prevents us from going into overdraft
+and throws an error in case we attempt to withdraw more than our current
+balance.</p>
+</blockquote>
+<pre class="r"><code>BankAccountStrict &lt;- R6Class(
+  classname = &quot;BankAccountStrict&quot;,
+  inherit = BankAccount,
+  public = list(
+    withdraw = function(draw = 0) {
+      if (self$balance - draw &lt; 0) {
+        stop(&quot;Overdraft! &quot;,
+          &quot;Your `current balance` is less than your withdraw.&quot;,
+          call. = FALSE
+        )
+      }
+      super$withdraw(draw = draw)
+    }
+  )
+)</code></pre>
+<pre class="r"><code>my_strict_account &lt;- BankAccountStrict$new()
+my_strict_account$balance</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>my_strict_account$
+  deposit(5)$
+  withdraw(15)</code></pre>
+<pre class="r"><code>my_strict_account$balance</code></pre>
+<pre><code>## [1] 0</code></pre>
+<blockquote>
+<p>create another subclass that charges a constant fee of 1 for each
+withdrawal which leaves the account with a negative balance.</p>
+</blockquote>
+<pre class="r"><code>BankAccountCharging &lt;- R6Class(
+  classname = &quot;BankAccountCharging&quot;,
+  inherit = BankAccount,
+  public = list(
+    withdraw = function(draw = 0) {
+      if (self$balance - draw &lt; 0) {
+        draw &lt;- draw + 1
+      }
+      super$withdraw(draw = draw)
+    }
+  )
+)</code></pre>
+<pre class="r"><code>my_charging_account &lt;- BankAccountCharging$new()
+my_charging_account$balance</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>my_charging_account$
+  deposit(5)$
+  withdraw(15)$
+  withdraw(0)
+
+my_charging_account$balance</code></pre>
+<pre><code>## [1] -12</code></pre>
+<ol start="2" style="list-style-type: decimal">
 <li><p>Create an R6 class that represents a shuffled deck of cards. You
 should be able to draw cards from the deck with <code>$draw(n)</code>,
 and return all cards to the deck and reshuffle with
@@ -646,26 +729,143 @@ cards.</p>
 <pre class="r"><code>suit &lt;- c(&quot;♠&quot;, &quot;♥&quot;, &quot;♦&quot;, &quot;♣&quot;)
 value &lt;- c(&quot;A&quot;, 2:10, &quot;J&quot;, &quot;Q&quot;, &quot;K&quot;)
 cards &lt;- paste0(rep(value, 4), suit)</code></pre></li>
-<li><p>Why can’t you model a bank account or a deck of cards with an S3
-class?</p></li>
-<li><p>Create an R6 class that allows you to get and set the current
-time zone. You can access the current time zone with
+</ol>
+<blockquote>
+<p>Our new ShuffledDeck class will use sample() and positive integer
+subsetting to implement the reshuffling and drawing functionality. We
+also add a check, so you cannot draw more cards than there are left in
+the deck.</p>
+</blockquote>
+<pre class="r"><code>ShuffledDeck &lt;- R6Class(
+  classname = &quot;ShuffledDeck&quot;,
+  public = list(
+    deck = NULL,
+    initialize = function(deck = cards) {
+      self$deck &lt;- sample(deck)
+    },
+    reshuffle = function() {
+      self$deck &lt;- sample(cards)
+      invisible(self)
+    },
+    n = function() {
+      length(self$deck)
+    },
+    draw = function(n = 1) {
+      if (n &gt; self$n()) {
+        stop(&quot;Only &quot;, self$n(), &quot; cards remaining.&quot;, call. = FALSE)
+      }
+
+      output &lt;- self$deck[seq_len(n)]
+      self$deck &lt;- self$deck[-seq_len(n)]
+      output
+    }
+  )
+)</code></pre>
+<blockquote>
+<p>To test this class, we create a deck (initialise an instance), draw
+all the cards, then reshuffle, checking we get different cards each
+time.</p>
+</blockquote>
+<pre class="r"><code>my_deck &lt;- ShuffledDeck$new()
+
+my_deck$draw(52)</code></pre>
+<pre><code>##  [1] &quot;4♠&quot;  &quot;6♠&quot;  &quot;2♣&quot;  &quot;9♣&quot;  &quot;K♦&quot;  &quot;3♠&quot;  &quot;5♠&quot;  &quot;3♣&quot;  &quot;Q♥&quot;  &quot;6♣&quot;  &quot;A♥&quot;  &quot;9♠&quot; 
+## [13] &quot;5♣&quot;  &quot;4♦&quot;  &quot;A♠&quot;  &quot;J♦&quot;  &quot;K♥&quot;  &quot;8♥&quot;  &quot;7♠&quot;  &quot;8♦&quot;  &quot;5♦&quot;  &quot;10♥&quot; &quot;Q♣&quot;  &quot;3♥&quot; 
+## [25] &quot;Q♠&quot;  &quot;A♣&quot;  &quot;7♥&quot;  &quot;8♠&quot;  &quot;8♣&quot;  &quot;6♦&quot;  &quot;2♠&quot;  &quot;J♥&quot;  &quot;9♦&quot;  &quot;10♣&quot; &quot;4♣&quot;  &quot;J♠&quot; 
+## [37] &quot;2♥&quot;  &quot;3♦&quot;  &quot;K♠&quot;  &quot;6♥&quot;  &quot;7♣&quot;  &quot;Q♦&quot;  &quot;5♥&quot;  &quot;J♣&quot;  &quot;4♥&quot;  &quot;2♦&quot;  &quot;10♠&quot; &quot;K♣&quot; 
+## [49] &quot;9♥&quot;  &quot;A♦&quot;  &quot;7♦&quot;  &quot;10♦&quot;</code></pre>
+<pre class="r"><code>my_deck$draw(10)</code></pre>
+<pre class="r"><code>my_deck$reshuffle()$draw(5)</code></pre>
+<pre><code>## [1] &quot;4♣&quot; &quot;6♠&quot; &quot;9♠&quot; &quot;J♦&quot; &quot;2♣&quot;</code></pre>
+<pre class="r"><code>my_deck$reshuffle()$draw(5)</code></pre>
+<pre><code>## [1] &quot;J♠&quot; &quot;2♣&quot; &quot;J♦&quot; &quot;7♣&quot; &quot;7♥&quot;</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Why can’t you model a bank account or a deck of cards with an S3
+class?</li>
+</ol>
+<blockquote>
+<p>Because S3 classes obey R’s usual semantics of copy-on-modify: every
+time you deposit money into your bank account or draw a card from the
+deck, you’d get a new copy of the object.</p>
+</blockquote>
+<blockquote>
+<p>It is possible to combine S3 classes with an environment (which is
+how R6 works), but it is ill-advised to create an object that looks like
+a regular R object but has reference semantics.</p>
+</blockquote>
+<ol start="4" style="list-style-type: decimal">
+<li>Create an R6 class that allows you to get and set the current time
+zone. You can access the current time zone with
 <code>Sys.timezone()</code> and set it with
 <code>Sys.setenv(TZ = &quot;newtimezone&quot;)</code>. When setting the time zone,
 make sure the new time zone is in the list provided by
-<code>OlsonNames()</code>.</p></li>
-<li><p>Create an R6 class that manages the current working directory. It
-should have <code>$get()</code> and <code>$set()</code>
-methods.</p></li>
-<li><p>Why can’t you model the time zone or current working directory
-with an S3 class?</p></li>
-<li><p>What base type are R6 objects built on top of? What attributes do
-they have?</p></li>
+<code>OlsonNames()</code>.</li>
 </ol>
+<blockquote>
+<p>To create an R6 class that allows us to get and set the time zone, we
+provide the respective functions as public methods to the R6 class.</p>
+</blockquote>
+<pre class="r"><code>Timezone &lt;- R6Class(
+  classname = &quot;Timezone&quot;,
+  public = list(
+    get = function() {
+      Sys.timezone()
+    },
+    set = function(value) {
+      stopifnot(value %in% OlsonNames())
+
+      old &lt;- self$get()
+      Sys.setenv(TZ = value)
+      invisible(old)
+    }
+  )
+)</code></pre>
+<pre class="r"><code>tz &lt;- Timezone$new()
+
+old &lt;- tz$set(&quot;Antarctica/South_Pole&quot;)
+tz$get()</code></pre>
+<pre><code>## [1] &quot;Antarctica/South_Pole&quot;</code></pre>
+<pre class="r"><code>tz$set(old)
+tz$get()</code></pre>
+<pre><code>## [1] &quot;Europe/London&quot;</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Create an R6 class that manages the current working directory. It
+should have <code>$get()</code> and <code>$set()</code> methods.</li>
+</ol>
+<pre class="r"><code>WorkingDirectory &lt;- R6Class(
+  classname = &quot;WorkingDirectory&quot;,
+  public = list(
+    get = function() {
+      getwd()
+    },
+    set = function(value) {
+      setwd(value)
+    }
+  )
+)</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>Why can’t you model the time zone or current working directory with
+an S3 class?</li>
+</ol>
+<blockquote>
+<p>Because S3 classes are not suitable for modelling a state that
+changes over time. S3 methods should (almost) always return the same
+result when called with the same inputs.</p>
+</blockquote>
+<ol start="7" style="list-style-type: decimal">
+<li>What base type are R6 objects built on top of? What attributes do
+they have?</li>
+</ol>
+<blockquote>
+<p>R6 objects are built on top of environments. They have a class
+attribute, which is a character vector containing the class name, the
+name of any super classes (if existent) and the string “R6” as the last
+element.</p>
+</blockquote>
 </div>
 </div>
 <div id="r6-access" class="section level2">
-<h2>Controlling access</h2>
+<h2>14.3 Controlling access</h2>
 <p></p>
 <p><code>R6Class()</code> has two other arguments that work similarly to
 <code>public</code>:</p>
@@ -677,7 +877,7 @@ define dynamic, or active, fields.</p></li>
 </ul>
 <p>These are described in the following sections.</p>
 <div id="privacy" class="section level3">
-<h3>Privacy</h3>
+<h3>14.3.1 Privacy</h3>
 <p></p>
 <p>With R6 you can define <strong>private</strong> fields and methods,
 elements that can only be accessed from within the class, not from the
@@ -732,7 +932,7 @@ programming languages because the object hierarchies in R tend to be
 simpler.</p>
 </div>
 <div id="active-fields" class="section level3">
-<h3>Active fields</h3>
+<h3>14.3.2 Active fields</h3>
 <p> </p>
 <p>Active fields allow you to define components that look like fields
 from the outside, but are defined with functions, like methods. Active
@@ -754,11 +954,11 @@ returns a different value every time you access it:</p>
 ))
 x &lt;- Rando$new()
 x$random</code></pre>
-<pre><code>## [1] 0.8090836</code></pre>
+<pre><code>## [1] 0.8456175</code></pre>
 <pre class="r"><code>x$random</code></pre>
-<pre><code>## [1] 0.6642088</code></pre>
+<pre><code>## [1] 0.8591964</code></pre>
 <pre class="r"><code>x$random</code></pre>
-<pre><code>## [1] 0.7274578</code></pre>
+<pre><code>## [1] 0.971773</code></pre>
 <p> Active fields are particularly useful in conjunction with private
 fields, because they make it possible to implement components that look
 like fields from the outside but provide additional checks. For example,
@@ -804,25 +1004,172 @@ hadley4$name</code></pre>
 <pre><code>## Error: `$age` is read only</code></pre>
 </div>
 <div id="exercises-1" class="section level3">
-<h3>Exercises</h3>
+<h3>14.3.3 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Create a bank account class that prevents you from directly
-setting the account balance, but you can still withdraw from and deposit
-to. Throw an error if you attempt to go into overdraft.</p></li>
-<li><p>Create a class with a write-only <code>$password</code> field. It
+<li>Create a bank account class that prevents you from directly setting
+the account balance, but you can still withdraw from and deposit to.
+Throw an error if you attempt to go into overdraft.</li>
+</ol>
+<blockquote>
+<p>To fulfil this requirement, we make balance a private field. The user
+has to use the $deposit() and $withdraw() methods which have access to
+the balance field.</p>
+</blockquote>
+<pre class="r"><code>BankAccountStrict2 &lt;- R6Class(
+  classname = &quot;BankAccountStrict2&quot;,
+  public = list(
+    deposit = function(dep = 0) {
+      private$balance &lt;- private$balance + dep
+      invisible(self)
+    },
+    withdraw = function(draw = 0) {
+      if (private$balance - draw &lt; 0) {
+        stop(
+          &quot;Your `withdraw` must be smaller &quot;,
+          &quot;than your `balance`.&quot;,
+          call. = FALSE
+        )
+      }
+      private$balance &lt;- private$balance - draw
+      invisible(self)
+    }
+  ),
+  private = list(
+    balance = 0
+  )
+)</code></pre>
+<p>To test our new class, we create an instance and try to go into
+overdraft.</p>
+<pre class="r"><code>my_account_strict_2 &lt;- BankAccountStrict2$new()
+
+my_account_strict_2$deposit(5)
+my_account_strict_2$withdraw(10)</code></pre>
+<pre><code>## Error: Your `withdraw` must be smaller than your `balance`.</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Create a class with a write-only <code>$password</code> field. It
 should have <code>$check_password(password)</code> method that returns
 <code>TRUE</code> or <code>FALSE</code>, but there should be no way to
-view the complete password.</p></li>
-<li><p>Extend the <code>Rando</code> class with another active binding
-that allows you to access the previous random value. Ensure that active
-binding is the only way to access the value.</p></li>
-<li><p>Can subclasses access private fields/methods from their parent?
-Perform an experiment to find out.</p></li>
+view the complete password.</li>
 </ol>
+<blockquote>
+<p>To protect the password from changes and direct access, the password
+will be a private field. Further, our Password will get its own print
+method which hides the password.</p>
+</blockquote>
+<pre class="r"><code>Password &lt;- R6Class(
+  classname = &quot;Password&quot;,
+  public = list(
+    print = function(...) {
+      cat(&quot;&lt;Password&gt;: ********\n&quot;)
+      invisible(self)
+    },
+    set = function(value) {
+      private$password &lt;- value
+    },
+    check = function(password) {
+      identical(password, private$password)
+    }
+  ),
+  private = list(
+    password = NULL
+  )
+)</code></pre>
+<blockquote>
+<p>Let’s create one instance of our new class and confirm that the
+password is neither accessible nor visible, but still check-able.</p>
+</blockquote>
+<pre class="r"><code>my_pw &lt;- Password$new()
+my_pw$set(&quot;This_is_my_password!&quot;)
+my_pw$password</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>my_pw</code></pre>
+<pre><code>## &lt;Password&gt;: ********</code></pre>
+<pre class="r"><code>my_pw$check(&quot;Thisismypassword&quot;)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>my_pw$check(&quot;This_is_my_password!&quot;)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Extend the <code>Rando</code> class with another active binding that
+allows you to access the previous random value. Ensure that active
+binding is the only way to access the value.</li>
+</ol>
+<blockquote>
+<p>To access the previous random value from an instance, we add a
+private $last_random field to our class, and we modify $random() to
+write to this field, whenever it is called. To access the $last_random
+field we provide $previous().</p>
+</blockquote>
+<pre class="r"><code>Rando &lt;- R6::R6Class(
+  classname = &quot;Rando&quot;,
+  private = list(
+    last_random = NULL
+  ),
+  active = list(
+    random = function(value) {
+      if (missing(value)) {
+        private$last_random &lt;- runif(1)
+        private$last_random
+      } else {
+        stop(&quot;Can&#39;t set `$random`.&quot;, call. = FALSE)
+      }
+    },
+    previous = function(value) {
+      if (missing(value)) {
+        private$last_random
+      }
+    }
+  )
+)</code></pre>
+<pre class="r"><code>x &lt;- Rando$new()
+x$random</code></pre>
+<pre><code>## [1] 0.3404876</code></pre>
+<pre class="r"><code>x$random</code></pre>
+<pre><code>## [1] 0.9337022</code></pre>
+<pre class="r"><code>x$previous</code></pre>
+<pre><code>## [1] 0.9337022</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>Can subclasses access private fields/methods from their parent?
+Perform an experiment to find out.</li>
+</ol>
+<blockquote>
+<p>To find out if private fields/methods can be accessed from
+subclasses, we first create a class A with a private field apple and a
+private method juice(). Afterwards, an instance of a subclass B is
+created and calls the applejuice() methods, which tries to access the
+apple field and the juice() method from its superclass A.</p>
+</blockquote>
+<pre class="r"><code>A &lt;- R6Class(
+  classname = &quot;A&quot;,
+  private = list(
+    field = &quot;apple&quot;,
+    method = function() {
+      &quot;juice&quot;
+    }
+  )
+)
+
+B &lt;- R6Class(
+  classname = &quot;B&quot;,
+  inherit = A,
+  public = list(
+    test = function() {
+      cat(&quot;Field:  &quot;, super$field, &quot;\n&quot;, sep = &quot;&quot;)
+      cat(&quot;Method: &quot;, super$method(), &quot;\n&quot;, sep = &quot;&quot;)
+    }
+  )
+)
+
+B$new()$test()</code></pre>
+<pre><code>## Field:  
+## Method: juice</code></pre>
+<blockquote>
+<p>We conclude that subclasses can access private methods from their
+superclasses, but not private fields.</p>
+</blockquote>
 </div>
 </div>
 <div id="r6-semantics" class="section level2">
-<h2>Reference semantics</h2>
+<h2>14.4 Reference semantics</h2>
 <p></p>
 <p>One of the big differences between R6 and most other objects is that
 they have reference semantics. The primary consequence of reference
@@ -858,7 +1205,7 @@ you can write a <code>$finalize()</code> to complement the
 </ul>
 <p>These consequences are described in more detail below.</p>
 <div id="reasoning" class="section level3">
-<h3>Reasoning</h3>
+<h3>14.4.1 Reasoning</h3>
 <p>Generally, reference semantics makes code harder to reason about.
 Take this very simple example:</p>
 <pre class="r"><code>x &lt;- list(a = 1)
@@ -882,7 +1229,7 @@ doing both can lead to substantially simpler code in some cases, and
 we’ll discuss this further in Section @ref(threading-state).</p>
 </div>
 <div id="finalizer" class="section level3">
-<h3>Finalizer</h3>
+<h3>14.4.2 Finalizer</h3>
 <p> </p>
 <p>One useful property of reference semantics is that it makes sense to
 think about when an R6 object is <strong>finalized</strong>, i.e. when
@@ -923,7 +1270,7 @@ rm(tf)
 #&gt; Cleaning up /tmp/Rtmpk73JdI/file155f31d8424bd</code></pre>
 </div>
 <div id="r6-fields" class="section level3">
-<h3>R6 fields</h3>
+<h3>14.4.3 R6 fields</h3>
 <p></p>
 <p>A final consequence of reference semantics can crop up where you
 don’t expect it. If you use an R6 class as the default value of a field,
@@ -973,17 +1320,69 @@ db_a$file$path == db_b$file$path</code></pre>
 <pre><code>## [1] FALSE</code></pre>
 </div>
 <div id="exercises-2" class="section level3">
-<h3>Exercises</h3>
+<h3>14.4.4 Exercises</h3>
 <ol style="list-style-type: decimal">
 <li>Create a class that allows you to write a line to a specified file.
 You should open a connection to the file in <code>$initialize()</code>,
 append a line using <code>cat()</code> in <code>$append_line()</code>,
 and close the connection in <code>$finalize()</code>.</li>
 </ol>
+<blockquote>
+<p>Our FileWriter class will create a connection to a file at
+initialization. Therefore, we open a connection to a user specified file
+during the initialisation. Note that we need to set open = “a” in file()
+to open connection for appending text. Otherwise, cat() would only work
+when applied to files, but not with connections as explicitly asked for
+in the exercise. Further, we add the append_line() method and a close()
+statement as finalizer.</p>
+</blockquote>
+<p>Arguments</p>
+<ul>
+<li><p>description<br />
+character string. A description of the connection: see
+‘Details’.</p></li>
+<li><p>open<br />
+character string. A description of how to open the connection (if it
+should be opened initially). See section ‘Modes’ for possible
+values.</p></li>
+</ul>
+<p>Modes Possible values for the argument open are</p>
+<p>“r” or “rt” Open for reading in text mode.</p>
+<p>“w” or “wt” Open for writing in text mode.</p>
+<p>“a” or “at” Open for appending in text mode.</p>
+<pre class="r"><code>FileWriter &lt;- R6::R6Class(
+  classname = &quot;FileWriter&quot;,
+  public = list(
+    con = NULL,
+    initialize = function(filename) {
+      self$con &lt;- file(filename, open = &quot;a&quot;)
+    },
+    
+    append_line = function(x) {
+      cat(x, &quot;\n&quot;, sep = &quot;&quot;, file = self$con)
+    },
+    
+    finalize = function() {
+      close(self$con)
+    }
+  )
+)</code></pre>
+<blockquote>
+<p>test</p>
+</blockquote>
+<pre class="r"><code>tmp_file &lt;- tempfile()
+test_writer &lt;- FileWriter$new(tmp_file)
+
+readLines(tmp_file)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>test_writer$append_line(&quot;First&quot;)
+test_writer$append_line(&quot;Second&quot;)
+readLines(tmp_file)</code></pre>
+<pre><code>## [1] &quot;First&quot;  &quot;Second&quot;</code></pre>
 </div>
 </div>
 <div id="why-r6" class="section level2">
-<h2>Why R6?</h2>
+<h2>14.5 Why R6?</h2>
 <p> </p>
 <p>R6 is very similar to a built-in OO system called <strong>reference
 classes</strong>, or RC for short. I prefer R6 to RC because:</p>

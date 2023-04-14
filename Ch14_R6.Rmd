@@ -326,7 +326,7 @@ my_strict_account <- BankAccountStrict$new()
 my_strict_account$balance
 ```
 
-```{r}
+```{r, eval = FALSE}
 my_strict_account$
   deposit(5)$
   withdraw(15)
@@ -941,6 +941,64 @@ db_a$file$path == db_b$file$path
     You should open a connection to the file in `$initialize()`, append a
     line using `cat()` in `$append_line()`, and close the connection in
     `$finalize()`.
+    
+> Our FileWriter class will create a connection to a file at initialization. Therefore, we open a connection to a user specified file during the initialisation. Note that we need to set open = "a" in file() to open connection for appending text. Otherwise, cat() would only work when applied to files, but not with connections as explicitly asked for in the exercise. Further, we add the append_line() method and a close() statement as finalizer.
+
+Arguments
+
+* description	
+character string. A description of the connection: see ‘Details’.
+
+* open	
+character string. A description of how to open the connection (if it should be opened initially). See section ‘Modes’ for possible values.
+
+Modes
+Possible values for the argument open are
+
+"r" or "rt"
+Open for reading in text mode.
+
+"w" or "wt"
+Open for writing in text mode.
+
+"a" or "at"
+Open for appending in text mode.
+
+```{r}
+FileWriter <- R6::R6Class(
+  classname = "FileWriter",
+  public = list(
+    con = NULL,
+    initialize = function(filename) {
+      self$con <- file(filename, open = "a")
+    },
+    
+    append_line = function(x) {
+      cat(x, "\n", sep = "", file = self$con)
+    },
+    
+    finalize = function() {
+      close(self$con)
+    }
+  )
+)
+```
+
+> test
+
+```{r}
+tmp_file <- tempfile()
+test_writer <- FileWriter$new(tmp_file)
+
+readLines(tmp_file)
+```
+
+```{r}
+test_writer$append_line("First")
+test_writer$append_line("Second")
+readLines(tmp_file)
+```
+
 
 ## 14.5 Why R6? {#why-r6}
 \index{reference classes}
