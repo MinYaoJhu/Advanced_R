@@ -7,9 +7,9 @@ output:
     keep_md: yes
 ---
 
-# R6 {#r6}
+# 14 R6 {#r6}
 
-## Introduction
+## 14.1 Introduction
 \index{R6}
 
 This chapter describes the R6 OOP system. R6 has two special properties:
@@ -54,7 +54,7 @@ library(R6)
 
 R6 objects have reference semantics which means that they are modified in-place, not copied-on-modify. If you're not familiar with these terms, brush up your vocab by reading Section \@ref(modify-in-place).
 
-## Classes and methods {#r6-classes}
+## 14.2 Classes and methods {#r6-classes}
 \index{R6!classes}
 \index{classes!R6}
 \indexc{self}
@@ -88,7 +88,7 @@ Accumulator <- R6Class("Accumulator", list(
 )
 ```
 
-You should always assign the result of `R6Class()` into a variable with the same name as the class, because `R6Class()` returns an R6 object that defines the class:
+> You should always assign the result of `R6Class()` into a variable with the same name as the class, because `R6Class()` returns an R6 object that defines the class:
 
 ```{r}
 Accumulator
@@ -112,7 +112,7 @@ In this class, the fields and methods are public, which means that you can get o
 
 To make it clear when we're talking about fields and methods as opposed to variables and functions, I'll prefix their names with `$`. For example, the `Accumulate` class has field `$sum` and method `$add()`.
 
-### Method chaining
+### 14.2.1 Method chaining
 \index{method chaining}
 
 `$add()` is called primarily for its side-effect of updating `$sum`. 
@@ -144,7 +144,7 @@ x$
 
 This technique is called __method chaining__ and is commonly used in languages like Python and JavaScript. Method chaining is deeply related to the pipe, and we'll discuss the pros and cons of each approach in Section \@ref(tradeoffs-pipe).
 
-### Important methods {#r6-important-methods}
+### 14.2.2 Important methods {#r6-important-methods}
 \index{R6!methods!print}
 \index{R6!methods!initialize}
 
@@ -204,7 +204,7 @@ hadley$print
 
 From the perspective of R6, there is no relationship between `hadley` and `hadley2`; they just coincidentally share the same class name. This doesn't cause problems when using already developed R6 objects but can make interactive experimentation confusing. If you're changing the code and can't figure out why the results of method calls aren't any different, make sure you've re-constructed R6 objects with the new class.
 
-### Adding methods after creation
+### 14.2.3 Adding methods after creation
 \index{R6!methods!adding extra}
 
 Instead of continuously creating new classes, it's also possible to modify the fields and methods of an existing class. This is useful when exploring interactively, or when you have a class with many functions that you'd like to break up into pieces. Add new elements to an existing class with `$set()`, supplying the visibility (more on in Section \@ref(r6-access)), the name, and the component.
@@ -220,7 +220,7 @@ Accumulator$set("public", "add", function(x = 1) {
 
 As above, new methods and fields are only available to new objects; they are not retrospectively added to existing objects.
 
-### Inheritance
+### 14.2.4 Inheritance
 \index{R6!inheritance}
 \index{inheritance!R6}
 
@@ -243,7 +243,7 @@ x2$add(10)$add(1)$sum
 
 `$add()` overrides the superclass implementation, but we can still delegate to the superclass implementation by using `super$`. (This is analogous to `NextMethod()` in S3, as discussed in Section \@ref(s3-inheritance).) Any methods which are not overridden will use the implementation in the parent class.
 
-### Introspection
+### 14.2.5 Introspection
 \index{R6!introspection}
 
 Every R6 object has an S3 class that reflects its hierarchy of R6 classes. This means that the easiest way to determine the class (and all classes it inherits from) is to use `class()`:
@@ -263,14 +263,113 @@ names(hadley2)
 
 We defined `$name`, `$age`, `$print`, and `$initialize`. As suggested by the name, `.__enclos_env__` is an internal implementation detail that you shouldn't touch; we'll come back to `$clone()` in Section \@ref(r6-semantics).
 
-### Exercises
+### 14.2.6 Exercises
 
 1.  Create a bank account R6 class that stores a balance and allows you to 
     deposit and withdraw money. Create a subclass that throws an error 
     if you attempt to go into overdraft. Create another subclass that allows
     you to go into overdraft, but charges you a fee.
 
-1.  Create an R6 class that represents a shuffled deck of cards. You should be
+```{r}
+BankAccount <- R6Class(
+  classname = "BankAccount", 
+  public = list(
+    balance = 0,
+    deposit = function(dep = 0) {
+      self$balance <- self$balance + dep
+      invisible(self)
+    },
+    withdraw = function(draw) {
+      self$balance <- self$balance - draw
+      invisible(self)
+    }
+  )
+)
+```
+
+> Test
+
+```{r}
+my_account <- BankAccount$new()
+my_account$balance
+```
+
+```{r}
+my_account$
+  deposit(5)$
+  withdraw(15)$
+  balance
+```
+
+> create the first subclass that prevents us from going into overdraft and throws an error in case we attempt to withdraw more than our current balance.
+
+```{r}
+BankAccountStrict <- R6Class(
+  classname = "BankAccountStrict",
+  inherit = BankAccount,
+  public = list(
+    withdraw = function(draw = 0) {
+      if (self$balance - draw < 0) {
+        stop("Overdraft! ",
+          "Your `current balance` is less than your withdraw.",
+          call. = FALSE
+        )
+      }
+      super$withdraw(draw = draw)
+    }
+  )
+)
+```
+
+```{r}
+my_strict_account <- BankAccountStrict$new()
+my_strict_account$balance
+```
+
+```{r}
+my_strict_account$
+  deposit(5)$
+  withdraw(15)
+```
+
+```{r}
+my_strict_account$balance
+```
+
+> create another subclass that charges a constant fee of 1 for each withdrawal which leaves the account with a negative balance.
+
+```{r}
+BankAccountCharging <- R6Class(
+  classname = "BankAccountCharging",
+  inherit = BankAccount,
+  public = list(
+    withdraw = function(draw = 0) {
+      if (self$balance - draw < 0) {
+        draw <- draw + 1
+      }
+      super$withdraw(draw = draw)
+    }
+  )
+)
+```
+
+
+```{r}
+my_charging_account <- BankAccountCharging$new()
+my_charging_account$balance
+```
+
+```{r}
+my_charging_account$
+  deposit(5)$
+  withdraw(15)$
+  withdraw(0)
+
+my_charging_account$balance
+```
+
+
+2.  Create an R6 class that represents a shuffled deck of cards. You should be
     able to draw cards from the deck with `$draw(n)`, and return all cards to 
     the deck and reshuffle with `$reshuffle()`. Use the following code to make 
     a vector of cards.
@@ -281,23 +380,130 @@ We defined `$name`, `$age`, `$print`, and `$initialize`. As suggested by the nam
     cards <- paste0(rep(value, 4), suit)
     ```
 
-1.  Why can't you model a bank account or a deck of cards with an S3 class?
+> Our new ShuffledDeck class will use sample() and positive integer subsetting to implement the reshuffling and drawing functionality. We also add a check, so you cannot draw more cards than there are left in the deck.
+
+```{r}
+ShuffledDeck <- R6Class(
+  classname = "ShuffledDeck",
+  public = list(
+    deck = NULL,
+    initialize = function(deck = cards) {
+      self$deck <- sample(deck)
+    },
+    reshuffle = function() {
+      self$deck <- sample(cards)
+      invisible(self)
+    },
+    n = function() {
+      length(self$deck)
+    },
+    draw = function(n = 1) {
+      if (n > self$n()) {
+        stop("Only ", self$n(), " cards remaining.", call. = FALSE)
+      }
+
+      output <- self$deck[seq_len(n)]
+      self$deck <- self$deck[-seq_len(n)]
+      output
+    }
+  )
+)
+```
+
+> To test this class, we create a deck (initialise an instance), draw all the cards, then reshuffle, checking we get different cards each time.
+
+```{r}
+my_deck <- ShuffledDeck$new()
+
+my_deck$draw(52)
+```
+
+```{r eval=FALSE}
+my_deck$draw(10)
+```
+
+```{r}
+my_deck$reshuffle()$draw(5)
+```
+
+```{r}
+my_deck$reshuffle()$draw(5)
+```
+
+
+3.  Why can't you model a bank account or a deck of cards with an S3 class?
+
+> Because S3 classes obey R’s usual semantics of copy-on-modify: every time you deposit money into your bank account or draw a card from the deck, you’d get a new copy of the object.
+
+> It is possible to combine S3 classes with an environment (which is how R6 works), but it is ill-advised to create an object that looks like a regular R object but has reference semantics.
     
-1.  Create an R6 class that allows you to get and set the current time zone. 
+4.  Create an R6 class that allows you to get and set the current time zone. 
     You can access the current time zone with `Sys.timezone()` and set it 
     with `Sys.setenv(TZ = "newtimezone")`. When setting the time zone, make
     sure the new time zone is in the list provided by `OlsonNames()`.
+    
+> To create an R6 class that allows us to get and set the time zone, we provide the respective functions as public methods to the R6 class.    
 
-1.  Create an R6 class that manages the current working directory.
+```{r}
+Timezone <- R6Class(
+  classname = "Timezone",
+  public = list(
+    get = function() {
+      Sys.timezone()
+    },
+    set = function(value) {
+      stopifnot(value %in% OlsonNames())
+
+      old <- self$get()
+      Sys.setenv(TZ = value)
+      invisible(old)
+    }
+  )
+)
+```
+
+```{r}
+tz <- Timezone$new()
+
+old <- tz$set("Antarctica/South_Pole")
+tz$get()
+```
+
+```{r}
+tz$set(old)
+tz$get()
+```
+
+
+5.  Create an R6 class that manages the current working directory.
     It should have `$get()` and `$set()` methods.
     
-1.  Why can't you model the time zone or current working directory with an S3
+```{r}
+WorkingDirectory <- R6Class(
+  classname = "WorkingDirectory",
+  public = list(
+    get = function() {
+      getwd()
+    },
+    set = function(value) {
+      setwd(value)
+    }
+  )
+)
+```
+
+    
+6.  Why can't you model the time zone or current working directory with an S3
     class?
     
-1.  What base type are R6 objects built on top of? What attributes do they
+> Because S3 classes are not suitable for modelling a state that changes over time. S3 methods should (almost) always return the same result when called with the same inputs.
+    
+7.  What base type are R6 objects built on top of? What attributes do they
     have?
+    
+>  R6 objects are built on top of environments. They have a class attribute, which is a character vector containing the class name, the name of any super classes (if existent) and the string "R6" as the last element.
 
-## Controlling access {#r6-access}
+## 14.3 Controlling access {#r6-access}
 \index{R6!access control}
 
 `R6Class()` has two other arguments that work similarly to `public`:
@@ -310,7 +516,7 @@ We defined `$name`, `$age`, `$print`, and `$initialize`. As suggested by the nam
 
 These are described in the following sections.
 
-### Privacy
+### 14.3.1 Privacy
 \index{R6!methods!private}
 
 With R6 you can define __private__ fields and methods, elements that can only be accessed from within the class, not from the outside[^try-hard]. There are two things that you need to know to take advantage of private elements:
@@ -353,7 +559,7 @@ hadley3$name
 
 The distinction between public and private fields is important when you create complex networks of classes, and you want to make it as clear as possible what is ok for others to access. Anything that's private can be more easily refactored because you know others aren't relying on it. Private methods tend to be less important in R compared to other programming languages because the object hierarchies in R tend to be simpler.
 
-### Active fields
+### 14.3.2 Active fields
 \index{R6!active fields}
 \index{active bindings}
 
@@ -418,24 +624,176 @@ hadley4$name <- 10
 hadley4$age <- 20
 ```
 
-### Exercises
+### 14.3.3 Exercises
 
 1.  Create a bank account class that prevents you from directly setting the 
     account balance, but you can still withdraw from and deposit to. Throw
     an error if you attempt to go into overdraft.
     
-1.  Create a class with a write-only `$password` field. It should have 
+> To fulfil this requirement, we make balance a private field. The user has to use the $deposit() and $withdraw() methods which have access to the balance field.
+
+```{r}
+BankAccountStrict2 <- R6Class(
+  classname = "BankAccountStrict2",
+  public = list(
+    deposit = function(dep = 0) {
+      private$balance <- private$balance + dep
+      invisible(self)
+    },
+    withdraw = function(draw = 0) {
+      if (private$balance - draw < 0) {
+        stop(
+          "Your `withdraw` must be smaller ",
+          "than your `balance`.",
+          call. = FALSE
+        )
+      }
+      private$balance <- private$balance - draw
+      invisible(self)
+    }
+  ),
+  private = list(
+    balance = 0
+  )
+)
+```
+
+To test our new class, we create an instance and try to go into overdraft.
+
+```{r, error = TRUE}
+my_account_strict_2 <- BankAccountStrict2$new()
+
+my_account_strict_2$deposit(5)
+my_account_strict_2$withdraw(10)
+```
+
+
+    
+2.  Create a class with a write-only `$password` field. It should have 
     `$check_password(password)` method that returns `TRUE` or `FALSE`, but 
     there should be no way to view the complete password.
+    
+> To protect the password from changes and direct access, the password will be a private field. Further, our Password will get its own print method which hides the password.    
 
-1.  Extend the `Rando` class with another active binding that allows you to 
+```{r}
+Password <- R6Class(
+  classname = "Password",
+  public = list(
+    print = function(...) {
+      cat("<Password>: ********\n")
+      invisible(self)
+    },
+    set = function(value) {
+      private$password <- value
+    },
+    check = function(password) {
+      identical(password, private$password)
+    }
+  ),
+  private = list(
+    password = NULL
+  )
+)
+```
+
+> Let’s create one instance of our new class and confirm that the password is neither accessible nor visible, but still check-able.
+
+```{r}
+my_pw <- Password$new()
+my_pw$set("This_is_my_password!")
+my_pw$password
+```
+
+```{r}
+my_pw
+```
+
+```{r}
+my_pw$check("Thisismypassword")
+```
+
+```{r}
+my_pw$check("This_is_my_password!")
+```
+
+
+3.  Extend the `Rando` class with another active binding that allows you to 
     access the previous random value. Ensure that active binding is the only
     way to access the value.
+    
+> To access the previous random value from an instance, we add a private $last_random field to our class, and we modify $random() to write to this field, whenever it is called. To access the $last_random field we provide $previous().
 
-1.  Can subclasses access private fields/methods from their parent? Perform
+```{r}
+Rando <- R6::R6Class(
+  classname = "Rando",
+  private = list(
+    last_random = NULL
+  ),
+  active = list(
+    random = function(value) {
+      if (missing(value)) {
+        private$last_random <- runif(1)
+        private$last_random
+      } else {
+        stop("Can't set `$random`.", call. = FALSE)
+      }
+    },
+    previous = function(value) {
+      if (missing(value)) {
+        private$last_random
+      }
+    }
+  )
+)
+```
+
+```{r}
+x <- Rando$new()
+x$random
+```
+
+```{r}
+x$random
+```
+
+```{r}
+x$previous
+```
+
+
+4.  Can subclasses access private fields/methods from their parent? Perform
     an experiment to find out.
+    
+> To find out if private fields/methods can be accessed from subclasses, we first create a class A with a private field apple and a private method juice(). Afterwards, an instance of a subclass B is created and calls the applejuice() methods, which tries to access the apple field and the juice() method from its superclass A.
 
-## Reference semantics {#r6-semantics}
+```{r}
+A <- R6Class(
+  classname = "A",
+  private = list(
+    field = "apple",
+    method = function() {
+      "juice"
+    }
+  )
+)
+
+B <- R6Class(
+  classname = "B",
+  inherit = A,
+  public = list(
+    test = function() {
+      cat("Field:  ", super$field, "\n", sep = "")
+      cat("Method: ", super$method(), "\n", sep = "")
+    }
+  )
+)
+
+B$new()$test()
+```
+
+> We conclude that subclasses can access private methods from their superclasses, but not private fields.
+
+## 14.4 Reference semantics {#r6-semantics}
 \index{reference semantics}
 
 One of the big differences between R6 and most other objects is that they have reference semantics. The primary consequence of reference semantics is that objects are not copied when modified:
@@ -473,7 +831,7 @@ There are three other less obvious consequences:
   
 These consequences are described in more detail below.
 
-### Reasoning
+### 14.4.1 Reasoning
 
 Generally, reference semantics makes code harder to reason about. Take this very simple example:
 
@@ -497,7 +855,7 @@ z <- f(x, y)
 
 The final line is much harder to reason about:  if `f()` calls methods of `x` or `y`, it might modify them as well as `z`. This is the biggest potential downside of R6 and you should take care to avoid it by writing functions that either return a value, or modify their R6 inputs, but not both. That said, doing both can lead to substantially simpler code in some cases, and we'll discuss this further in Section \@ref(threading-state).
 
-### Finalizer
+### 14.4.2 Finalizer
 \index{R6!methods!finalizer}
 \index{finalizers}
 
@@ -531,7 +889,7 @@ rm(tf)
 #> Cleaning up /tmp/Rtmpk73JdI/file155f31d8424bd
 ```
 
-### R6 fields
+### 14.4.3 R6 fields
 \index{mutable default arguments}
 
 A final consequence of reference semantics can crop up where you don't expect it. If you use an R6 class as the default value of a field, it will be shared across all instances of the object! Take the following code: we want to create a temporary database every time we call `TemporaryDatabase$new()`, but the current code always uses the same path.
@@ -577,14 +935,14 @@ db_b <- TemporaryDatabase$new()
 db_a$file$path == db_b$file$path
 ```
 
-### Exercises
+### 14.4.4 Exercises
 
 1.  Create a class that allows you to write a line to a specified file. 
     You should open a connection to the file in `$initialize()`, append a
     line using `cat()` in `$append_line()`, and close the connection in
     `$finalize()`.
 
-## Why R6? {#why-r6}
+## 14.5 Why R6? {#why-r6}
 \index{reference classes}
 \index{R6!versus reference classes}
 
