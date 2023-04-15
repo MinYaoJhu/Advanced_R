@@ -548,6 +548,17 @@ hadley2</code></pre>
 <pre><code>## Person: 
 ##   Name: Hadley
 ##   Age:  NA</code></pre>
+<pre class="r"><code>hadley2$print()</code></pre>
+<pre><code>## Person: 
+##   Name: Hadley
+##   Age:  NA</code></pre>
+<pre class="r"><code>hadley2$print()$print()</code></pre>
+<pre><code>## Person: 
+##   Name: Hadley
+##   Age:  NA
+## Person: 
+##   Name: Hadley
+##   Age:  NA</code></pre>
 <p>This code illustrates an important aspect of R6. Because methods are
 bound to individual objects, the previously created <code>hadley</code>
 object does not get this new method:</p>
@@ -769,16 +780,16 @@ time.</p>
 <pre class="r"><code>my_deck &lt;- ShuffledDeck$new()
 
 my_deck$draw(52)</code></pre>
-<pre><code>##  [1] &quot;5♦&quot;  &quot;10♠&quot; &quot;2♦&quot;  &quot;7♠&quot;  &quot;3♠&quot;  &quot;A♣&quot;  &quot;4♥&quot;  &quot;5♠&quot;  &quot;Q♣&quot;  &quot;J♦&quot;  &quot;4♦&quot;  &quot;K♣&quot; 
-## [13] &quot;Q♦&quot;  &quot;4♣&quot;  &quot;10♣&quot; &quot;10♦&quot; &quot;8♠&quot;  &quot;6♠&quot;  &quot;6♦&quot;  &quot;8♦&quot;  &quot;4♠&quot;  &quot;Q♥&quot;  &quot;7♦&quot;  &quot;2♠&quot; 
-## [25] &quot;K♦&quot;  &quot;A♠&quot;  &quot;J♠&quot;  &quot;A♦&quot;  &quot;K♠&quot;  &quot;9♦&quot;  &quot;9♠&quot;  &quot;K♥&quot;  &quot;5♥&quot;  &quot;5♣&quot;  &quot;10♥&quot; &quot;3♦&quot; 
-## [37] &quot;2♥&quot;  &quot;Q♠&quot;  &quot;J♣&quot;  &quot;7♣&quot;  &quot;J♥&quot;  &quot;A♥&quot;  &quot;8♣&quot;  &quot;8♥&quot;  &quot;6♥&quot;  &quot;9♥&quot;  &quot;6♣&quot;  &quot;3♥&quot; 
-## [49] &quot;7♥&quot;  &quot;9♣&quot;  &quot;3♣&quot;  &quot;2♣&quot;</code></pre>
+<pre><code>##  [1] &quot;5♠&quot;  &quot;10♠&quot; &quot;10♦&quot; &quot;8♠&quot;  &quot;4♣&quot;  &quot;Q♠&quot;  &quot;6♦&quot;  &quot;Q♦&quot;  &quot;A♠&quot;  &quot;6♣&quot;  &quot;3♦&quot;  &quot;9♦&quot; 
+## [13] &quot;10♣&quot; &quot;3♥&quot;  &quot;2♣&quot;  &quot;A♦&quot;  &quot;3♠&quot;  &quot;6♥&quot;  &quot;8♣&quot;  &quot;6♠&quot;  &quot;3♣&quot;  &quot;2♦&quot;  &quot;K♦&quot;  &quot;7♦&quot; 
+## [25] &quot;10♥&quot; &quot;7♠&quot;  &quot;4♦&quot;  &quot;K♠&quot;  &quot;K♣&quot;  &quot;4♥&quot;  &quot;8♦&quot;  &quot;5♥&quot;  &quot;J♠&quot;  &quot;K♥&quot;  &quot;4♠&quot;  &quot;J♥&quot; 
+## [37] &quot;8♥&quot;  &quot;9♥&quot;  &quot;9♣&quot;  &quot;9♠&quot;  &quot;5♦&quot;  &quot;Q♣&quot;  &quot;2♥&quot;  &quot;A♥&quot;  &quot;A♣&quot;  &quot;J♦&quot;  &quot;2♠&quot;  &quot;J♣&quot; 
+## [49] &quot;7♣&quot;  &quot;7♥&quot;  &quot;5♣&quot;  &quot;Q♥&quot;</code></pre>
 <pre class="r"><code>my_deck$draw(10)</code></pre>
 <pre class="r"><code>my_deck$reshuffle()$draw(5)</code></pre>
-<pre><code>## [1] &quot;7♣&quot; &quot;4♦&quot; &quot;J♥&quot; &quot;9♣&quot; &quot;A♠&quot;</code></pre>
+<pre><code>## [1] &quot;4♣&quot; &quot;3♦&quot; &quot;7♠&quot; &quot;6♥&quot; &quot;Q♣&quot;</code></pre>
 <pre class="r"><code>my_deck$reshuffle()$draw(5)</code></pre>
-<pre><code>## [1] &quot;J♠&quot; &quot;7♣&quot; &quot;3♥&quot; &quot;3♣&quot; &quot;K♦&quot;</code></pre>
+<pre><code>## [1] &quot;10♠&quot; &quot;Q♠&quot;  &quot;A♣&quot;  &quot;K♠&quot;  &quot;K♦&quot;</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Why can’t you model a bank account or a deck of cards with an S3
 class?</li>
@@ -954,11 +965,11 @@ returns a different value every time you access it:</p>
 ))
 x &lt;- Rando$new()
 x$random</code></pre>
-<pre><code>## [1] 0.4532086</code></pre>
+<pre><code>## [1] 0.7272082</code></pre>
 <pre class="r"><code>x$random</code></pre>
-<pre><code>## [1] 0.8100917</code></pre>
+<pre><code>## [1] 0.5459721</code></pre>
 <pre class="r"><code>x$random</code></pre>
-<pre><code>## [1] 0.970346</code></pre>
+<pre><code>## [1] 0.2403577</code></pre>
 <p> Active fields are particularly useful in conjunction with private
 fields, because they make it possible to implement components that look
 like fields from the outside but provide additional checks. For example,
@@ -1122,11 +1133,11 @@ field we provide $previous().</p>
 )</code></pre>
 <pre class="r"><code>x &lt;- Rando$new()
 x$random</code></pre>
-<pre><code>## [1] 0.9542915</code></pre>
+<pre><code>## [1] 0.0005687452</code></pre>
 <pre class="r"><code>x$random</code></pre>
-<pre><code>## [1] 0.6890033</code></pre>
+<pre><code>## [1] 0.02185039</code></pre>
 <pre class="r"><code>x$previous</code></pre>
-<pre><code>## [1] 0.6890033</code></pre>
+<pre><code>## [1] 0.02185039</code></pre>
 <ol start="4" style="list-style-type: decimal">
 <li>Can subclasses access private fields/methods from their parent?
 Perform an experiment to find out.</li>
@@ -1165,7 +1176,7 @@ SubClass$new()$test()</code></pre>
 ## Method: juice</code></pre>
 <blockquote>
 <p>We conclude that subclasses can access private methods from their
-superclasses, but not private fields.</p>
+superclasses, but not private fields. Why?</p>
 </blockquote>
 </div>
 </div>

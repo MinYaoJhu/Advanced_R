@@ -194,6 +194,15 @@ hadley2 <- Person$new("Hadley")
 hadley2
 ```
 
+```{r}
+hadley2$print()
+```
+
+```{r}
+hadley2$print()$print()
+```
+
+
 This code illustrates an important aspect of R6. Because methods are bound to individual objects, the previously created `hadley` object does not get this new method:
 
 ```{r}
@@ -791,7 +800,7 @@ SubClass <- R6Class(
 SubClass$new()$test()
 ```
 
-> We conclude that subclasses can access private methods from their superclasses, but not private fields.
+> We conclude that subclasses can access private methods from their superclasses, but not private fields. Why?
 
 ## 14.4 Reference semantics {#r6-semantics}
 \index{reference semantics}
