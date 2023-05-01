@@ -2,7 +2,9 @@
 title: "Ch15_S4-2"
 author: "Min-Yao"
 date: "2023-04-21"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ## 15.4 Generics and methods {#s4-generics}
@@ -122,14 +124,136 @@ name(john) <- letters
 
 1.  Add `age()` accessors for the `Person` class.
 
+```{r}
+setGeneric("age", function(x) standardGeneric("age"))
+setGeneric("age<-", function(x, value) standardGeneric("age<-"))
+```
+
+```{r}
+setMethod("age", "Person", function(x) x@age)
+setMethod("age<-", "Person", function(x, value) {
+  x@age <- value
+  validObject(x)
+  x
+})
+```
+
+```{r}
+age(john) <- 50
+age(john)
+```
+
+
 2.  In the definition of the generic, why is it necessary to repeat the
     name of the generic twice?
     
+> In this syntax, the first argument is the name of the generic, and the second argument is a function that will define the default behavior of the method. The name explicitly incorporates method dispatch via standardGeneric() within the generic’s body (def parameter of setGeneric()). This behaviour is similar to UseMethod() in S3.
+
+```{r}
+setGeneric("myGeneric", function(x) standardGeneric("myGeneric"))
+```
+
+    
 3.  Why does the `show()` method defined in Section \@ref(show-method) use
     `is(object)[[1]]`? (Hint: try printing the employee subclass.)
+    
+```{r}
+setMethod("show", "Person", function(object) {
+  cat(is(object)[[1]], "\n",
+      "  Name: ", object@name, "\n",
+      "  Age:  ", object@age, "\n",
+      sep = ""
+  )
+})
+```
+
+```{r}
+john
+```
+
+```{r}
+is(john)
+```
+
+> is(object) returns the class of the object. is(object) also contains the superclass, for subclasses like Employee. In order to always return the most specific class (the subclass), show() returns the first element of is(object).
 
 4.  What happens if you define a method with different argument names to
     the generic?
+    
+> We first create the object hadley of class Person:
+
+```{r}
+.Person <- setClass(
+  "Person",
+  slots = c(name = "character", age = "numeric")
+)
+
+setMethod("show", "Person", function(object) {
+  cat(is(object)[[1]], "\n",
+      "  Name: ", object@name, "\n",
+      "  Age:  ", object@age, "\n",
+      sep = ""
+  )
+})
+
+hadley <- .Person(name = "Hadley", age = 30)
+hadley
+```
+
+> Now let’s see which arguments can be supplied to the show() generic.
+
+```{r}
+formals("show")
+```
+
+> Usually, we would use this argument when defining a new method.
+
+```{r}
+setMethod("show", "Person", function(object) {
+  cat(object@name, "creates hard exercises")
+})
+
+hadley
+```
+
+When we supply another name as a first element of our method (e.g. x instead of object), this element will be matched to the correct object argument and we receive a warning. Our method will work, though:
+
+```{r}
+setMethod("show", "Person", function(x) {
+  cat(x@name, "creates hard exercises")
+})
+
+hadley
+```
+
+If we add more arguments to our method than our generic can handle, we will get an error.
+
+```{r}
+setMethod("show", "Person", function(x, y) {
+  cat(x@name, "is", x@age, "years old")
+})
+```
+
+If we do this with arguments added to the correctly written object argument, we will receive an informative error message. It states that we could add other argument names for generics, which can take the ... argument.
+
+```{r}
+setMethod("show", "Person", function(object, y) {
+  cat(object@name, "is", object@age, "years old")
+})
+```
+
+correct version:
+
+```{r}
+setMethod("show", "Person", function(object) {
+  cat(object@name, "is", object@age, "years old")
+})
+
+hadley
+```
+
+
+
 
 ## 15.5 Method dispatch {#s4-dispatch}
 \index{S4!method dispatch}
@@ -267,12 +391,18 @@ As the method graph gets more and more complicated it gets harder and harder to 
 1.  Draw the method graph for 
     `r paste0(code("f("), emoji("sweat_smile"), ", ", emoji("kissing_cat"), code(")"))`.
 
+
+
 2.  Draw the method graph for 
     `r paste0(code("f("), emoji("smiley"), ", ", emoji("wink"), ", ", emoji("kissing_smiling_eyes"), code(")"))`.
+
+
 
 3.  Take the last example which shows multiple dispatch over two classes that
     use multiple inheritance. What happens if you define a method for all
     terminal classes? Why does method dispatch not save us much work here?
+    
+
 
 ## 15.6 S4 and S3 {#s4-s3}
 \index{S4!working with S3}
@@ -347,7 +477,56 @@ NB: `setMethod()` will automatically call `setGeneric()` if the first argument i
 1.  What would a full `setOldClass()` definition look like for an ordered 
     factor (i.e. add `slots` and `prototype` the definition above)?
 
+> The purpose of setOldClass() lies in registering an S3 class as a “formally defined class,” so that it can be used within the S4 object-oriented programming system. When using it, we may provide the argument S4Class, which will inherit the slots and their default values (prototype) to the registered class.
+
+Let’s build an S4 OrderedFactor on top of the S3 factor in such a way.
+
+```{r}
+setOldClass("factor")    # use build-in definition for brevity
+
+OrderedFactor <- setClass(
+  "OrderedFactor",
+  contains = "factor",   # inherit from registered S3 class
+  slots = c(
+    levels = "character",
+    ordered = "logical"  # add logical order slot
+  ),
+  prototype = structure(
+    integer(),
+    levels = character(),
+    ordered = logical()  # add default value
+  )
+)
+```
+
+We can now register the (S3) ordered-class, while providing an “S4 template.” We can also use the S4-class to create new object directly.
+
+```{r}
+setOldClass("ordered", S4Class = "OrderedFactor")
+
+x <- OrderedFactor(
+  c(1L, 2L, 2L),
+  levels = c("a", "b", "c"),
+  ordered = TRUE
+)
+str(x)
+#> Formal class 'OrderedFactor' [package ".GlobalEnv"] with 4 slots
+#>   ..@ .Data   : int [1:3] 1 2 2
+#>   ..@ levels  : chr [1:3] "a" "b" "c"
+#>   ..@ ordered : logi TRUE
+#>   ..@ .S3Class: chr "factor"
+```
+
+
 2.  Define a `length` method for the `Person` class.
+
+> We keep things simple and will just return "180cm" when the length() method is called on a Person object. The method can be defined either as an S3 or S4 method.
+
+```{r}
+length.Person <- function(x) "180cm"  # S3
+setMethod("length", "Person", function(x) "180cm")  # S4
+```
+
 
 [SO-Morgan]: http://stackoverflow.com/search?tab=votes&q=user%3a547331%20%5bs4%5d%20is%3aanswe
 [bioc-courses]: https://bioconductor.org/help/course-materials/
