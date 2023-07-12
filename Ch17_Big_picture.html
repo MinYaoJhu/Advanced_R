@@ -664,12 +664,12 @@ takes a <strong>data mask</strong>, which is typically a data frame:</p>
 df</code></pre>
 <pre><code>##   x y
 ## 1 1 3
-## 2 2 1
-## 3 3 2
+## 2 2 2
+## 3 3 1
 ## 4 4 4
 ## 5 5 5</code></pre>
 <pre class="r"><code>eval_tidy(expr(x + y), df)</code></pre>
-<pre><code>## [1]  4  3  5  8 10</code></pre>
+<pre><code>## [1]  4  4  4  8 10</code></pre>
 <p>Evaluating with a data mask is a useful technique for interactive
 analysis because it allows you to write <code>x + y</code> rather than
 <code>df$x + df$y</code>. However, that convenience comes at a cost:
@@ -684,7 +684,7 @@ pronouns.</p>
 }
 
 with2(df, x + y)</code></pre>
-<pre><code>## [1]  4  3  5  8 10</code></pre>
+<pre><code>## [1]  4  4  4  8 10</code></pre>
 <p>Unfortunately, this function has a subtle bug and we need a new data
 structure to help deal with it.</p>
 </div>
