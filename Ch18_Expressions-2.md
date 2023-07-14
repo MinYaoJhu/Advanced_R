@@ -18,7 +18,9 @@ library(lobstr)
 ## 18.4 Parsing and grammar {#grammar}
 \index{grammar}
 
-We've talked a lot about expressions and the AST, but not about how expressions are created from code that you type (like `"x + y"`). The process by which a computer language takes a string and constructs an expression is called __parsing__, and is governed by a set of rules known as a __grammar__. In this section, we'll use `lobstr::ast()` to explore some of the details of R's grammar, and then show how you can transform back and forth between expressions and strings.
+We've talked a lot about expressions and the AST, but not about how expressions are created from code that you type (like `"x + y"`). 
+
+> The process by which a computer language takes a string and constructs an expression is called __parsing__, and is governed by a set of rules known as a __grammar__. In this section, we'll use `lobstr::ast()` to explore some of the details of R's grammar, and then show how you can transform back and forth between expressions and strings.
 
 ### 18.4.1 Operator precedence
 \index{operator precedence}
@@ -246,24 +248,261 @@ Be careful when using the base R equivalent, `deparse()`: it returns a character
     ```
 
     Compare and contrast the two uses by referencing the AST.
+    
+
+```r
+ast(f((1)))
+```
+
+```
+## █─f 
+## └─█─`(` 
+##   └─1
+```
+
+> In the AST of the first example, the outer ( is not visible since it is part of the prefix function syntax for f(). However, the inner ( represents a function and is displayed as a symbol in the AST.
+
+
+```r
+ast(`(`(1 + 1))
+```
+
+```
+## █─`(` 
+## └─█─`+` 
+##   ├─1 
+##   └─1
+```
+
+> In the second example, we can observe that the outer ( is a function, while the inner ( is associated with its syntax.
 
 1.  `=` can also be used in two ways. Construct a simple example that shows
     both uses.
+    
+> The symbol = serves a dual purpose in R, both for assignment and for naming arguments in function calls:
+
+
+```r
+a = c(b = 100)
+a
+b
+```
+
+However, when working with ast(), a direct attempt like the following results in an error:
+
+
+```r
+ast(a = c(b = 100))
+```
+
+> The error arises because b = prompts R to search for an argument named b. Since x is the only argument of ast(), an error is raised.
+
+To overcome this issue, the simplest approach is to enclose the problematic line within braces:
+
+
+```r
+ast({a = c(b = 100)})
+```
+
+```
+## █─`{` 
+## └─█─`=` 
+##   ├─a 
+##   └─█─c 
+##     └─b = 100
+```
+
+> When we disregard the braces and compare the trees, it becomes apparent that the first = symbol is utilized for assignment, while the second = is a component of the function call syntax.
 
 1.  Does `-2^2` yield 4 or -4? Why?
 
+
+```r
+-2^2
+```
+
+```
+## [1] -4
+```
+
+```r
+ast(-2^2)
+```
+
+```
+## █─`-` 
+## └─█─`^` 
+##   ├─2 
+##   └─2
+```
+> The outcome obtained is -4 due to the higher precedence of the ^ operator over -. 
+
 1.  What does `!1 + !1` return? Why?
+
+
+```r
+!1 + !1
+```
+
+```
+## [1] FALSE
+```
+
+```r
+ast(!1 + !1)
+```
+
+```
+## █─`!` 
+## └─█─`+` 
+##   ├─1 
+##   └─█─`!` 
+##     └─1
+```
+
+> The evaluation process unfolds as follows: 
+
+> First, !1 on the right-hand side is assessed. It yields FALSE since R coerces any non-zero numeric value to TRUE when a logical operator is applied. The negation of TRUE results in FALSE.
+
+> Subsequently, 1 + FALSE is evaluated, giving the value 1 because FALSE is coerced to 0.
+
+> Finally, !1 is evaluated, yielding FALSE.
+
+> It is worth noting that if ! had a higher precedence, the intermediate result would be FALSE + FALSE, which would evaluate to 0.
 
 1.  Why does `x1 <- x2 <- x3 <- 0` work? Describe the two reasons.
 
+
+```r
+x1 <- x2 <- x3 <- 0
+x1
+```
+
+```
+## [1] 0
+```
+
+```r
+ast(x1 <- x2 <- x3 <- 0)
+```
+
+```
+## █─`<-` 
+## ├─x1 
+## └─█─`<-` 
+##   ├─x2 
+##   └─█─`<-` 
+##     ├─x3 
+##     └─0
+```
+
+> There are two reasons for this behavior. First, the <- operator in R is right-associative, meaning that evaluation occurs from right to left.
+
+> Secondly, the <- operator invisibly returns the value on the right-hand side.
+
+
+```r
+(x3 <- 0)
+```
+
+```
+## [1] 0
+```
+
+> As a result, the assignment operation can be nested in this manner.
+
 1.  Compare the ASTs of `x + y %+% z` and `x ^ y %+% z`. What have you learned
     about the precedence of custom infix functions?
+    
+
+```r
+ast(x + y %+% z)
+```
+
+```
+## █─`+` 
+## ├─x 
+## └─█─`%+%` 
+##   ├─y 
+##   └─z
+```
+
+> In this case, the expression y %+% z will be evaluated first, and the result will be added to x.
+
+
+
+```r
+ast(x ^ y %+% z)
+```
+
+```
+## █─`%+%` 
+## ├─█─`^` 
+## │ ├─x 
+## │ └─y 
+## └─z
+```
+
+> Here, x ^ y will be calculated first, and the resulting value will serve as the first argument to %+%().
+
+> From these examples, we can deduce that custom infix functions hold precedence between addition and exponentiation operations.
 
 1.  What happens if you call `parse_expr()` with a string that generates
     multiple expressions? e.g. `parse_expr("x + 1; y + 1")`
+    
+
+```r
+parse_expr("x + 1; y + 1")
+```
+
+```
+## Error in `parse_expr()`:
+## ! `x` must contain exactly 1 expression, not 2.
+```
 
 1.  What happens if you attempt to parse an invalid expression? e.g. `"a +"`
     or `"f())"`.
+    
+
+```r
+parse_expr("a +")
+```
+
+```
+## Error in parse(text = x, keep.source = FALSE): <text>:2:0: unexpected end of input
+## 1: a +
+##    ^
+```
+
+```r
+parse_expr("f())")
+```
+
+```
+## Error in parse(text = x, keep.source = FALSE): <text>:1:4: unexpected ')'
+## 1: f())
+##        ^
+```
+
+```r
+parse(text = "a +")
+```
+
+```
+## Error in parse(text = "a +"): <text>:2:0: unexpected end of input
+## 1: a +
+##    ^
+```
+
+```r
+parse(text = "f())")
+```
+
+```
+## Error in parse(text = "f())"): <text>:1:4: unexpected ')'
+## 1: f())
+##        ^
+```
 
 1.  `deparse()` produces vectors when the input is long. For example, the
     following call produces a vector of length two:
@@ -277,10 +516,46 @@ Be careful when using the base R equivalent, `deparse()`: it returns a character
     ```
 
     What does `expr_text()` do instead?
+    
+
+```r
+expr_text(expr)
+```
+
+```
+## [1] "function (expr) \n{\n    enexpr(expr)\n}"
+```
+
+> The function expr_text() concatenates the outcomes obtained from deparse(expr) and employs a line break (\n) as the separator between them.
 
 1.  `pairwise.t.test()` assumes that `deparse()` always returns a length one
     character vector. Can you construct an input that violates this expectation?
     What happens?
+
+
+
+```r
+# R version 4.3.0
+
+d <- 1
+pairwise.t.test(2, d + d + d + d + d + d + d + d + 
+                  d + d + d + d + d + d + d + d + d)
+```
+
+```
+## 
+## 	Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  2 and d + d + d + d + d + d + d + d + d + d + d + d + d + d + d + d + d 
+## 
+## <0 x 0 matrix>
+## 
+## P value adjustment method: holm
+```
+
+> To address potential unexpected output caused by exceeding the default width.cutoff value of 60 characters in deparse(), pairwise.t.test() in versions prior to R 4.0.0 utilized deparse(substitute(x)) in conjunction with paste(). This approach could result in the splitting of the expression into a character vector of length greater than 1.
+
+> However, starting from R 4.0.0, pairwise.t.test() was updated to utilize the newly introduced deparse1() function, acting as a wrapper around deparse(). This change ensures that the result is a single string (character vector of length one), primarily used in name construction.
 
 ## 18.5 Walking AST with recursive functions {#ast-funs}
 \index{recursion!over ASTs}
@@ -545,7 +820,7 @@ flat_map_chr(letters[1:3], ~ rep(., sample(3, 1)))
 ```
 
 ```
-## [1] "a" "a" "a" "b" "c" "c"
+## [1] "a" "a" "b" "c" "c"
 ```
 
 The recursive case for pairlists is straightforward: we iterate over every element of the pairlist (i.e. each function argument) and combine the results. The case for calls is a little bit more complex: if this is a call to `<-` then we should return the second element of the call:
@@ -683,7 +958,137 @@ The complete version of this function is quite complicated, it's important to re
 1.  `logical_abbr()` returns `TRUE` for `T(1, 2, 3)`. How could you modify
     `logical_abbr_rec()` so that it ignores function calls that use `T` or `F`?
 
-1.  `logical_abbr()` works with expressions. It currently fails when you give it
+
+```r
+expr_type <- function(x) {
+  if (rlang::is_syntactic_literal(x)) {
+    "constant"
+  } else if (is.symbol(x)) {
+    "symbol"
+  } else if (is.call(x)) {
+    "call"
+  } else if (is.pairlist(x)) {
+    "pairlist"
+  } else {
+    typeof(x)
+  }
+}
+
+switch_expr <- function(x, ...) {
+  switch(expr_type(x),
+         ...,
+         stop("Don't know how to handle type ", 
+              typeof(x), call. = FALSE))
+}
+```
+
+
+```r
+# original
+logical_abbr_rec <- function(x) {
+  switch_expr(x,
+    # Base cases
+    constant = FALSE,
+    symbol = as_string(x) %in% c("F", "T"),
+
+    # Recursive cases
+    call = ,
+    pairlist = purrr::some(x, logical_abbr_rec)
+  )
+}
+```
+
+
+```r
+logical_abbr(T(1, 2, 3))
+```
+
+```
+## [1] TRUE
+```
+
+
+
+```r
+# updated
+find_T_call <- function(x) {
+  if (is_call(x, "T")) {
+    x <- as.list(x)[-1]
+    purrr::some(x, logical_abbr_rec)
+  } else {
+    purrr::some(x, logical_abbr_rec)
+  }
+}
+
+logical_abbr_rec <- function(x) {
+  switch_expr(
+    x,
+    # Base cases
+    constant = FALSE,
+    symbol = as_string(x) %in% c("F", "T"),
+    
+    # Recursive cases
+    pairlist = purrr::some(x, logical_abbr_rec),
+    call = find_T_call(x)
+  )
+}
+
+logical_abbr <- function(x) {
+  logical_abbr_rec(enexpr(x))
+}
+```
+
+
+```r
+logical_abbr(T(1, 2, 3))
+```
+
+```
+## [1] FALSE
+```
+
+```r
+logical_abbr(T(T, T(3, 4)))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+logical_abbr(T(T))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+logical_abbr(T())
+```
+
+```
+## [1] FALSE
+```
+
+```r
+logical_abbr()
+```
+
+```
+## [1] FALSE
+```
+
+```r
+logical_abbr(c(T, T, T))
+```
+
+```
+## [1] TRUE
+```
+
+
+2.  `logical_abbr()` works with expressions. It currently fails when you give it
     a function. Why? How could you modify `logical_abbr()` to make it
     work? What components of a function will you need to recurse over?
 
@@ -694,10 +1099,30 @@ The complete version of this function is quite complicated, it's important to re
     })
     ```
 
-1.  Modify `find_assign` to also detect assignment using replacement
+> The current implementation of the function fails when encountering a closure ("closure") because it is not handled in switch_expr() within logical_abbr_rec().
+
+
+```r
+f <- function(x = TRUE) {
+  g(x + T)
+}
+```
+
+
+```r
+logical_abbr(!!f)
+```
+
+```
+## Error: Don't know how to handle type closure
+```
+
+> If we want to make it work, we have to write a function to also iterate over the formals and the body of the input function.
+
+3.  Modify `find_assign` to also detect assignment using replacement
     functions, i.e. `names(x) <- y`.
 
-1.  Write a function that extracts all calls to a specified function.
+4.  Write a function that extracts all calls to a specified function.
 
 
 ## 18.6 Specialised data structures {#expression-special}
