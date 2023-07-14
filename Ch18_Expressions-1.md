@@ -230,7 +230,7 @@ expr(`<-`(y, `*`(x, 10)))
 ## y <- x * 10
 ```
 
-The order in which infix operators are applied is governed by a set of rules called operator precedence, and we'll use `lobstr::ast()` to explore them in Section \@ref(operator-precedence).
+> The order in which infix operators are applied is governed by a set of rules called operator precedence, and we'll use `lobstr::ast()` to explore them in Section \@ref(operator-precedence).
 
 ### 18.2.4 Exercises
 
@@ -260,7 +260,44 @@ The order in which infix operators are applied is governed by a set of rules cal
     ## └─z
     ```
 
-1.  Draw the following trees by hand and then check your answers with
+
+```r
+ast(f(g(h())))
+```
+
+```
+## █─f 
+## └─█─g 
+##   └─█─h
+```
+
+```r
+ast(1 + 2 + 3)
+```
+
+```
+## █─`+` 
+## ├─█─`+` 
+## │ ├─1 
+## │ └─2 
+## └─3
+```
+
+```r
+ast((x + y) * z)
+```
+
+```
+## █─`*` 
+## ├─█─`(` 
+## │ └─█─`+` 
+## │   ├─x 
+## │   └─y 
+## └─z
+```
+
+
+2.  Draw the following trees by hand and then check your answers with
     `lobstr::ast()`.
 
     
@@ -270,7 +307,53 @@ The order in which infix operators are applied is governed by a set of rules cal
     f(g(1, 2), h(3, i(4, 5)))
     ```
 
-1.  What's happening with the ASTs below? (Hint: carefully read `?"^"`.)
+
+```r
+ast(f(g(h(i(1, 2, 3)))))
+```
+
+```
+## █─f 
+## └─█─g 
+##   └─█─h 
+##     └─█─i 
+##       ├─1 
+##       ├─2 
+##       └─3
+```
+
+```r
+ast(f(1, g(2, h(3, i()))))
+```
+
+```
+## █─f 
+## ├─1 
+## └─█─g 
+##   ├─2 
+##   └─█─h 
+##     ├─3 
+##     └─█─i
+```
+
+```r
+ast(f(g(1, 2), h(3, i(4, 5))))
+```
+
+```
+## █─f 
+## ├─█─g 
+## │ ├─1 
+## │ └─2 
+## └─█─h 
+##   ├─3 
+##   └─█─i 
+##     ├─4 
+##     └─5
+```
+
+
+3.  What's happening with the ASTs below? (Hint: carefully read `?"^"`.)
 
     
     ```r
@@ -302,8 +385,10 @@ The order in which infix operators are applied is governed by a set of rules cal
     ## ├─x 
     ## └─1
     ```
+> ASTs initiate function calls by stating the function's name, resulting in the transformation of the first expression into its prefix form. The second scenario involves the translation of `**` into `^` by R's parser. Lastly, in the final AST, R reconfigures the expression by flipping it during parsing.
 
-1.  What is special about the AST below? (Hint: re-read Section
+
+4.  What is special about the AST below? (Hint: re-read Section
     \@ref(fun-components).)
 
     
@@ -319,18 +404,92 @@ The order in which infix operators are applied is governed by a set of rules cal
     ## └─<inline srcref>
     ```
 
-1.  What does the call tree of an `if` statement with multiple `else if`
+> The final leaf of the AST lacks explicit mention within the expression. Rather, base R automatically generates the srcref attribute, which indicates the source code of the function.
+
+5.  What does the call tree of an `if` statement with multiple `else if`
     conditions look like? Why?
+    
+
+```r
+x <- 0
+if (x < 0) {
+  print("Negative number")
+} else if (x > 0) {
+  print("Positive number")
+} else
+  print("Zero")
+```
+
+```
+## [1] "Zero"
+```
+
+
+```r
+ast(if (x < 0) {
+  print("Negative number")
+} else if (x > 0) {
+  print("Positive number")
+} else
+  print("Zero"))
+```
+
+```
+## █─`if` 
+## ├─█─`<` 
+## │ ├─x 
+## │ └─0 
+## ├─█─`{` 
+## │ └─█─print 
+## │   └─"Negative number" 
+## └─█─`if` 
+##   ├─█─`>` 
+##   │ ├─x 
+##   │ └─0 
+##   ├─█─`{` 
+##   │ └─█─print 
+##   │   └─"Positive number" 
+##   └─█─print 
+##     └─"Zero"
+```
+
+
+```r
+ast(if (x < 0)
+  print("Negative number")
+  else if (x > 0)
+    print("Positive number")
+  else
+    print("Zero"))
+```
+
+```
+## █─`if` 
+## ├─█─`<` 
+## │ ├─x 
+## │ └─0 
+## ├─█─print 
+## │ └─"Negative number" 
+## └─█─`if` 
+##   ├─█─`>` 
+##   │ ├─x 
+##   │ └─0 
+##   ├─█─print 
+##   │ └─"Positive number" 
+##   └─█─print 
+##     └─"Zero"
+```
+
 
 ## 18.3 Expressions {#expression-details}
 \index{expressions}
 \indexc{expr()}
 
-Collectively, the data structures present in the AST are called expressions. An __expression__ is any member of the set of base types created by parsing code: constant scalars, symbols, call objects, and pairlists. These are the data structures used to represent captured code from `expr()`, and  `is_expression(expr(...))` is always true[^exceptions]. Constants, symbols and call objects are the most important, and are discussed below. Pairlists and empty symbols are more specialised and we'll come back to them in Sections \@ref(pairlists) and Section \@ref(empty-symbol).
+> Collectively, the data structures present in the AST are called expressions. An __expression__ is any member of the set of base types created by parsing code: constant scalars, symbols, call objects, and pairlists. These are the data structures used to represent captured code from `expr()`, and  `is_expression(expr(...))` is always true[^exceptions]. Constants, symbols and call objects are the most important, and are discussed below. Pairlists and empty symbols are more specialised and we'll come back to them in Sections \@ref(pairlists) and Section \@ref(empty-symbol).
 
 [^exceptions]: It is _possible_ to insert any other base object into an expression, but this is unusual and only needed in rare circumstances. We'll come back to that idea in Section \@ref(non-standard-ast).
 
-NB: In base R documentation "expression" is used to mean two things. As well as the definition above, expression is also used to refer to the type of object returned by `expression()` and `parse()`, which are basically lists of expressions as defined above. In this book I'll call these __expression vectors__, and I'll come back to them in Section \@ref(expression-vectors).
+> NB: In base R documentation "expression" is used to mean two things. As well as the definition above, expression is also used to refer to the type of object returned by `expression()` and `parse()`, which are basically lists of expressions as defined above. In this book I'll call these __expression vectors__, and I'll come back to them in Section \@ref(expression-vectors).
 
 ### 18.3.1 Constants
 \index{constants}
@@ -378,7 +537,7 @@ identical(expr("x"), "x")
 \index{names|see {symbols}}
 \indexc{sym()}
 
-A __symbol__ represents the name of an object like `x`, `mtcars`, or `mean`. In base R, the terms symbol and name are used interchangeably (i.e. `is.name()` is identical to `is.symbol()`), but in this book I used symbol consistently because "name" has many other meanings.
+> A __symbol__ represents the name of an object like `x`, `mtcars`, or `mean`. In base R, the terms symbol and name are used interchangeably (i.e. `is.name()` is identical to `is.symbol()`), but in this book I used symbol consistently because "name" has many other meanings.
 
 You can create a symbol in two ways: by capturing code that references an object with `expr()`, or turning a string into a symbol with `rlang::sym()`:
 
@@ -436,7 +595,7 @@ The symbol type is not vectorised, i.e. a symbol is always length 1. If you want
 \index{call objects}
 \index{language objects!see {call objects}}
 
-A __call object__ represents a captured function call. Call objects are a special type of list[^call-pairlist] where the first component specifies the function to call (usually a symbol), and the remaining elements are the arguments for that call. Call objects create branches in the AST, because calls can be nested inside other calls.
+> A __call object__ represents a captured function call. Call objects are a special type of list[^call-pairlist] where the first component specifies the function to call (usually a symbol), and the remaining elements are the arguments for that call. Call objects create branches in the AST, because calls can be nested inside other calls.
 
 [^call-pairlist]: More precisely, they're pairlists, Section \@ref(pairlists), but this distinction rarely matters.
 
@@ -574,7 +733,7 @@ x
 #### 18.3.3.2 Function position
 \index{call objects!function component}
 
-The first element of the call object is the __function position__. This contains the function that will be called when the object is evaluated, and is usually a symbol[^call-number]:
+> The first element of the call object is the __function position__. This contains the function that will be called when the object is evaluated, and is usually a symbol[^call-number]:
 
 
 ```r
@@ -705,9 +864,13 @@ Both base R and rlang provide functions for testing for each type of input, alth
 1.  Which two of the six types of atomic vector can't appear in an expression?
     Why? Similarly, why can't you create an expression that contains an atomic 
     vector of length greater than one?
+    
+> raws and complex atomics. However, expressions involving a function are classified as calls. Consequently, both these types of vector entities are precluded from being employed within an expression. In a similar vein, the creation of an expression that results in an atomic object exceeding a length of one is unattainable without the utilization of a function (e.g., c()).
 
 1.  What happens when you subset a call object to remove the first element?
     e.g. `expr(read.csv("foo.csv", header = TRUE))[-1]`. Why?
+
+> Upon removal of the initial element within a call object, the subsequent element transitions to the foremost position, serving as the designated function for call. Thus, we obtain the expression `"foo.csv"(header = TRUE)`.
 
 1.  Describe the differences between the following call objects.
 
@@ -720,6 +883,53 @@ Both base R and rlang provide functions for testing for each type of input, alth
     call2(median, expr(x), na.rm = TRUE)
     call2(expr(median), expr(x), na.rm = TRUE)
     ```
+
+> The call objects exhibit variability in their initial two elements, which are occasionally assessed prior to constructing the call. 
+
+> In the first scenario, both median() and x are evaluated and directly incorporated within the call structure. Consequently, upon inspecting the formed call, we observe that median serves as a generic function, while the x argument corresponds to the sequence 1:10.
+
+
+```r
+    call2(median, x, na.rm = TRUE)
+```
+
+```
+## (function (x, na.rm = FALSE, ...) 
+## UseMethod("median"))(1:10, na.rm = TRUE)
+```
+
+> In the subsequent calls, we encounter distinct combinations that remain divergent. On one occasion, solely x undergoes evaluation, while on another occasion, only median() is assessed.
+
+
+```r
+    call2(expr(median), x, na.rm = TRUE)
+```
+
+```
+## median(1:10, na.rm = TRUE)
+```
+
+```r
+    call2(median, expr(x), na.rm = TRUE)
+```
+
+```
+## (function (x, na.rm = FALSE, ...) 
+## UseMethod("median"))(x, na.rm = TRUE)
+```
+
+> In the ultimate call, neither x nor median() undergoes evaluation.
+
+
+```r
+call2(expr(median), expr(x), na.rm = TRUE)
+```
+
+```
+## median(x, na.rm = TRUE)
+```
+
+
 
 1.  `rlang::call_standardise()` doesn't work so well for the following calls.
     Why? What makes `mean()` special?
@@ -749,13 +959,102 @@ Both base R and rlang provide functions for testing for each type of input, alth
     ## mean(x = 1:10, , TRUE)
     ```
 
+> The underlying cause for this unforeseen behavior stems from the utilization of the `...` argument within the `mean()` function, which prevents the standardization of the corresponding arguments. Due to the implementation of S3 dispatch in `mean()` (i.e., employing `UseMethod()`), and the presence of additional arguments specified within the underlying `mean.default()` method, `call_standardise()` can significantly improve by implementing a dedicated S3 method.
+
+
+```r
+call_standardise(quote(mean.default(1:10, na.rm = TRUE)))
+```
+
+```
+## mean.default(x = 1:10, na.rm = TRUE)
+```
+
+```r
+call_standardise(quote(mean.default(n = T, 1:10)))
+```
+
+```
+## mean.default(x = 1:10, na.rm = T)
+```
+
+```r
+call_standardise(quote(mean.default(x = 1:10, , TRUE)))
+```
+
+```
+## mean.default(x = 1:10, na.rm = TRUE)
+```
+
 1.  Why does this code not make sense?
 
     
     ```r
     x <- expr(foo(x = 1))
+    x
     names(x) <- c("x", "y")
+    x
     ```
+
+> Consider the following observations upon executing the code:
+
+
+```r
+x <- expr(foo(x = 1))
+x
+```
+
+```
+## foo(x = 1)
+```
+
+```r
+names(x) <- c("x", "")
+x
+```
+
+```
+## foo(1)
+```
+
+```r
+names(x) <- c("", "x")
+x
+```
+
+```
+## foo(x = 1)
+```
+
+> It becomes evident that assigning a name to the first element merely introduces metadata that R disregards.
 
 1.  Construct the expression `if(x > 1) "a" else "b"` using multiple calls to
     `call2()`. How does the code structure reflect the structure of the AST?
+
+> By employing the prefix form, we obtain a comparable structure:
+
+
+```r
+call2("if", call2(">", sym("x"), 1), "a", "b")
+```
+
+```
+## if (x > 1) "a" else "b"
+```
+
+> When examining the Abstract Syntax Tree (AST) from left to right, we observe the identical arrangement: the function to evaluate, followed by an expression that constitutes another function and is evaluated first, and finally, two constants that are subsequently evaluated:
+
+
+```r
+ast(`if`(x > 1, "a", "b"))
+```
+
+```
+## █─`if` 
+## ├─█─`>` 
+## │ ├─x 
+## │ └─1 
+## ├─"a" 
+## └─"b"
+```
+

@@ -533,10 +533,12 @@ an expression with prefix calls, R will still print it in infix
 form:</p>
 <pre class="r"><code>expr(`&lt;-`(y, `*`(x, 10)))</code></pre>
 <pre><code>## y &lt;- x * 10</code></pre>
+<blockquote>
 <p>The order in which infix operators are applied is governed by a set
 of rules called operator precedence, and we’ll use
 <code>lobstr::ast()</code> to explore them in Section
 @ref(operator-precedence).</p>
+</blockquote>
 </div>
 <div id="exercises" class="section level3">
 <h3>18.2.4 Exercises</h3>
@@ -556,11 +558,58 @@ of rules called operator precedence, and we’ll use
 ## │   ├─x 
 ## │   └─y 
 ## └─z</code></pre></li>
+</ol>
+<pre class="r"><code>ast(f(g(h())))</code></pre>
+<pre><code>## █─f 
+## └─█─g 
+##   └─█─h</code></pre>
+<pre class="r"><code>ast(1 + 2 + 3)</code></pre>
+<pre><code>## █─`+` 
+## ├─█─`+` 
+## │ ├─1 
+## │ └─2 
+## └─3</code></pre>
+<pre class="r"><code>ast((x + y) * z)</code></pre>
+<pre><code>## █─`*` 
+## ├─█─`(` 
+## │ └─█─`+` 
+## │   ├─x 
+## │   └─y 
+## └─z</code></pre>
+<ol start="2" style="list-style-type: decimal">
 <li><p>Draw the following trees by hand and then check your answers with
 <code>lobstr::ast()</code>.</p>
 <pre class="r"><code>f(g(h(i(1, 2, 3))))
 f(1, g(2, h(3, i())))
 f(g(1, 2), h(3, i(4, 5)))</code></pre></li>
+</ol>
+<pre class="r"><code>ast(f(g(h(i(1, 2, 3)))))</code></pre>
+<pre><code>## █─f 
+## └─█─g 
+##   └─█─h 
+##     └─█─i 
+##       ├─1 
+##       ├─2 
+##       └─3</code></pre>
+<pre class="r"><code>ast(f(1, g(2, h(3, i()))))</code></pre>
+<pre><code>## █─f 
+## ├─1 
+## └─█─g 
+##   ├─2 
+##   └─█─h 
+##     ├─3 
+##     └─█─i</code></pre>
+<pre class="r"><code>ast(f(g(1, 2), h(3, i(4, 5))))</code></pre>
+<pre><code>## █─f 
+## ├─█─g 
+## │ ├─1 
+## │ └─2 
+## └─█─h 
+##   ├─3 
+##   └─█─i 
+##     ├─4 
+##     └─5</code></pre>
+<ol start="3" style="list-style-type: decimal">
 <li><p>What’s happening with the ASTs below? (Hint: carefully read
 <code>?&quot;^&quot;</code>.)</p>
 <pre class="r"><code>lobstr::ast(`x` + `y`)</code></pre>
@@ -574,7 +623,14 @@ f(g(1, 2), h(3, i(4, 5)))</code></pre></li>
 <pre class="r"><code>lobstr::ast(1 -&gt; x)</code></pre>
 <pre><code>## █─`&lt;-` 
 ## ├─x 
-## └─1</code></pre></li>
+## └─1</code></pre>
+<blockquote>
+<p>ASTs initiate function calls by stating the function’s name,
+resulting in the transformation of the first expression into its prefix
+form. The second scenario involves the translation of <code>**</code>
+into <code>^</code> by R’s parser. Lastly, in the final AST, R
+reconfigures the expression by flipping it during parsing.</p>
+</blockquote></li>
 <li><p>What is special about the AST below? (Hint: re-read Section
 @ref(fun-components).)</p>
 <pre class="r"><code>lobstr::ast(function(x = 1, y = 2) {})</code></pre>
@@ -583,14 +639,72 @@ f(g(1, 2), h(3, i(4, 5)))</code></pre></li>
 ## │ └─y = 2 
 ## ├─█─`{` 
 ## └─&lt;inline srcref&gt;</code></pre></li>
-<li><p>What does the call tree of an <code>if</code> statement with
-multiple <code>else if</code> conditions look like? Why?</p></li>
 </ol>
+<blockquote>
+<p>The final leaf of the AST lacks explicit mention within the
+expression. Rather, base R automatically generates the srcref attribute,
+which indicates the source code of the function.</p>
+</blockquote>
+<ol start="5" style="list-style-type: decimal">
+<li>What does the call tree of an <code>if</code> statement with
+multiple <code>else if</code> conditions look like? Why?</li>
+</ol>
+<pre class="r"><code>x &lt;- 0
+if (x &lt; 0) {
+  print(&quot;Negative number&quot;)
+} else if (x &gt; 0) {
+  print(&quot;Positive number&quot;)
+} else
+  print(&quot;Zero&quot;)</code></pre>
+<pre><code>## [1] &quot;Zero&quot;</code></pre>
+<pre class="r"><code>ast(if (x &lt; 0) {
+  print(&quot;Negative number&quot;)
+} else if (x &gt; 0) {
+  print(&quot;Positive number&quot;)
+} else
+  print(&quot;Zero&quot;))</code></pre>
+<pre><code>## █─`if` 
+## ├─█─`&lt;` 
+## │ ├─x 
+## │ └─0 
+## ├─█─`{` 
+## │ └─█─print 
+## │   └─&quot;Negative number&quot; 
+## └─█─`if` 
+##   ├─█─`&gt;` 
+##   │ ├─x 
+##   │ └─0 
+##   ├─█─`{` 
+##   │ └─█─print 
+##   │   └─&quot;Positive number&quot; 
+##   └─█─print 
+##     └─&quot;Zero&quot;</code></pre>
+<pre class="r"><code>ast(if (x &lt; 0)
+  print(&quot;Negative number&quot;)
+  else if (x &gt; 0)
+    print(&quot;Positive number&quot;)
+  else
+    print(&quot;Zero&quot;))</code></pre>
+<pre><code>## █─`if` 
+## ├─█─`&lt;` 
+## │ ├─x 
+## │ └─0 
+## ├─█─print 
+## │ └─&quot;Negative number&quot; 
+## └─█─`if` 
+##   ├─█─`&gt;` 
+##   │ ├─x 
+##   │ └─0 
+##   ├─█─print 
+##   │ └─&quot;Positive number&quot; 
+##   └─█─print 
+##     └─&quot;Zero&quot;</code></pre>
 </div>
 </div>
 <div id="expression-details" class="section level2">
 <h2>18.3 Expressions</h2>
 <p> </p>
+<blockquote>
 <p>Collectively, the data structures present in the AST are called
 expressions. An <strong>expression</strong> is any member of the set of
 base types created by parsing code: constant scalars, symbols, call
@@ -600,6 +714,8 @@ captured code from <code>expr()</code>, and
 and call objects are the most important, and are discussed below.
 Pairlists and empty symbols are more specialised and we’ll come back to
 them in Sections @ref(pairlists) and Section @ref(empty-symbol).</p>
+</blockquote>
+<blockquote>
 <p>NB: In base R documentation “expression” is used to mean two things.
 As well as the definition above, expression is also used to refer to the
 type of object returned by <code>expression()</code> and
@@ -607,6 +723,7 @@ type of object returned by <code>expression()</code> and
 defined above. In this book I’ll call these <strong>expression
 vectors</strong>, and I’ll come back to them in Section
 @ref(expression-vectors).</p>
+</blockquote>
 <div id="constants" class="section level3">
 <h3>18.3.1 Constants</h3>
 <p> </p>
@@ -630,12 +747,14 @@ represent a constant is the same constant:</p>
 <div id="symbols" class="section level3">
 <h3>18.3.2 Symbols</h3>
 <p> </p>
+<blockquote>
 <p>A <strong>symbol</strong> represents the name of an object like
 <code>x</code>, <code>mtcars</code>, or <code>mean</code>. In base R,
 the terms symbol and name are used interchangeably
 (i.e. <code>is.name()</code> is identical to <code>is.symbol()</code>),
 but in this book I used symbol consistently because “name” has many
 other meanings.</p>
+</blockquote>
 <p>You can create a symbol in two ways: by capturing code that
 references an object with <code>expr()</code>, or turning a string into
 a symbol with <code>rlang::sym()</code>:</p>
@@ -663,11 +782,13 @@ If you want multiple symbols, you’ll need to put them in a list, using
 <div id="calls" class="section level3">
 <h3>18.3.3 Calls</h3>
 <p> </p>
+<blockquote>
 <p>A <strong>call object</strong> represents a captured function call.
 Call objects are a special type of list<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> where the first
 component specifies the function to call (usually a symbol), and the
 remaining elements are the arguments for that call. Call objects create
 branches in the AST, because calls can be nested inside other calls.</p>
+</blockquote>
 <p>You can identify a call object when printed because it looks just
 like a function call. Confusingly <code>typeof()</code> and
 <code>str()</code> print “language”<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a> for call objects, but
@@ -729,9 +850,11 @@ x</code></pre>
 <div id="function-position" class="section level4">
 <h4>18.3.3.2 Function position</h4>
 <p></p>
+<blockquote>
 <p>The first element of the call object is the <strong>function
 position</strong>. This contains the function that will be called when
 the object is evaluated, and is usually a symbol<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a>:</p>
+</blockquote>
 <pre class="r"><code>lobstr::ast(foo())</code></pre>
 <pre><code>## █─foo</code></pre>
 <p>While R allows you to surround the name of the function with quotes,
@@ -870,12 +993,30 @@ tell them apart because all the base functions start with
 <div id="exercises-1" class="section level3">
 <h3>18.3.5 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>Which two of the six types of atomic vector can’t appear in an
+<li>Which two of the six types of atomic vector can’t appear in an
 expression? Why? Similarly, why can’t you create an expression that
-contains an atomic vector of length greater than one?</p></li>
-<li><p>What happens when you subset a call object to remove the first
+contains an atomic vector of length greater than one?</li>
+</ol>
+<blockquote>
+<p>raws and complex atomics. However, expressions involving a function
+are classified as calls. Consequently, both these types of vector
+entities are precluded from being employed within an expression. In a
+similar vein, the creation of an expression that results in an atomic
+object exceeding a length of one is unattainable without the utilization
+of a function (e.g., c()).</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>What happens when you subset a call object to remove the first
 element? e.g. <code>expr(read.csv(&quot;foo.csv&quot;, header = TRUE))[-1]</code>.
-Why?</p></li>
+Why?</li>
+</ol>
+<blockquote>
+<p>Upon removal of the initial element within a call object, the
+subsequent element transitions to the foremost position, serving as the
+designated function for call. Thus, we obtain the expression
+<code>&quot;foo.csv&quot;(header = TRUE)</code>.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
 <li><p>Describe the differences between the following call objects.</p>
 <pre class="r"><code>x &lt;- 1:10
 
@@ -883,6 +1024,37 @@ call2(median, x, na.rm = TRUE)
 call2(expr(median), x, na.rm = TRUE)
 call2(median, expr(x), na.rm = TRUE)
 call2(expr(median), expr(x), na.rm = TRUE)</code></pre></li>
+</ol>
+<blockquote>
+<p>The call objects exhibit variability in their initial two elements,
+which are occasionally assessed prior to constructing the call.</p>
+</blockquote>
+<blockquote>
+<p>In the first scenario, both median() and x are evaluated and directly
+incorporated within the call structure. Consequently, upon inspecting
+the formed call, we observe that median serves as a generic function,
+while the x argument corresponds to the sequence 1:10.</p>
+</blockquote>
+<pre class="r"><code>    call2(median, x, na.rm = TRUE)</code></pre>
+<pre><code>## (function (x, na.rm = FALSE, ...) 
+## UseMethod(&quot;median&quot;))(1:10, na.rm = TRUE)</code></pre>
+<blockquote>
+<p>In the subsequent calls, we encounter distinct combinations that
+remain divergent. On one occasion, solely x undergoes evaluation, while
+on another occasion, only median() is assessed.</p>
+</blockquote>
+<pre class="r"><code>    call2(expr(median), x, na.rm = TRUE)</code></pre>
+<pre><code>## median(1:10, na.rm = TRUE)</code></pre>
+<pre class="r"><code>    call2(median, expr(x), na.rm = TRUE)</code></pre>
+<pre><code>## (function (x, na.rm = FALSE, ...) 
+## UseMethod(&quot;median&quot;))(x, na.rm = TRUE)</code></pre>
+<blockquote>
+<p>In the ultimate call, neither x nor median() undergoes
+evaluation.</p>
+</blockquote>
+<pre class="r"><code>call2(expr(median), expr(x), na.rm = TRUE)</code></pre>
+<pre><code>## median(x, na.rm = TRUE)</code></pre>
+<ol style="list-style-type: decimal">
 <li><p><code>rlang::call_standardise()</code> doesn’t work so well for
 the following calls. Why? What makes <code>mean()</code> special?</p>
 <pre class="r"><code>call_standardise(quote(mean(1:10, na.rm = TRUE)))</code></pre>
@@ -891,13 +1063,69 @@ the following calls. Why? What makes <code>mean()</code> special?</p>
 <pre><code>## mean(x = 1:10, n = T)</code></pre>
 <pre class="r"><code>call_standardise(quote(mean(x = 1:10, , TRUE)))</code></pre>
 <pre><code>## mean(x = 1:10, , TRUE)</code></pre></li>
+</ol>
+<blockquote>
+<p>The underlying cause for this unforeseen behavior stems from the
+utilization of the <code>...</code> argument within the
+<code>mean()</code> function, which prevents the standardization of the
+corresponding arguments. Due to the implementation of S3 dispatch in
+<code>mean()</code> (i.e., employing <code>UseMethod()</code>), and the
+presence of additional arguments specified within the underlying
+<code>mean.default()</code> method, <code>call_standardise()</code> can
+significantly improve by implementing a dedicated S3 method.</p>
+</blockquote>
+<pre class="r"><code>call_standardise(quote(mean.default(1:10, na.rm = TRUE)))</code></pre>
+<pre><code>## mean.default(x = 1:10, na.rm = TRUE)</code></pre>
+<pre class="r"><code>call_standardise(quote(mean.default(n = T, 1:10)))</code></pre>
+<pre><code>## mean.default(x = 1:10, na.rm = T)</code></pre>
+<pre class="r"><code>call_standardise(quote(mean.default(x = 1:10, , TRUE)))</code></pre>
+<pre><code>## mean.default(x = 1:10, na.rm = TRUE)</code></pre>
+<ol style="list-style-type: decimal">
 <li><p>Why does this code not make sense?</p>
 <pre class="r"><code>x &lt;- expr(foo(x = 1))
-names(x) &lt;- c(&quot;x&quot;, &quot;y&quot;)</code></pre></li>
-<li><p>Construct the expression <code>if(x &gt; 1) &quot;a&quot; else &quot;b&quot;</code>
-using multiple calls to <code>call2()</code>. How does the code
-structure reflect the structure of the AST?</p></li>
+x
+names(x) &lt;- c(&quot;x&quot;, &quot;y&quot;)
+x</code></pre></li>
 </ol>
+<blockquote>
+<p>Consider the following observations upon executing the code:</p>
+</blockquote>
+<pre class="r"><code>x &lt;- expr(foo(x = 1))
+x</code></pre>
+<pre><code>## foo(x = 1)</code></pre>
+<pre class="r"><code>names(x) &lt;- c(&quot;x&quot;, &quot;&quot;)
+x</code></pre>
+<pre><code>## foo(1)</code></pre>
+<pre class="r"><code>names(x) &lt;- c(&quot;&quot;, &quot;x&quot;)
+x</code></pre>
+<pre><code>## foo(x = 1)</code></pre>
+<blockquote>
+<p>It becomes evident that assigning a name to the first element merely
+introduces metadata that R disregards.</p>
+</blockquote>
+<ol style="list-style-type: decimal">
+<li>Construct the expression <code>if(x &gt; 1) &quot;a&quot; else &quot;b&quot;</code>
+using multiple calls to <code>call2()</code>. How does the code
+structure reflect the structure of the AST?</li>
+</ol>
+<blockquote>
+<p>By employing the prefix form, we obtain a comparable structure:</p>
+</blockquote>
+<pre class="r"><code>call2(&quot;if&quot;, call2(&quot;&gt;&quot;, sym(&quot;x&quot;), 1), &quot;a&quot;, &quot;b&quot;)</code></pre>
+<pre><code>## if (x &gt; 1) &quot;a&quot; else &quot;b&quot;</code></pre>
+<blockquote>
+<p>When examining the Abstract Syntax Tree (AST) from left to right, we
+observe the identical arrangement: the function to evaluate, followed by
+an expression that constitutes another function and is evaluated first,
+and finally, two constants that are subsequently evaluated:</p>
+</blockquote>
+<pre class="r"><code>ast(`if`(x &gt; 1, &quot;a&quot;, &quot;b&quot;))</code></pre>
+<pre><code>## █─`if` 
+## ├─█─`&gt;` 
+## │ ├─x 
+## │ └─1 
+## ├─&quot;a&quot; 
+## └─&quot;b&quot;</code></pre>
 </div>
 </div>
 </div>
