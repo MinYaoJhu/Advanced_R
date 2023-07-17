@@ -629,8 +629,8 @@ logical_abbr_rec <- function(x) {
     symbol = as_string(x) %in% c("F", "T"),
     
     # Recursive cases
-    pairlist = purrr::some(x, logical_abbr_rec),
-    call = find_T_call(x)
+    call = find_T_call(x),
+    pairlist = purrr::some(x, logical_abbr_rec)
   )
 }
 
@@ -661,13 +661,17 @@ logical_abbr(c(T, T, T))
 
 > The current implementation of the function fails when encountering a closure ("closure") because it is not handled in switch_expr() within logical_abbr_rec().
 
-```{r, eval = TRUE}
-f <- function(x = TRUE) {
+```{r}
+f <- quote(function(x = TRUE) {
   g(x + T)
-}
+})
 ```
 
-```{r, error = TRUE}
+```{r}
+logical_abbr(f)
+```
+
+```{r}
 logical_abbr(!!f)
 ```
 
@@ -676,7 +680,71 @@ logical_abbr(!!f)
 3.  Modify `find_assign` to also detect assignment using replacement
     functions, i.e. `names(x) <- y`.
 
+
+> Let's examine the AST structure of this assignment:
+
+```{r}
+ast(names(x) <- y)
+```
+
+> We want to handle the situation where both the first two elements are function calls. Moreover, if the first call is the same as <-, we only need to return the second call to determine which objects received new assigned values.
+
+To accomplish this, we include the following code block within another else statement in the find_assign_call() function:
+
+```{r, eval = FALSE}
+if (is_call(x, "<-") && is_call(x[[2]])) {
+  lhs <- expr_text(x[[2]])
+  children <- as.list(x)[-1]
+}
+```
+
+Let's conclude with the entire code, along with some tests for our new function:
+
+```{r}
+flat_map_chr <- function(.x, .f, ...) {
+  purrr::flatten_chr(purrr::map(.x, .f, ...))
+}
+
+find_assign <- function(x) unique(find_assign_rec(enexpr(x)))
+
+find_assign_call <- function(x) {
+  if (is_call(x, "<-") && is_symbol(x[[2]])) {
+    lhs <- as_string(x[[2]])
+    children <- as.list(x)[-1]
+  } else {
+    if (is_call(x, "<-") && is_call(x[[2]])) {
+      lhs <- expr_text(x[[2]])
+      children <- as.list(x)[-1]
+    } else {
+      lhs <- character()
+      children <- as.list(x)
+    }}
+  
+  c(lhs, flat_map_chr(children, find_assign_rec))
+}
+
+find_assign_rec <- function(x) {
+  switch_expr(
+    x,
+    # Base cases
+    constant = ,symbol = character(),
+    # Recursive cases
+    pairlist = flat_map_chr(x, find_assign_rec),
+    call = find_assign_call(x)
+  )
+}
+
+# Tests functionality
+find_assign(x <- y)
+find_assign(names(x))
+find_assign(names(x) <- y)
+find_assign(names(x(y)) <- y)
+find_assign(names(x(y)) <- y <- z)
+```
+
+
 4.  Write a function that extracts all calls to a specified function.
+
 
 
 ## 18.6 Specialised data structures {#expression-special}
