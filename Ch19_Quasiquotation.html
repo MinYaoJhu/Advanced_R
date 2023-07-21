@@ -645,7 +645,7 @@ mpg</code></pre>
 ##     }
 ##     UseMethod(&quot;summarise&quot;)
 ## }
-## &lt;bytecode: 0x00000129bb1a0560&gt;
+## &lt;bytecode: 0x0000026657766898&gt;
 ## &lt;environment: namespace:dplyr&gt;</code></pre>
 <pre class="r"><code>dplyr:::summarise.data.frame</code></pre>
 <pre><code>## function (.data, ..., .by = NULL, .groups = NULL) 
@@ -668,7 +668,7 @@ mpg</code></pre>
 ##     }
 ##     out
 ## }
-## &lt;bytecode: 0x00000129bcbed598&gt;
+## &lt;bytecode: 0x0000026659143418&gt;
 ## &lt;environment: namespace:dplyr&gt;</code></pre>
 <blockquote>
 <p>To gain insight into the inner workings of <code>summarise()</code>,
@@ -705,7 +705,7 @@ mean</code></pre>
 ##     aes &lt;- new_aes(args, env = parent.frame())
 ##     rename_aes(aes)
 ## }
-## &lt;bytecode: 0x00000129bc2f78d0&gt;
+## &lt;bytecode: 0x000002665886c0a8&gt;
 ## &lt;environment: namespace:ggplot2&gt;</code></pre>
 </div>
 </div>
@@ -910,8 +910,21 @@ Table @ref(tab:quoting-base).</p>
 <div id="exercises-1" class="section level3">
 <h3>19.3.6 Exercises</h3>
 <ol style="list-style-type: decimal">
-<li><p>How is <code>expr()</code> implemented? Look at its source
-code.</p></li>
+<li>How is <code>expr()</code> implemented? Look at its source
+code.</li>
+</ol>
+<pre class="r"><code>expr</code></pre>
+<pre><code>## function (expr) 
+## {
+##     enexpr(expr)
+## }
+## &lt;bytecode: 0x0000026658a33a58&gt;
+## &lt;environment: namespace:rlang&gt;</code></pre>
+<blockquote>
+<p><code>expr()</code> serves as a straightforward wrapper, channeling
+its argument to <code>enexpr()</code>.</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
 <li><p>Compare and contrast the following two functions. Can you predict
 the output before running them?</p>
 <pre class="r"><code>f1 &lt;- function(x, y) {
@@ -922,14 +935,122 @@ f2 &lt;- function(x, y) {
 }
 f1(a + b, c + d)
 f2(a + b, c + d)</code></pre></li>
-<li><p>What happens if you try to use <code>enexpr()</code> with an
+</ol>
+<blockquote>
+<p>In both functions, multiple arguments can be captured, resulting in a
+named list of expressions. When using f1(), the arguments defined within
+the body of the function will be returned. This behavior occurs because
+exprs() captures the expressions specified by the developer during the
+definition of f1().</p>
+</blockquote>
+<pre class="r"><code>f1(a + b, c + d)</code></pre>
+<blockquote>
+<p>On the other hand, f2() will return the arguments provided to the
+function when it is called, as specified by the user.</p>
+</blockquote>
+<pre class="r"><code>f2(a + b, c + d)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>What happens if you try to use <code>enexpr()</code> with an
 expression (i.e.  <code>enexpr(x + y)</code> ? What happens if
-<code>enexpr()</code> is passed a missing argument?</p></li>
-<li><p>How are <code>exprs(a)</code> and <code>exprs(a = )</code>
-different? Think about both the input and the output.</p></li>
-<li><p>What are other differences between <code>exprs()</code> and
+<code>enexpr()</code> is passed a missing argument?</li>
+</ol>
+<pre class="r"><code>enexpr(x + y)</code></pre>
+<blockquote>
+<p>The first scenario results in an error being raise</p>
+</blockquote>
+<pre class="r"><code>enexpr()</code></pre>
+<pre class="r"><code>is_missing(enexpr())</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<blockquote>
+<p>In the second case, <code>enexpr()</code> is called without any
+arguments, leading to a missing argument being returned. The function
+<code>is_missing()</code> confirms that <code>enexpr()</code> indeed
+returns a missing argument.</p>
+</blockquote>
+<ol start="4" style="list-style-type: decimal">
+<li>How are <code>exprs(a)</code> and <code>exprs(a = )</code>
+different? Think about both the input and the output.</li>
+</ol>
+<pre class="r"><code>exprs(a)</code></pre>
+<pre><code>## [[1]]
+## a</code></pre>
+<pre class="r"><code>str(exprs(a))</code></pre>
+<pre><code>## List of 1
+##  $ : symbol a</code></pre>
+<blockquote>
+<p>In the code snippet exprs(a), the input a is considered as a symbol
+representing an unnamed argument. Consequently, the output will be an
+unnamed list, with the first element containing the symbol a.</p>
+</blockquote>
+<pre class="r"><code>exprs(a = )</code></pre>
+<pre><code>## $a</code></pre>
+<pre class="r"><code>str(exprs(a = ))</code></pre>
+<pre><code>## List of 1
+##  $ a: symbol</code></pre>
+<pre class="r"><code>test_exprs &lt;- exprs(a = )
+is_missing(test_exprs$a)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<blockquote>
+<p>However, in the code snippet exprs(a = ), the first argument is named
+a, but no value is provided for it. As a result, the output will be a
+named list, where the first element is labeled as a, indicating the
+presence of a missing argument.</p>
+</blockquote>
+<ol start="5" style="list-style-type: decimal">
+<li>What are other differences between <code>exprs()</code> and
 <code>alist()</code>? Read the documentation for the named arguments of
-<code>exprs()</code> to find out.</p></li>
+<code>exprs()</code> to find out.</li>
+</ol>
+<pre class="r"><code># Usage
+
+# list(...)
+
+# exprs(
+#   ...,
+#   .named = FALSE,
+#   .ignore_empty = c(&quot;trailing&quot;, &quot;none&quot;, &quot;all&quot;),
+#   .unquote_names = TRUE
+# )</code></pre>
+<blockquote>
+<p>exprs() is the plural variant of expr(). It returns a list of
+expressions. It is like base::alist() but with injection support.</p>
+</blockquote>
+<blockquote>
+<p>The injection operators are extensions of R implemented by rlang to
+modify a piece of code before R processes it. There are two main
+families:</p>
+</blockquote>
+<p>The dynamic dots operators, <code>!!!</code> and
+<code>&quot;{&quot;</code>.</p>
+<p>The metaprogramming operators <code>!!</code>, <code>{{</code>, and
+<code>&quot;{{&quot;</code>. Splicing with <code>!!!</code> can also be done in
+metaprogramming context.</p>
+<blockquote>
+<p>exprs() offers several additional arguments: <code>.named</code>
+(default FALSE), <code>.ignore_empty</code> (options: “trailing”,
+“none”, “all”), and <code>.unquote_names</code> (default TRUE).</p>
+</blockquote>
+<blockquote>
+<p>By using <code>.named</code>, all dots can be ensured to have names.
+If TRUE, unnamed inputs are automatically named with as_label(). This is
+equivalent to applying exprs_auto_name() on the result. If FALSE,
+unnamed elements are left as is and, if fully unnamed, the list is given
+minimal names (a vector of ““). If NULL, fully unnamed results are left
+with NULL names.</p>
+</blockquote>
+<blockquote>
+<p>The <code>.ignore_empty</code> parameter determines how empty
+arguments should be handled, allowing the options to handle only
+trailing dots (“trailing”), ignore none of the arguments (“none”), or
+ignore all of them (“all”). If “trailing”, only the last argument is
+ignored if it is empty. Named arguments are not considered empty.</p>
+</blockquote>
+<blockquote>
+<p>Moreover, <code>.unquote_names</code> allows developers to treat
+<code>:=</code> as <code>=</code>, which can be beneficial for
+supporting unquoting (<code>!!</code>) on the left-hand side.</p>
+</blockquote>
+<ol start="6" style="list-style-type: decimal">
 <li><p>The documentation for <code>substitute()</code> says:</p>
 <blockquote>
 <p>Substitution takes place by examining each component of the parse
@@ -946,6 +1067,40 @@ unchanged.</li>
 </blockquote>
 <p>Create examples that illustrate each of the above cases.</p></li>
 </ol>
+<blockquote>
+<p>Let’s establish a fresh environment called <code>new_env</code>,
+which currently holds no objects. In this scenario, when we utilize
+<code>substitute()</code>, it will simply return its initial argument
+expr as is:</p>
+</blockquote>
+<pre class="r"><code>new_env &lt;- env()
+substitute(x, new_env)</code></pre>
+<pre><code>## x</code></pre>
+<blockquote>
+<p>Now, if we construct a function that contains an argument directly
+returned after substitution, the function will simply yield the supplied
+expression:</p>
+</blockquote>
+<pre class="r"><code>evaluate_expression &lt;- function(x) substitute(x)
+
+evaluate_expression(x + y * a / b)</code></pre>
+<pre><code>## x + y * a/b</code></pre>
+<blockquote>
+<p>However, when <code>substitute()</code> identifies (portions of) the
+expression within env, it will perform a literal substitution, except
+when env refers to .GlobalEnv.</p>
+</blockquote>
+<pre class="r"><code>new_env$x &lt;- 7
+substitute(x, new_env)</code></pre>
+<pre><code>## [1] 7</code></pre>
+<pre class="r"><code>x &lt;- 7
+substitute(x, .GlobalEnv)</code></pre>
+<pre><code>## x</code></pre>
+<blockquote>
+<p>In summary, the behavior of <code>substitute()</code> depends on
+whether the specified environment contains objects or is the
+<code>.GlobalEnv</code>.</p>
+</blockquote>
 </div>
 </div>
 </div>
