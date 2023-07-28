@@ -172,6 +172,7 @@ cyl
 with(mtcars2, sum(vs))
 mtcars2
 vs
+sum(vs)
 ```
 
 > mtcars2 -> evaluated
@@ -444,6 +445,11 @@ expr
 
 > `expr()` serves as a straightforward wrapper, channeling its argument to `enexpr()`. 
 
+```{r}
+enexpr
+```
+
+
 2.  Compare and contrast the following two functions. Can you predict the
     output before running them?
 
@@ -580,3 +586,6 @@ substitute(x, .GlobalEnv)
 ```
 
 > In summary, the behavior of `substitute()` depends on whether the specified environment contains objects or is the `.GlobalEnv`.
+
+
+
