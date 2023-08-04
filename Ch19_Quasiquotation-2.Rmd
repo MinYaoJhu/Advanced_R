@@ -966,9 +966,15 @@ reduce(summands, ~ expr(!!.x + !!.y))
 ```
 
 ```{r}
-# reduce(summands, call2, "+")
+reduce(summands, call2, .fn = "+")
 ```
 
+Usage
+call2(.fn, ..., .ns = NULL)
+
+Arguments
+.fn	
+Function to call. Must be a callable object: a string, symbol, call, or a function.
 
 > find the first version to be more readable and user-friendly. Although it may have a bit more initial boilerplate code, the unquoting syntax greatly enhances its readability. As a result, the entire expression becomes more explicit and less intricate.
 
@@ -1040,6 +1046,12 @@ composed_function2 <- compose2_functions(sin, cos)
 composed_function2
 result2 <- composed_function2(pi)
 result2
+```
+
+```{r}
+sumabs <- compose(abs, sum)
+sumabs(c(1,3,5,6))
+sumabs(c(1,3,5,6,-20))
 ```
 
 

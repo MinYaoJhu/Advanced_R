@@ -1,0 +1,908 @@
+---
+title: "Ch20_Evaluation"
+author: "Min-Yao"
+date: "2023-08-04"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+## 20.1 Introduction
+
+The user-facing inverse of quotation is unquotation: it gives the _user_ the ability to selectively evaluate parts of an otherwise quoted argument. The developer-facing complement of quotation is evaluation: this gives the _developer_ the ability to evaluate quoted expressions in custom environments to achieve specific goals.
+
+This chapter begins with a discussion of evaluation in its purest form. You'll learn how `eval()` evaluates an expression in an environment, and then how it can be used to implement a number of important base R functions. Once you have the basics under your belt, you'll learn extensions to evaluation that are needed for robustness. There are two big new ideas:
+
+*   The quosure: a data structure that captures an expression along with its
+    associated environment, as found in function arguments.
+
+*   The data mask, which makes it easier to evaluate an expression in the
+    context of a data frame. This introduces potential evaluation ambiguity
+    which we'll then resolve with data pronouns.
+
+Together, quasiquotation, quosures, and data masks form what we call __tidy evaluation__, or tidy eval for short. Tidy eval provides a principled approach to non-standard evaluation that makes it possible to use such functions both interactively and embedded with other functions. Tidy evaluation is the most important practical implication of all this theory so we'll spend a little time exploring the implications. The chapter finishes off with a discussion of the closest related approaches in base R, and how you can program around their drawbacks.
+
+### Outline {-}
+
+* Section \@ref(eval) discusses the basics of evaluation using `eval()`,
+  and shows how you can use it to implement key functions like `local()`
+  and `source()`.
+
+* Section \@ref(quosures) introduces a new data structure, the quosure, which
+  combines an expression with an environment. You'll learn how to capture
+  quosures from promises, and evaluate them using `rlang::eval_tidy()`.
+
+* Section \@ref(data-masks) extends evaluation with the data mask, which
+  makes it trivial to intermingle symbols bound in an environment with
+  variables found in a data frame.
+
+* Section \@ref(tidy-evaluation) shows how to use tidy evaluation in practice,
+  focussing on the common pattern of quoting and unquoting, and how to
+  handle ambiguity with pronouns.
+
+* Section \@ref(base-evaluation) circles back to evaluation in base R,
+  discusses some of the downsides, and shows how to use quasiquotation and
+  evaluation to wrap functions that use NSE.
+
+### Prerequisites {-}
+
+You'll need to be familiar with the content of Chapter \@ref(expressions) and Chapter \@ref(quasiquotation), as well as the environment data structure (Section \@ref(env-basics)) and the caller environment (Section \@ref(call-stack)).
+
+We'll continue to use [rlang](https://rlang.r-lib.org) and [purrr](https://purrr.tidyverse.org).
+
+
+```r
+library(rlang)
+library(purrr)
+```
+
+## Evaluation basics {#eval}
+\index{evaluation!basics}
+\indexc{eval\_bare()}
+
+Here we'll explore the details of `eval()` which we briefly mentioned in the last chapter. It has two key arguments: `expr` and `envir`. The first argument, `expr`, is the object to evaluate, typically a symbol or expression[^non-expr]. None of the evaluation functions quote their inputs, so you'll usually use them with `expr()` or similar:
+
+[^non-expr]: All other objects yield themselves when evaluated; i.e. `eval(x)` yields `x`, except when `x` is a symbol or expression.
+
+
+```r
+x <- 10
+eval(expr(x))
+```
+
+```
+## [1] 10
+```
+
+```r
+y <- 2
+eval(expr(x + y))
+```
+
+```
+## [1] 12
+```
+
+The second argument, `env`, gives the environment in which the expression should be evaluated, i.e. where to look for the values of `x`, `y`, and `+`. By default, this is the current environment, i.e. the calling environment of `eval()`, but you can override it if you want:
+
+
+```r
+eval(expr(x + y), env(x = 1000))
+```
+
+```
+## [1] 1002
+```
+
+The first argument is evaluated, not quoted, which can lead to confusing results once if you use a custom environment and forget to manually quote:
+
+
+```r
+eval(print(x + 1), env(x = 1000))
+```
+
+```
+## [1] 11
+```
+
+```
+## [1] 11
+```
+
+```r
+eval(expr(print(x + 1)), env(x = 1000))
+```
+
+```
+## [1] 1001
+```
+
+Now that you've seen the basics, let's explore some applications. We'll focus primarily on base R functions that you might have used before, reimplementing the underlying principles using rlang.
+
+### Application: `local()`
+\indexc{local()}
+
+Sometimes you want to perform a chunk of calculation that creates some intermediate variables. The intermediate variables have no long-term use and could be quite large, so you'd rather not keep them around. One approach is to clean up after yourself using `rm()`; another is to wrap the code in a function and just call it once. A more elegant approach is to use `local()`:
+
+
+```r
+# Clean up variables created earlier
+rm(x, y)
+
+foo <- local({
+  x <- 10
+  y <- 200
+  x + y
+})
+
+foo
+```
+
+```
+## [1] 210
+```
+
+```r
+x
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'x' not found
+```
+
+```r
+y
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'y' not found
+```
+
+The essence of `local()` is quite simple and re-implemented below. We capture the input expression, and create a new environment in which to evaluate it. This is a new environment (so assignment doesn't affect the existing environment) with the caller environment as parent (so that `expr` can still access variables in that environment). This effectively emulates running `expr` as if it was inside a function (i.e. it's lexically scoped, Section \@ref(lexical-scoping)).
+
+
+```r
+local2 <- function(expr) {
+  env <- env(caller_env())
+  eval(enexpr(expr), env)
+}
+
+foo <- local2({
+  x <- 10
+  y <- 200
+  x + y
+})
+
+foo
+```
+
+```
+## [1] 210
+```
+
+```r
+x
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'x' not found
+```
+
+```r
+y
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'y' not found
+```
+
+Understanding how `base::local()` works is harder, as it uses `eval()` and `substitute()` together in rather complicated ways. Figuring out exactly what's going on is good practice if you really want to understand the subtleties of `substitute()` and the base `eval()` functions, so they are included in the exercises below.
+
+### Application: `source()`
+\indexc{source()}
+
+We can create a simple version of `source()` by combining `eval()` with `parse_expr()` from Section \@ref(parsing). We read in the file from disk, use `parse_expr()` to parse the string into a list of expressions, and then use `eval()` to evaluate each element in turn. This version evaluates the code in the caller environment, and invisibly returns the result of the last expression in the file just like `base::source()`.
+
+
+```r
+source2 <- function(path, env = caller_env()) {
+  file <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  exprs <- parse_exprs(file)
+
+  res <- NULL
+  for (i in seq_along(exprs)) {
+    res <- eval(exprs[[i]], env)
+  }
+
+  invisible(res)
+}
+```
+
+The real `source()` is considerably more complicated because it can `echo` input and output, and has many other settings that control its behaviour.
+
+
+::: sidebar
+**Expression vectors**
+\index{expression vectors}
+
+`base::eval()` has special behaviour for expression _vectors_, evaluating each component in turn. This makes for a very compact implementation of `source2()` because `base::parse()` also returns an expression object:
+
+
+```r
+source3 <- function(file, env = parent.frame()) {
+  lines <- parse(file)
+  res <- eval(lines, envir = env)
+  invisible(res)
+}
+```
+
+While `source3()` is considerably more concise than `source2()`, this is the only advantage to expression vectors. Overall I don't believe this benefit outweighs the cost of introducing a new data structure, and hence this book avoids the use of expression vectors.
+:::
+
+
+### Gotcha: `function()`
+\index{evaluation!functions}
+\indexc{srcref}
+
+There's one small gotcha that you should be aware of if you're using `eval()` and `expr()` to generate functions:
+
+
+```r
+x <- 10
+y <- 20
+f <- eval(expr(function(x, y) !!x + !!y))
+f
+```
+
+```
+## function(x, y) !!x + !!y
+```
+
+This function doesn't look like it will work, but it does:
+
+
+```r
+f()
+```
+
+```
+## [1] 30
+```
+
+This is because, if available, functions print their `srcref` attribute (Section \@ref(fun-components)), and because `srcref` is a base R feature it's unaware of quasiquotation. 
+
+To work around this problem, either use `new_function()` (Section \@ref(new-function)) or remove the `srcref` attribute:
+
+
+```r
+attr(f, "srcref") <- NULL
+f
+```
+
+```
+## function (x, y) 
+## 10 + 20
+```
+
+### Exercises
+
+1.  Carefully read the documentation for `source()`. What environment does it
+    use by default? What if you supply `local = TRUE`? How do you provide
+    a custom environment?
+    
+> `FALSE` (the default) corresponds to the user's workspace (the global environment) and TRUE to the environment from which source is called.
+
+> By default, the `source()` function employs the global environment (local = FALSE) for its evaluation. 
+
+> Alternatively, you have the option to specify a particular evaluation environment by directly passing it to the local parameter. 
+
+> If you wish to utilize the current environment (which refers to the environment from which `source()` is called), you can achieve this by setting `local = TRUE`.
+
+
+```r
+# Generate a transient, source-ready R script designed to display x
+script_file <- tempfile()
+writeLines("print(x)", script_file)
+
+# Define the value of `x` in the global scope
+x <- "global scope"
+env2 <- env(x = "specified scope")
+
+determine_evaluation <- function(file, local) {
+  x <- "local scope"
+  source(file, local = local)
+}
+
+# Where will the source() function execute the code?
+determine_evaluation(script_file, local = FALSE)  # default behavior
+```
+
+```
+## [1] "global scope"
+```
+
+```r
+determine_evaluation(script_file, local = env2)
+```
+
+```
+## [1] "specified scope"
+```
+
+```r
+determine_evaluation(script_file, local = TRUE)
+```
+
+```
+## [1] "local scope"
+```
+
+2.  Predict the results of the following lines of code:
+
+    
+    ```r
+    eval(expr(eval(expr(eval(expr(2 + 2))))))       # (1)
+    eval(eval(expr(eval(expr(eval(expr(2 + 2))))))) # (2)
+    expr(eval(expr(eval(expr(eval(expr(2 + 2))))))) # (3)
+    ```
+
+> (1) Generally, `eval(expr(x))` yields `x`. Hence, (1) results in $2 + 2 = 4$. 
+
+> (2) Including an additional `eval()` does not impact this scenario. As a result, (2) also equals 4. 
+
+> (3) Nonetheless, encompassing (1) within `expr()` quotes the entire expression.
+
+
+
+3.  Fill in the function bodies below to re-implement `get()` using `sym()` 
+    and `eval()`, and`assign()` using `sym()`, `expr()`, and `eval()`. Don't 
+    worry about the multiple ways of choosing an environment that `get()` and
+    `assign()` support; assume that the user supplies it explicitly.
+
+    
+    ```r
+    # name is a string
+    get2 <- function(name, env) {}
+    assign2 <- function(name, value, env) {}
+    ```
+
+We redefine these two functions by utilizing tidy evaluation. We transform the string `name` into a symbol and then assess it:
+
+
+```r
+get2 <- function(name, env = current_env()) {
+  sym_name <- sym(name)
+  eval(sym_name, env)
+}
+
+x <- 10
+get2("x")
+```
+
+```
+## [1] 10
+```
+
+```r
+#get2(x)
+```
+
+To formulate the appropriate expression for value assignment, we employ unquoting via `!!`.
+
+
+```r
+assign2 <- function(name, value, env = current_env()) {
+  sym_name <- sym(name)
+  assign_expr <- expr(!!sym_name <- !!value)
+  eval(assign_expr, env)
+}
+
+assign2("x", 4)
+x
+```
+
+```
+## [1] 10
+```
+
+4.  Modify `source2()` so it returns the result of _every_ expression,
+    not just the last one. Can you eliminate the for loop?
+
+The implementation of source2() was presented in Advanced R as follows:
+
+
+```r
+source2 <- function(path, env = caller_env()) {
+  file <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  exprs <- parse_exprs(file)
+
+  res <- NULL
+  for (i in seq_along(exprs)) {
+    res <- eval(exprs[[i]], env)
+  }
+
+  invisible(res)
+}
+```
+
+To emphasize the changes in our updated `source2()` function, we've retained the differing code from the previous `source2()` in a comment.
+
+
+```r
+source2 <- function(path, env = caller_env()) {
+  file <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  exprs <- parse_exprs(file)
+  
+  res <- purrr::map(exprs, eval, env)
+  
+  invisible(res)
+}
+```
+
+Now, let's generate a file and test source2(). Remember that <- returns invisibly.
+
+
+```r
+# tmp_file <- tempfile()
+# writeLines(
+#   "x <- 1
+#    x
+#    y <- 2
+#    y  # a comment here",
+#   tmp_file
+# )
+# 
+# (source2(tmp_file))
+```
+
+
+5.  We can make `base::local()` slightly easier to understand by spreading
+    out over multiple lines:
+
+    
+    ```r
+    local3 <- function(expr, envir = new.env()) {
+      call <- substitute(eval(quote(expr), envir))
+      eval(call, envir = parent.frame())
+    }
+    ```
+
+    Explain how `local()` works in words. (Hint: you might want to `print(call)`
+    to help understand what `substitute()` is doing, and read the documentation
+    to remind yourself what environment `new.env()` will inherit from.)
+
+Let's heed the suggestion and insert `print(call)` within `local3()`:
+
+
+```r
+local3 <- function(expr, envir = new.env()) {
+  call <- substitute(eval(quote(expr), envir))
+  print(call)
+  eval(call, envir = parent.frame())
+}
+```
+
+> The initial line constructs a call to `eval()` since `substitute()` operates within the current evaluation argument. However, this detail isn't pertinent in this context, as both `expr` and `envir` are promises, leading to the expression slots of the promises replacing the symbols, as stated in `?substitute`.
+
+
+```r
+#?substitute
+```
+
+
+```r
+local3({
+  x <- 10
+  x * 2
+})
+```
+
+```
+## eval(quote({
+##     x <- 10
+##     x * 2
+## }), new.env())
+```
+
+```
+## [1] 20
+```
+
+Subsequently, `call` will be assessed within the caller environment (referred to as the parent frame). Considering that `call` encompasses another call to `eval()`, why does this matter? The explanation is nuanced: this encompassing environment determines the locations where the bindings for `eval`, `quote`, and `new.env` are located.
+
+
+```r
+eval(quote({
+  x <- 10
+  x * 2
+}), new.env())
+```
+
+```
+## [1] 20
+```
+
+```r
+exists("x")
+```
+
+```
+## [1] TRUE
+```
+
+
+## Quosures
+\index{quosures}
+
+Almost every use of `eval()` involves both an expression and environment. This coupling is so important that we need a data structure that can hold both pieces. Base R does not have such a structure[^formula] so rlang fills the gap with the __quosure__, an object that contains an expression and an environment. The name is a portmanteau of quoting and closure, because a quosure both quotes the expression and encloses the environment. Quosures reify the internal promise object (Section \@ref(promises)) into something that you can program with.
+
+[^formula]: Technically a formula combines an expression and environment, but formulas are tightly coupled to modelling so a new data structure makes sense.
+
+In this section, you'll learn how to create and manipulate quosures, and a little about how they are implemented.
+
+### Creating
+\index{quosures!creating}
+
+There are three ways to create quosures:
+
+*   Use `enquo()` and `enquos()` to capture user-supplied expressions.
+    The vast majority of quosures should be created this way.
+
+    
+    ```r
+    foo <- function(x) enquo(x)
+    foo(a + b)
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^a + b
+    ## env:  global
+    ```
+    \indexc{enquo()}
+
+*   `quo()` and `quos()` exist to match to `expr()` and `exprs()`, but
+    they are included only for the sake of completeness and are needed very
+    rarely. If you find yourself using them, think carefully if `expr()` and
+    careful unquoting can eliminate the need to capture the environment.
+
+    
+    ```r
+    quo(x + y + z)
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^x + y + z
+    ## env:  global
+    ```
+    \index{quosures!quo()@\texttt{quo()}}
+
+*   `new_quosure()` create a quosure from its components: an expression and
+    an environment. This is rarely needed in practice, but is useful for
+    learning, so is used a lot in this chapter.
+
+    
+    ```r
+    new_quosure(expr(x + y), env(x = 1, y = 10))
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^x + y
+    ## env:  0x000001d1d0a8c168
+    ```
+
+### Evaluating
+\index{evaluation!tidy}
+\index{quosures!evaluating}
+\indexc{eval\_tidy()}
+
+Quosures are paired with a new evaluation function `eval_tidy()` that takes a single quosure instead of an expression-environment pair. It is straightforward to use:
+
+
+```r
+q1 <- new_quosure(expr(x + y), env(x = 1, y = 10))
+eval_tidy(q1)
+```
+
+```
+## [1] 11
+```
+
+For this simple case, `eval_tidy(q1)` is basically a shortcut for `eval(get_expr(q1), get_env(q1))`. However, it has two important features that you'll learn about later in the chapter: it supports nested quosures (Section \@ref(nested-quosures)) and pronouns (Section \@ref(pronouns)).
+
+### Dots {#quosure-dots}
+\indexc{...}
+
+Quosures are typically just a convenience: they make code cleaner because you only have one object to pass around, instead of two. They are, however, essential when it comes to working with `...` because it's possible for each argument passed to `...` to be associated with a different environment. In the following example note that both quosures have the same expression, `x`, but a different environment:
+
+
+```r
+f <- function(...) {
+  x <- 1
+  g(..., f = x)
+}
+g <- function(...) {
+  enquos(...)
+}
+
+x <- 0
+qs <- f(global = x)
+qs
+```
+
+```
+## <list_of<quosure>>
+## 
+## $global
+## <quosure>
+## expr: ^x
+## env:  global
+## 
+## $f
+## <quosure>
+## expr: ^x
+## env:  0x000001d1d172a6e8
+```
+
+That means that when you evaluate them, you get the correct results:
+
+
+```r
+map_dbl(qs, eval_tidy)
+```
+
+```
+## global      f 
+##      0      1
+```
+
+Correctly evaluating the elements of `...` was one of the original motivations for the development of quosures.
+
+### Under the hood {#quosure-impl}
+\index{quosures!internals}
+\index{formulas}
+
+Quosures were inspired by R's formulas, because formulas capture an expression and an environment:
+
+
+```r
+f <- ~runif(3)
+str(f)
+```
+
+```
+## Class 'formula'  language ~runif(3)
+##   ..- attr(*, ".Environment")=<environment: R_GlobalEnv>
+```
+
+An early version of tidy evaluation used formulas instead of quosures, as an attractive feature of `~` is that it provides quoting with a single keystroke. Unfortunately, however, there is no clean way to make `~` a quasiquoting function.
+
+Quosures are a subclass of formulas:
+
+
+```r
+q4 <- new_quosure(expr(x + y + z))
+class(q4)
+```
+
+```
+## [1] "quosure" "formula"
+```
+
+which means that under the hood, quosures, like formulas, are call objects:
+
+
+```r
+is_call(q4)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+q4[[1]]
+```
+
+```
+## Warning: Subsetting quosures with `[[` is deprecated as of rlang 0.4.0
+## Please use `quo_get_expr()` instead.
+## This warning is displayed once every 8 hours.
+```
+
+```
+## `~`
+```
+
+```r
+q4[[2]]
+```
+
+```
+## x + y + z
+```
+
+with an attribute that stores the environment:
+
+
+```r
+attr(q4, ".Environment")
+```
+
+```
+## <environment: R_GlobalEnv>
+```
+
+If you need to extract the expression or environment, don't rely on these implementation details. Instead use `get_expr()` and `get_env()`:
+
+
+```r
+get_expr(q4)
+```
+
+```
+## x + y + z
+```
+
+```r
+get_env(q4)
+```
+
+```
+## <environment: R_GlobalEnv>
+```
+
+### Nested quosures
+\index{quosures!nested}
+
+It's possible to use quasiquotation to embed a quosure in an expression. This is an advanced tool, and most of the time you don't need to think about it because it just works, but I talk about it here so you can spot nested quosures in the wild and not be confused. Take this example, which inlines two quosures into an expression:
+
+
+```r
+q2 <- new_quosure(expr(x), env(x = 1))
+q3 <- new_quosure(expr(x), env(x = 10))
+
+x <- expr(!!q2 + !!q3)
+```
+
+It evaluates correctly with `eval_tidy()`:
+
+
+```r
+eval_tidy(x)
+```
+
+```
+## [1] 11
+```
+
+However, if you print it, you only see the `x`s, with their formula heritage leaking through:
+
+
+```r
+x
+```
+
+```
+## (~x) + ~x
+```
+
+You can get a better display with `rlang::expr_print()` (Section \@ref(non-standard-ast)):
+
+
+```r
+expr_print(x)
+```
+
+```
+## (^x) + (^x)
+```
+
+When you use `expr_print()` in the console, quosures are coloured according to their environment, making it easier to spot when symbols are bound to different variables.
+
+### Exercises
+
+1.  Predict what each of the following quosures will return if
+    evaluated.
+
+    
+    ```r
+    q1 <- new_quosure(expr(x), env(x = 1))
+    q1
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^x
+    ## env:  0x000001d1d04af220
+    ```
+    
+    ```r
+    q2 <- new_quosure(expr(x + !!q1), env(x = 10))
+    q2
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^x + (^x)
+    ## env:  0x000001d1d061adf8
+    ```
+    
+    ```r
+    q3 <- new_quosure(expr(x + !!q2), env(x = 100))
+    q3
+    ```
+    
+    ```
+    ## <quosure>
+    ## expr: ^x + (^x + (^x))
+    ## env:  0x000001d1d095ee80
+    ```
+
+Every quosure undergoes evaluation within its individual environment, causing x to be associated with a distinct value on each occasion. 
+
+(1) 1
+
+(2) 11
+
+(3) 111
+
+
+```r
+eval_tidy(q1)
+```
+
+```
+## [1] 1
+```
+
+```r
+eval_tidy(q2)
+```
+
+```
+## [1] 11
+```
+
+```r
+eval_tidy(q3)
+```
+
+```
+## [1] 111
+```
+
+
+2.  Write an `enenv()` function that captures the environment associated
+    with an argument. (Hint: this should only require two function calls.)
+
+> A quosure encompasses both the expression and the environment. By utilizing `get_env()`, we can retrieve the environment from a quosure.
+
+
+```r
+enenv <- function(quos) {
+  get_env(enquo(quos))
+}
+
+# Verify
+enenv(x)
+```
+
+```
+## <environment: R_GlobalEnv>
+```
+
+```r
+# Confirm functionality within functions as well
+gather_env <- function(quos) {
+  enenv(quos)
+}
+gather_env(x)
+```
+
+```
+## <environment: 0x000001d1d1a46110>
+```
+
