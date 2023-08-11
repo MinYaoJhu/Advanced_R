@@ -196,7 +196,7 @@ attr(f, "srcref") <- NULL
 f
 ```
 
-### Exercises
+### 20.2.4 Exercises
 
 1.  Carefully read the documentation for `source()`. What environment does it
     use by default? What if you supply `local = TRUE`? How do you provide
@@ -258,6 +258,11 @@ determine_evaluation(script_file, local = TRUE)
     assign2 <- function(name, value, env) {}
     ```
 
+```{r}
+get
+```
+
+
 We redefine these two functions by utilizing tidy evaluation. We transform the string `name` into a symbol and then assess it:
 
 ```{r}
@@ -271,6 +276,11 @@ get2("x")
 #get2(x)
 ```
 
+```{r}
+assign
+```
+
+
 To formulate the appropriate expression for value assignment, we employ unquoting via `!!`.
 
 ```{r}
@@ -278,9 +288,22 @@ assign2 <- function(name, value, env = current_env()) {
   sym_name <- sym(name)
   assign_expr <- expr(!!sym_name <- !!value)
   eval(assign_expr, env)
+  print(x)
 }
 
-assign2("x", 4)
+assign2("x", 6, .GlobalEnv)
+x
+```
+
+```{r}
+assign2 <- function(name, value, env = .GlobalEnv) {
+  sym_name <- sym(name)
+  assign_expr <- expr(!!sym_name <- !!value)
+  eval(assign_expr, env)
+  print(x)
+}
+
+assign2("x", 5)
 x
 ```
 
@@ -319,16 +342,14 @@ source2 <- function(path, env = caller_env()) {
 Now, let's generate a file and test source2(). Remember that <- returns invisibly.
 
 ```{r}
-# tmp_file <- tempfile()
-# writeLines(
-#   "x <- 1
-#    x
-#    y <- 2
-#    y  # a comment here",
-#   tmp_file
-# )
-# 
-# (source2(tmp_file))
+tmp_file <- tempfile()
+writeLines("x <- 1
+   x
+   y <- 2
+   y  # a comment here",
+   tmp_file)
+
+source2(tmp_file)
 ```
 
 
