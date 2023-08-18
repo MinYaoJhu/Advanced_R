@@ -184,8 +184,6 @@ select2(df, b:d)
 
 1.  Why did I use a for loop in `transform2()` instead of `map()`? 
     Consider `transform2(df, x = x * 2, x = x * 2)`.
-    
-
 
 ```{r}
 transform2 <- function(.data, ...) {
@@ -243,7 +241,7 @@ condition_2 <- expr(df[x == 1, , drop = FALSE])
 custom_subset_2 <- eval_tidy(condition_2, df)
 ```
 
-> the condition itself is directly expressed in the `expr()` function and then evaluated using `eval_tidy()`. This results in a more concise code but might be slightly less readable, especially in complex scenarios.
+> `subset3()`: the condition itself is directly expressed in the `expr()` function and then evaluated using `eval_tidy()`. This results in a more concise code but might be slightly less readable, especially in complex scenarios.
 
 
 3.  The following function implements the basics of `dplyr::arrange()`.
@@ -787,25 +785,26 @@ custom_lm3c(mpg ~ disp, mtcars)$call
 
 ```{r}
 # Custom lm_wrap function and its utility
-custom_lm_wrap <- function(predictor, response = mpg, data = mtcars, 
-                           environment = caller_env()) {
-  predictor <- enexpr(predictor)
-  response <- enexpr(response)
-  data <- enexpr(data)
-  
-  formula_expr <- expr(!!response ~ !!predictor)
-  lm_call_expr <- expr(lm(!!formula_expr, data = !!data))
-  eval(lm_call_expr, envir = environment)
-}
+custom_lm_wrap <-
+  function(predictor,
+           response = mpg,
+           data = mtcars,
+           environment = caller_env()) {
+    predictor <- enexpr(predictor)
+    response <- enexpr(response)
+    data <- enexpr(data)
+    
+    formula_expr <- expr(!!response ~ !!predictor)
+    lm_call_expr <- expr(lm(!!formula_expr, data = !!data))
+    eval(lm_call_expr, envir = environment)
+  }
 
 # Verify the output appearance
 custom_lm_wrap(I(1 / disp) + disp * cyl)
 
 # Confirm the equivalence of the result to a direct lm() call
-identical(
-  custom_lm_wrap(I(1 / disp) + disp * cyl),
-  lm(mpg ~ I(1 / disp) + disp * cyl, data = mtcars)
-)
+identical(custom_lm_wrap(I(1 / disp) + disp * cyl),
+          lm(mpg ~ I(1 / disp) + disp * cyl, data = mtcars))
 
 ```
 
@@ -814,16 +813,30 @@ identical(
     resample expression (`data[sample(nrow(data), replace = TRUE), , drop = FALSE]`)
     in the data argument. Implement that approach. What are the advantages?
     What are the disadvantages?
-    
-> This strategy capitalizes on R's inherent capability for the lazy evaluation of function arguments. This is accomplished by embedding the resampling operation within the argument definition itself. In this scenario, users supply the data to the function; however, only a permuted version of this data (resample_data) will be utilized during analysis.
 
 ```{r}
-custom_resample_lm <- function(
-  formula, data,
-  resample_data = data[sample(nrow(data), replace = TRUE), ,
-                       drop = FALSE],
-  environment = current_env()) {
-  
+    resample_lm2 <- function(formula, data, env = caller_env()) {
+      formula <- enexpr(formula)
+      resample_data <- resample(data, n = nrow(data))
+
+      lm_env <- env(env, resample_data = resample_data)
+      lm_call <- expr(lm(!!formula, data = resample_data))
+      expr_print(lm_call)
+      eval(lm_call, lm_env)
+    }
+    resample_lm2(y ~ x, data = df)
+```    
+
+    
+
+
+```{r}
+custom_resample_lm <- function(formula,
+                               data,
+                               resample_data = data[sample(nrow(data), 
+                                                           replace = TRUE), ,
+                                                    drop = FALSE],
+                               environment = current_env()) {
   formula <- enexpr(formula)
   
   lm_call <- expr(lm(!!formula, data = resample_data))
@@ -836,5 +849,7 @@ df <- data.frame(x = 1:10, y = 5 + 3 * (1:10) + round(rnorm(10), 2))
 lm_1$call
 
 ```
+
+> This strategy capitalizes on R's inherent capability for the lazy evaluation of function arguments. This is accomplished by embedding the resampling operation within the argument definition itself. In this scenario, users supply the data to the function; however, only a permuted version of this data (resample_data) will be utilized during analysis.
 
 > In the presented code, a technique is introduced for the `resample_lm()` function. This methodology relocates an essential part of the pre-processing into the function's argument definition. However, it's important to note that this kind of approach is somewhat atypical within the realm of R. Contrasted with the unquoting-based implementation (depicted by `resample_lm1()` in Advanced R), this approach captures the model call in a more meaningful and robust manner. It's also worth mentioning that this strategy generates a new resample each time a model `update()` is performed. Furthermore, it's imperative to execute the evaluation within the function's environment due to the restricted availability of the resampled dataset, which is defined as a default argument and only accessible within the function environment.
