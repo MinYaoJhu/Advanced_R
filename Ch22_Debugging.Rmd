@@ -124,6 +124,7 @@ i <- function(d) {
   d + 10
 }
 ```
+
 ```{r, include = FALSE}
 source("debugging.R")
 ```
@@ -174,6 +175,9 @@ k <- function() stop("Oops!", call. = FALSE)
 f(j())
 ```
 
+
+
+
 ```{r, eval = FALSE}
 traceback()
 #> 7: stop("Oops!") at #1
@@ -185,10 +189,17 @@ traceback()
 #> 1: f(j())
 ```
 
+```{r}
+options(
+  rlang_backtrace_on_error = "full",
+  error = rlang::entrace
+)
+```
+
 You can using `rlang::with_abort()` and `rlang::last_trace()` to see the call tree. Here, I think it makes it much easier to see the source of the problem. Look at the last branch of the call tree to see that the error comes from `j()` calling `k()`.
 
 ```{r, error = TRUE}
-rlang::with_abort(f(j()))
+rlang::abort(f(j()))
 rlang::last_trace()
 ```
 
@@ -341,9 +352,10 @@ options(error = browser); f()
 options(error = recover); f()
 options(error = NULL)
 
-rlang::with_abort(f("a")); 
+rlang::abort(f("a")); 
 rlang::last_trace()
 ```
+
 
 ### 22.4.3 Compiled code {#debug-compiled}
 \index{debugging!C code}

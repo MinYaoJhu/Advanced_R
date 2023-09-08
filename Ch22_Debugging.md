@@ -188,6 +188,15 @@ f(j())
 
 
 ```r
+options(
+  rlang_backtrace_on_error = "full",
+  error = rlang::entrace
+)
+```
+
+
+
+```r
 traceback()
 #> 7: stop("Oops!") at #1
 #> 6: k() at #1
@@ -362,6 +371,7 @@ Unfortunately, the call stacks printed by `traceback()`, `browser()` & `where`, 
 `1: f("a")`      `where 4: f("a")`   `4: i("a")`   `4.       └─global::i("a")`
 
 RStudio displays calls in the same order as `traceback()`. rlang functions use the same ordering and numbering as `recover()`, but also use indenting to reinforce the hierarchy of calls.
+
 
 
 
