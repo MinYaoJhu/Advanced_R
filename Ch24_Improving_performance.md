@@ -1,0 +1,1051 @@
+---
+title: "Ch24_Improving_performance"
+author: "Min-Yao"
+date: "2023-09-15"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+# Improving performance {#perf-improve}
+
+## Introduction
+\index{performance!improving}
+
+> We should forget about small efficiencies, say about 97% of the time: 
+> premature optimization is the root of all evil. Yet we should not pass up our 
+> opportunities in that critical 3%. A good programmer will not be lulled 
+> into complacency by such reasoning, he will be wise to look carefully at 
+> the critical code; but only after that code has been identified.
+> 
+> --- Donald Knuth
+
+Once you've used profiling to identify a bottleneck, you need to make it faster. It's difficult to provide general advice on improving performance, but I try my best with four techniques that can be applied in many situations. I'll also suggest a general strategy for performance optimisation that helps ensure that your faster code is still correct.
+
+It's easy to get caught up in trying to remove all bottlenecks. Don't! Your time is valuable and is better spent analysing your data, not eliminating possible inefficiencies in your code. Be pragmatic: don't spend hours of your time to save seconds of computer time. To enforce this advice, you should set a goal time for your code and optimise only up to that goal. This means you will not eliminate all bottlenecks. Some you will not get to because you've met your goal. Others you may need to pass over and accept either because there is no quick and easy solution or because the code is already well optimised and no significant improvement is possible. Accept these possibilities and move on to the next candidate. 
+
+If you'd like to learn more about the performance characteristics of the R language, I'd highly recommend _Evaluating the Design of the R Language_ [@r-design]. It draws conclusions by combining a modified R interpreter with a wide set of code found in the wild.
+
+### Outline {-}
+
+* Section \@ref(code-organisation) teaches you how to organise 
+  your code to make optimisation as easy, and bug free, as possible.
+
+* Section \@ref(already-solved) reminds you to look for existing
+  solutions.
+
+* Section \@ref(be-lazy) emphasises the importance of
+  being lazy: often the easiest way to make a function faster is to 
+  let it to do less work.
+
+* Section \@ref(vectorise) concisely defines vectorisation, and shows you
+  how to make the most of built-in functions.
+
+* Section \@ref(avoid-copies) discusses the performance perils of 
+  copying data. 
+
+* Section \@ref(t-test) pulls all the pieces together into a case
+  study showing how to speed up repeated t-tests by about a thousand times. 
+
+* Section \@ref(more-techniques) finishes the chapter with pointers to
+  more resources that will help you write fast code.
+
+### Prerequisites {-}
+
+We'll use [bench](https://bench.r-lib.org/) to precisely compare the performance of small self-contained code chunks.
+
+
+```r
+library(bench)
+```
+
+## 24.2 Code organisation {#code-organisation}
+\index{performance!strategy}
+
+There are two traps that are easy to fall into when trying to make your code faster:
+
+1. Writing faster but incorrect code.
+1. Writing code that you think is faster, but is actually no better.
+
+The strategy outlined below will help you avoid these pitfalls. 
+
+When tackling a bottleneck, you're likely to come up with multiple approaches. Write a function for each approach, encapsulating all relevant behaviour. This makes it easier to check that each approach returns the correct result and to time how long it takes to run. To demonstrate the strategy, I'll compare two approaches for computing the mean:
+
+
+```r
+mean1 <- function(x) mean(x)
+mean2 <- function(x) sum(x) / length(x)
+```
+
+I recommend that you keep a record of everything you try, even the failures. If a similar problem occurs in the future, it'll be useful to see everything you've tried. To do this I recommend RMarkdown, which makes it easy to intermingle code with detailed comments and notes.
+
+Next, generate a representative test case. The case should be big enough to capture the essence of your problem but small enough that it only takes a few seconds at most. You don't want it to take too long because you'll need to run the test case many times to compare approaches. On the other hand, you don't want the case to be too small because then results might not scale up to the real problem. Here I'm going to use 100,000 numbers:
+
+
+```r
+x <- runif(1e5)
+```
+
+Now use `bench::mark()` to precisely compare the variations. `bench::mark()` automatically checks that all calls return the same values. This doesn't guarantee that the function behaves the same for all inputs, so in an ideal world you'll also have unit tests to make sure you don't accidentally change the behaviour of the function.
+
+
+```r
+bench::mark(
+  mean1(x),
+  mean2(x)
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 2 × 4
+##   expression      min   median `itr/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl>
+## 1 mean1(x)    182.1µs    196µs     4175.
+## 2 mean2(x)     89.1µs    102µs     7988.
+```
+
+(You might be surprised by the results: `mean(x)` is considerably slower than `sum(x) / length(x)`. This is because, among other reasons, `mean(x)` makes two passes over the vector to be more numerically accurate.)
+
+If you'd like to see this strategy in action, I've used it a few times on stackoverflow:
+
+* <http://stackoverflow.com/questions/22515525#22518603>
+* <http://stackoverflow.com/questions/22515175#22515856>
+* <http://stackoverflow.com/questions/3476015#22511936>
+
+## Checking for existing solutions {#already-solved}
+
+Once you've organised your code and captured all the variations you can think of, it's natural to see what others have done. You are part of a large community, and it's quite possible that someone has already tackled the same problem. Two good places to start are:
+
+* [CRAN task views](http://cran.rstudio.com/web/views/). If there's a
+  CRAN task view related to your problem domain, it's worth looking at
+  the packages listed there.
+
+* Reverse dependencies of Rcpp, as listed on its
+  [CRAN page](http://cran.r-project.org/web/packages/Rcpp). Since these
+  packages use C++, they're likely to be fast.
+
+Otherwise, the challenge is describing your bottleneck in a way that helps you find related problems and solutions. Knowing the name of the problem or its synonyms will make this search much easier. But because you don't know what it's called, it's hard to search for it! The best way to solve this problem is to read widely so that you can build up your own vocabulary over time. Alternatively, ask others. Talk to your colleagues and brainstorm some possible names, then search on Google and StackOverflow. It's often helpful to restrict your search to R related pages. For Google, try [rseek](http://www.rseek.org/). For stackoverflow, restrict your search by including the R tag, `[R]`, in your search. 
+
+Record all solutions that you find, not just those that immediately appear to be faster. Some solutions might be slower initially, but end up being faster because they're easier to optimise. You may also be able to combine the fastest parts from different approaches. If you've found a solution that's fast enough, congratulations! Otherwise, read on.
+
+### Exercises
+
+1.  What are faster alternatives to `lm()`? Which are specifically designed 
+    to work with larger datasets?
+    
+The [CRAN task view for high-performance computing](https://cran.rstudio.com/web/views/HighPerformanceComputing.html) provides many recommendations.
+
+We could for example give `biglm::biglm()` [@biglm], `speedglm::speedlm()` [@speedglm] or `RcppEigen::fastLm()` [@RcppEigen] a try.
+
+For small datasets, we observe only minor performance gains (or even a small cost):
+
+
+```r
+penguins <- palmerpenguins::penguins
+
+bench::mark(
+  "lm" = lm(
+    body_mass_g ~ bill_length_mm + species, data = penguins
+  ) |>  coef(),
+  "biglm" = biglm::biglm(
+    body_mass_g ~ bill_length_mm + species, data = penguins
+  ) |>  coef(),
+  "speedglm" = speedglm::speedlm(
+    body_mass_g ~ bill_length_mm + species, data = penguins
+  ) |>  coef(),
+  "fastLm" = RcppEigen::fastLm(
+    body_mass_g ~ bill_length_mm + species, data = penguins
+  ) |>  coef()
+)
+```
+
+```
+## # A tibble: 4 × 6
+##   expression      min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 lm            703µs 885.65µs      965.   784.8KB     4.09
+## 2 biglm         514µs 634.35µs     1209.    7.03MB     6.23
+## 3 speedglm      973µs   1.12ms      775.   70.98MB     4.10
+## 4 fastLm        554µs  607.2µs     1466.    3.66MB     8.34
+```
+
+For larger datasets the selection of the appropriate method is of greater relevance:
+
+
+```r
+eps <- rnorm(100000)
+x1 <- rnorm(100000, 5, 3)
+x2 <- rep(c("a", "b"), 50000)
+y <- 7 * x1 + (x2 == "a") + eps
+td <- data.frame(y = y, x1 = x1, x2 = x2, eps = eps)
+
+bench::mark(
+  "lm" = lm(y ~ x1 + x2, data = td) |>  coef(),
+  "biglm" = biglm::biglm(y ~ x1 + x2, data = td) |> coef(),
+  "speedglm" = speedglm::speedlm(y ~ x1 + x2, data = td) |> coef(),
+  "fastLm" = RcppEigen::fastLm(y ~ x1 + x2, data = td) |> coef()
+)
+## # A tibble: 4 × 6
+##   expression      min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 lm           27.4ms     32ms     23.1       27MB    26.9 
+## 2 biglm        24.7ms   30.3ms     17.4     22.2MB    10.4 
+## 3 speedglm     67.8ms   76.4ms     12.4     22.9MB     5.32
+## 4 fastLm      147.1ms  177.7ms      5.96    30.2MB     7.95
+```
+
+
+
+1.  What package implements a version of `match()` that's faster for
+    repeated lookups? How much faster is it?
+
+A web search points us to the `{fastmatch}` package [@fastmatch]. We compare it to `base::match()` and observe an impressive performance gain.
+
+
+```r
+table <- 1:100000
+x <- sample(table, 10000, replace = TRUE)
+
+bench::mark(
+  match = match(x, table),
+  fastmatch = fastmatch::fmatch(x, table)
+) 
+```
+
+```
+## # A tibble: 2 × 6
+##   expression      min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 match        12.5ms  23.06ms      40.1    1.46MB     0   
+## 2 fastmatch     552µs   1.34ms     749.   447.52KB     2.11
+```
+
+1.  List four functions (not just those in base R) that convert a string into a
+    date time object. What are their strengths and weaknesses?
+
+The usual base R way is to use the `as.POSIXct()` generic and create a date time object of class `POSIXct` and type integer.
+
+
+```r
+date_ct <- as.POSIXct("2020-01-01 12:30:25")
+date_ct
+```
+
+```
+## [1] "2020-01-01 12:30:25 GMT"
+```
+
+Under the hood `as.POSIXct()` employs `as.POSIXlt()` for the character conversion. This creates a date time object of class `POSIXlt` and type `list`.
+
+
+```r
+date_lt <- as.POSIXlt("2020-01-01 12:30:25")
+date_lt
+```
+
+```
+## [1] "2020-01-01 12:30:25 GMT"
+```
+
+The `POSIXlt` class has the advantage that it carries the individual time components as attributes. This allows to extract the time components via typical list operators.
+
+
+```r
+attributes(date_lt)
+```
+
+```
+## $names
+##  [1] "sec"    "min"    "hour"   "mday"   "mon"    "year"   "wday"   "yday"  
+##  [9] "isdst"  "zone"   "gmtoff"
+## 
+## $class
+## [1] "POSIXlt" "POSIXt" 
+## 
+## $tzone
+## [1] ""    "GMT" "BST"
+## 
+## $balanced
+## [1] TRUE
+```
+
+```r
+date_lt$sec
+```
+
+```
+## [1] 25
+```
+
+However, while lists may be practical, basic calculations are often faster and require less memory for objects with underlying integer type.
+
+
+```r
+date_lt2 <- rep(date_lt, 10000)
+date_ct2 <- rep(date_ct, 10000)
+
+bench::mark(
+  date_lt2 - date_lt2, 
+  date_ct2 - date_ct2,
+  date_ct2 - date_lt2
+)
+```
+
+```
+## # A tibble: 3 × 6
+##   expression               min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr>          <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 date_lt2 - date_lt2    332ms    353ms      2.83    1.36MB      0  
+## 2 date_ct2 - date_ct2    121µs    297µs   3256.    195.45KB     11.7
+## 3 date_ct2 - date_lt2    136ms    144ms      6.88  781.95KB      0
+```
+
+`as.POSIXct()` and `as.POSIXlt()` accept different character inputs by default (e.g. `"2001-01-01 12:30"` or `"2001/1/1 12:30"`). `strptime()` requires the format argument to be set explicitly, and provides a performance improvement in return.
+
+
+```r
+bench::mark(
+  as.POSIXct = as.POSIXct("2020-01-01 12:30:25"),
+  as.POSIXct_format = as.POSIXct("2020-01-01 12:30:25",
+    format = "%Y-%m-%d %H:%M:%S"
+  ),
+  strptime_fomat = strptime("2020-01-01 12:30:25",
+    format = "%Y-%m-%d %H:%M:%S"
+  )
+)[1:3]
+```
+
+```
+## # A tibble: 3 × 3
+##   expression             min   median
+##   <bch:expr>        <bch:tm> <bch:tm>
+## 1 as.POSIXct          88.3µs  254.6µs
+## 2 as.POSIXct_format   39.9µs  130.1µs
+## 3 strptime_fomat      13.8µs   42.3µs
+```
+
+A fourth way is to use the converter functions from the `{lubridate}` package [@lubridate], which contains wrapper functions (for the POSIXct approach) with an intuitive syntax. (There is a slight decrease in performance though.)
+
+
+```r
+library(lubridate)
+ymd_hms("2013-07-24 23:55:26")
+```
+
+```
+## [1] "2013-07-24 23:55:26 UTC"
+```
+
+```r
+bench::mark(
+  as.POSIXct = as.POSIXct("2013-07-24 23:55:26", tz = "UTC"),
+  ymd_hms = ymd_hms("2013-07-24 23:55:26")
+)[1:3]
+```
+
+```
+## # A tibble: 2 × 3
+##   expression      min   median
+##   <bch:expr> <bch:tm> <bch:tm>
+## 1 as.POSIXct   41.1µs    127µs
+## 2 ymd_hms      6.87ms   13.6ms
+```
+
+1.  Which packages provide the ability to compute a rolling mean?
+
+
+```r
+x <- 1:10
+slider::slide_dbl(x, mean, .before = 1, .complete = TRUE)
+```
+
+```
+##  [1]  NA 1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 9.5
+```
+
+```r
+bench::mark(
+  caTools = caTools::runmean(x, k = 2, endrule = "NA"),
+  data.table = data.table::frollmean(x, 2),
+  RcppRoll = RcppRoll::roll_mean(x, n = 2, fill = NA, 
+                                 align = "right"),
+  slider = slider::slide_dbl(x, mean, .before = 1, .complete = TRUE),
+  TTR = TTR::SMA(x, 2),
+  zoo_apply = zoo::rollapply(x, 2, mean, fill = NA, align = "right"),
+  zoo_rollmean = zoo::rollmean(x, 2, fill = NA, align = "right")
+)
+```
+
+```
+## # A tibble: 7 × 6
+##   expression        min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 caTools        39.6µs  131.3µs     7029.  178.71KB     2.04
+## 2 data.table     27.8µs  102.3µs     9397.    1.46MB     2.10
+## 3 RcppRoll       17.5µs   58.3µs    17531.   43.42KB     2.07
+## 4 slider         62.3µs  206.1µs     5023.        0B     2.03
+## 5 TTR             267µs  448.6µs     1972.    1.23MB     0   
+## 6 zoo_apply     813.6µs  885.4µs     1033.  453.93KB     2.03
+## 7 zoo_rollmean  729.2µs  789.7µs     1091.    6.43KB     2.03
+```
+
+1.  What are the alternatives to `optim()`?
+
+> General-purpose optimization based on Nelder–Mead, quasi-Newton and conjugate-gradient algorithms. It includes an option for box-constrained optimization and simulated annealing.
+
+`optim()` allows to optimise a function (`fn`) on an interval with a specific method (`method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent")`). Many detailed examples are given in the documentation. In the simplest case, we give `optim()` the starting value `par = 0` to calculate the minimum of a quadratic polynomial:
+
+
+```r
+optim(0, function(x) x^2 - 100 * x + 50,
+  method = "Brent",
+  lower = -1e20, upper = 1e20
+)
+```
+
+```
+## $par
+## [1] 50
+## 
+## $value
+## [1] -2450
+## 
+## $counts
+## function gradient 
+##       NA       NA 
+## 
+## $convergence
+## [1] 0
+## 
+## $message
+## NULL
+```
+
+Since this solves a one-dimensional optimisation task, we could have also used `stats::optimize()`.
+
+
+```r
+optimize(function(x) x^2 - 100 * x + 50, c(-1e20, 1e20))
+```
+
+```
+## $minimum
+## [1] 50
+## 
+## $objective
+## [1] -2450
+```
+
+## Doing as little as possible {#be-lazy}
+
+The easiest way to make a function faster is to let it do less work. One way to do that is use a function tailored to a more specific type of input or output, or to a more specific problem. For example:
+
+* `rowSums()`, `colSums()`, `rowMeans()`, and `colMeans()` are faster than
+  equivalent invocations that use `apply()` because they are vectorised 
+  (Section \@ref(vectorise)).
+
+* `vapply()` is faster than `sapply()` because it pre-specifies the output
+  type.
+
+* If you want to see if a vector contains a single value, `any(x == 10)`
+  is much faster than `10 %in% x` because testing equality is simpler 
+  than testing set inclusion.
+
+Having this knowledge at your fingertips requires knowing that alternative functions exist: you need to have a good vocabulary. Expand your vocab by regularly reading R code. Good places to read code are the [R-help mailing list](https://stat.ethz.ch/mailman/listinfo/r-help) and [StackOverflow](http://stackoverflow.com/questions/tagged/r).
+
+Some functions coerce their inputs into a specific type. If your input is not the right type, the function has to do extra work. Instead, look for a function that works with your data as it is, or consider changing the way you store your data. The most common example of this problem is using `apply()` on a data frame. `apply()` always turns its input into a matrix. Not only is this error prone (because a data frame is more general than a matrix), it is also slower.
+
+Other functions will do less work if you give them more information about the problem. It's always worthwhile to carefully read the documentation and experiment with different arguments. Some examples that I've discovered in the past include:
+
+* `read.csv()`: specify known column types with `colClasses`. (Also consider
+  switching to `readr::read_csv()` or `data.table::fread()` which are 
+  considerably faster than `read.csv()`.)
+
+* `factor()`: specify known levels with `levels`.
+
+* `cut()`: don't generate labels with `labels = FALSE` if you don't need them,
+  or, even better, use `findInterval()` as mentioned in the "see also" section
+  of the documentation.
+  
+* `unlist(x, use.names = FALSE)` is much faster than `unlist(x)`.
+
+* `interaction()`: if you only need combinations that exist in the data, use
+  `drop = TRUE`.
+
+Below, I explore how you might improve apply this strategy to improve the performance of `mean()` and `as.data.frame()`.
+
+### `mean()`
+\indexc{.Internal()}
+\index{method dispatch!performance}
+
+Sometimes you can make a function faster by avoiding method dispatch. If you're calling a method in a tight loop, you can avoid some of the costs by doing the method lookup only once:
+
+* For S3, you can do this by calling `generic.class()` instead of `generic()`. 
+
+* For S4, you can do this by using `selectMethod()` to find the method, saving 
+  it to a variable, and then calling that function. 
+
+For example, calling `mean.default()` is quite a bit faster than calling `mean()` for small vectors:
+
+
+```r
+x <- runif(1e2)
+
+bench::mark(
+  mean(x),
+  mean.default(x)
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 2 × 4
+##   expression           min   median `itr/sec`
+##   <bch:expr>      <bch:tm> <bch:tm>     <dbl>
+## 1 mean(x)            9.3µs   16.4µs    55260.
+## 2 mean.default(x)    2.3µs    6.6µs   134036.
+```
+
+This optimisation is a little risky. While `mean.default()` is almost twice as fast for 100 values, it will fail in surprising ways if `x` is not a numeric vector. 
+
+An even riskier optimisation is to directly call the underlying `.Internal` function. This is faster because it doesn't do any input checking or handle NA's, so you are buying speed at the cost of safety.
+
+
+```r
+x <- runif(1e2)
+bench::mark(
+  mean(x),
+  mean.default(x),
+  .Internal(mean(x))
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 3 × 4
+##   expression              min   median `itr/sec`
+##   <bch:expr>         <bch:tm> <bch:tm>     <dbl>
+## 1 mean(x)               5.8µs   16.2µs    64778.
+## 2 mean.default(x)       1.8µs    3.3µs   286262.
+## 3 .Internal(mean(x))    200ns    500ns  1958979.
+```
+
+NB: Most of these differences arise because `x` is small. If you increase the size the differences basically disappear, because most of the time is now spent computing the mean, not finding the underlying implementation. This is a good reminder that the size of the input matters, and you should motivate your optimisations based on realistic data.
+
+
+```r
+x <- runif(1e4)
+bench::mark(
+  mean(x),
+  mean.default(x),
+  .Internal(mean(x))
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 3 × 4
+##   expression              min   median `itr/sec`
+##   <bch:expr>         <bch:tm> <bch:tm>     <dbl>
+## 1 mean(x)              22.1µs   26.8µs    31559.
+## 2 mean.default(x)      19.3µs     20µs    40659.
+## 3 .Internal(mean(x))   17.2µs   21.7µs    38611.
+```
+
+
+### `as.data.frame()`
+\indexc{as.data.frame()}
+
+Knowing that you're dealing with a specific type of input can be another way to write faster code. For example, `as.data.frame()` is quite slow because it coerces each element into a data frame and then `rbind()`s them together. If you have a named list with vectors of equal length, you can directly transform it into a data frame. In this case, if you can make strong assumptions about your input, you can write a method that's considerably faster than the default.
+
+
+```r
+quickdf <- function(l) {
+  class(l) <- "data.frame"
+  attr(l, "row.names") <- .set_row_names(length(l[[1]]))
+  l
+}
+
+l <- lapply(1:26, function(i) runif(1e3))
+names(l) <- letters
+
+bench::mark(
+  as.data.frame = as.data.frame(l),
+  quick_df      = quickdf(l)
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 2 × 4
+##   expression         min   median `itr/sec`
+##   <bch:expr>    <bch:tm> <bch:tm>     <dbl>
+## 1 as.data.frame  998.6µs   1.11ms      731.
+## 2 quick_df         6.6µs    8.1µs    99310.
+```
+
+Again, note the trade-off. This method is fast because it's dangerous. If you give it bad inputs, you'll get a corrupt data frame:
+
+
+```r
+quickdf(list(x = 1, y = 1:2))
+```
+
+```
+## Warning in format.data.frame(if (omit) x[seq_len(n0), , drop = FALSE] else x, :
+## corrupt data frame: columns will be truncated or padded with NAs
+```
+
+```
+##   x y
+## 1 1 1
+```
+
+To come up with this minimal method, I carefully read through and then rewrote the source code for `as.data.frame.list()` and `data.frame()`. I made many small changes, each time checking that I hadn't broken existing behaviour. After several hours work, I was able to isolate the minimal code shown above. This is a very useful technique. Most base R functions are written for flexibility and functionality, not performance. Thus, rewriting for your specific need can often yield substantial improvements. To do this, you'll need to read the source code. It can be complex and confusing, but don't give up!
+
+### Exercises
+
+1.  What's the difference between `rowSums()` and `.rowSums()`?
+
+
+```r
+rowSums
+```
+
+```
+## function (x, na.rm = FALSE, dims = 1L) 
+## {
+##     if (is.data.frame(x)) 
+##         x <- as.matrix(x)
+##     if (!is.array(x) || length(dn <- dim(x)) < 2L) 
+##         stop("'x' must be an array of at least two dimensions")
+##     if (dims < 1L || dims > length(dn) - 1L) 
+##         stop("invalid 'dims'")
+##     p <- prod(dn[-(id <- seq_len(dims))])
+##     dn <- dn[id]
+##     z <- if (is.complex(x)) 
+##         .Internal(rowSums(Re(x), prod(dn), p, na.rm)) + (0+1i) * 
+##             .Internal(rowSums(Im(x), prod(dn), p, na.rm))
+##     else .Internal(rowSums(x, prod(dn), p, na.rm))
+##     if (length(dn) > 1L) {
+##         dim(z) <- dn
+##         dimnames(z) <- dimnames(x)[id]
+##     }
+##     else names(z) <- dimnames(x)[[1L]]
+##     z
+## }
+## <bytecode: 0x00000149039453e8>
+## <environment: namespace:base>
+```
+
+`.rowSums()` calls an internal function, which is built into the R interpreter. These compiled functions can be very fast.
+
+
+```r
+.rowSums
+```
+
+```
+## function (x, m, n, na.rm = FALSE) 
+## .Internal(rowSums(x, m, n, na.rm))
+## <bytecode: 0x0000014910bfe9c8>
+## <environment: namespace:base>
+```
+
+When we inspect the source code of the user-facing `rowSums()`, we see that it is designed as a wrapper around `.rowSums()` with some input validation, conversions and handling of complex numbers.
+
+However, as our benchmark reveals almost identical computing times, we prefer the safer variant over the internal function for this case.
+
+
+```r
+m <- matrix(rnorm(1e6), nrow = 1000)
+
+bench::mark(
+  rowSums(m),
+  .rowSums(m, 1000, 1000)
+)
+```
+
+```
+## # A tibble: 2 × 6
+##   expression                   min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr>              <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 rowSums(m)                2.66ms   2.96ms      287.    7.86KB        0
+## 2 .rowSums(m, 1000, 1000)   2.65ms   2.82ms      312.    7.86KB        0
+```
+
+
+1.  Make a faster version of `chisq.test()` that only computes the chi-square
+    test statistic when the input is two numeric vectors with no missing
+    values. You can try simplifying `chisq.test()` or by coding from the 
+    [mathematical definition](http://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test).
+    
+
+```r
+chisq.test
+```
+
+```
+## function (x, y = NULL, correct = TRUE, p = rep(1/length(x), length(x)), 
+##     rescale.p = FALSE, simulate.p.value = FALSE, B = 2000) 
+## {
+##     DNAME <- deparse(substitute(x))
+##     if (is.data.frame(x)) 
+##         x <- as.matrix(x)
+##     if (is.matrix(x)) {
+##         if (min(dim(x)) == 1L) 
+##             x <- as.vector(x)
+##     }
+##     if (!is.matrix(x) && !is.null(y)) {
+##         if (length(x) != length(y)) 
+##             stop("'x' and 'y' must have the same length")
+##         DNAME2 <- deparse(substitute(y))
+##         xname <- if (length(DNAME) > 1L || nchar(DNAME, "w") > 
+##             30) 
+##             ""
+##         else DNAME
+##         yname <- if (length(DNAME2) > 1L || nchar(DNAME2, "w") > 
+##             30) 
+##             ""
+##         else DNAME2
+##         OK <- complete.cases(x, y)
+##         x <- factor(x[OK])
+##         y <- factor(y[OK])
+##         if ((nlevels(x) < 2L) || (nlevels(y) < 2L)) 
+##             stop("'x' and 'y' must have at least 2 levels")
+##         x <- table(x, y)
+##         names(dimnames(x)) <- c(xname, yname)
+##         DNAME <- paste(paste(DNAME, collapse = "\n"), "and", 
+##             paste(DNAME2, collapse = "\n"))
+##     }
+##     if (any(x < 0) || anyNA(x)) 
+##         stop("all entries of 'x' must be nonnegative and finite")
+##     if ((n <- sum(x)) == 0) 
+##         stop("at least one entry of 'x' must be positive")
+##     if (simulate.p.value) {
+##         setMETH <- function() METHOD <<- paste(METHOD, "with simulated p-value\n\t (based on", 
+##             B, "replicates)")
+##         almost.1 <- 1 - 64 * .Machine$double.eps
+##     }
+##     if (is.matrix(x)) {
+##         METHOD <- "Pearson's Chi-squared test"
+##         nr <- as.integer(nrow(x))
+##         nc <- as.integer(ncol(x))
+##         if (is.na(nr) || is.na(nc) || is.na(nr * nc)) 
+##             stop("invalid nrow(x) or ncol(x)", domain = NA)
+##         sr <- rowSums(x)
+##         sc <- colSums(x)
+##         E <- outer(sr, sc)/n
+##         v <- function(r, c, n) c * r * (n - r) * (n - c)/n^3
+##         V <- outer(sr, sc, v, n)
+##         dimnames(E) <- dimnames(x)
+##         if (simulate.p.value && all(sr > 0) && all(sc > 0)) {
+##             setMETH()
+##             tmp <- .Call(C_chisq_sim, sr, sc, B, E)
+##             STATISTIC <- sum(sort((x - E)^2/E, decreasing = TRUE))
+##             PARAMETER <- NA
+##             PVAL <- (1 + sum(tmp >= almost.1 * STATISTIC))/(B + 
+##                 1)
+##         }
+##         else {
+##             if (simulate.p.value) 
+##                 warning("cannot compute simulated p-value with zero marginals")
+##             if (correct && nrow(x) == 2L && ncol(x) == 2L) {
+##                 YATES <- min(0.5, abs(x - E))
+##                 if (YATES > 0) 
+##                   METHOD <- paste(METHOD, "with Yates' continuity correction")
+##             }
+##             else YATES <- 0
+##             STATISTIC <- sum((abs(x - E) - YATES)^2/E)
+##             PARAMETER <- (nr - 1L) * (nc - 1L)
+##             PVAL <- pchisq(STATISTIC, PARAMETER, lower.tail = FALSE)
+##         }
+##     }
+##     else {
+##         if (length(dim(x)) > 2L) 
+##             stop("invalid 'x'")
+##         if (length(x) == 1L) 
+##             stop("'x' must at least have 2 elements")
+##         if (length(x) != length(p)) 
+##             stop("'x' and 'p' must have the same number of elements")
+##         if (any(p < 0)) 
+##             stop("probabilities must be non-negative.")
+##         if (abs(sum(p) - 1) > sqrt(.Machine$double.eps)) {
+##             if (rescale.p) 
+##                 p <- p/sum(p)
+##             else stop("probabilities must sum to 1.")
+##         }
+##         METHOD <- "Chi-squared test for given probabilities"
+##         E <- n * p
+##         V <- n * p * (1 - p)
+##         STATISTIC <- sum((x - E)^2/E)
+##         names(E) <- names(x)
+##         if (simulate.p.value) {
+##             setMETH()
+##             nx <- length(x)
+##             sm <- matrix(sample.int(nx, B * n, TRUE, prob = p), 
+##                 nrow = n)
+##             ss <- apply(sm, 2L, function(x, E, k) {
+##                 sum((table(factor(x, levels = 1L:k)) - E)^2/E)
+##             }, E = E, k = nx)
+##             PARAMETER <- NA
+##             PVAL <- (1 + sum(ss >= almost.1 * STATISTIC))/(B + 
+##                 1)
+##         }
+##         else {
+##             PARAMETER <- length(x) - 1
+##             PVAL <- pchisq(STATISTIC, PARAMETER, lower.tail = FALSE)
+##         }
+##     }
+##     names(STATISTIC) <- "X-squared"
+##     names(PARAMETER) <- "df"
+##     if (any(E < 5) && is.finite(PARAMETER)) 
+##         warning("Chi-squared approximation may be incorrect")
+##     structure(list(statistic = STATISTIC, parameter = PARAMETER, 
+##         p.value = PVAL, method = METHOD, data.name = DNAME, observed = x, 
+##         expected = E, residuals = (x - E)/sqrt(E), stdres = (x - 
+##             E)/sqrt(V)), class = "htest")
+## }
+## <bytecode: 0x0000014913509748>
+## <environment: namespace:stats>
+```
+
+We aim to speed up our reimplementation of `chisq.test()` by *doing less*.
+
+
+```r
+chisq.test2 <- function(x, y) {
+  m <- rbind(x, y)
+  margin1 <- rowSums(m)
+  margin2 <- colSums(m)
+  n <- sum(m)
+  me <- tcrossprod(margin1, margin2) / n
+
+  x_stat <- sum((m - me)^2 / me)
+  df <- (length(margin1) - 1) * (length(margin2) - 1)
+  p.value <- pchisq(x_stat, df = df, lower.tail = FALSE)
+
+  list(x_stat = x_stat, df = df, p.value = p.value)
+}
+```
+
+We check if our new implementation returns the same results and benchmark it afterwards.
+
+
+```r
+a <- 21:25
+b <- seq(21, 29, 2)
+m <- cbind(a, b)
+
+chisq.test(m) |> print(digits=5)
+```
+
+```
+## 
+## 	Pearson's Chi-squared test
+## 
+## data:  m
+## X-squared = 0.162, df = 4, p-value = 1
+```
+
+```r
+chisq.test2(a, b)
+```
+
+```
+## $x_stat
+## [1] 0.1619369
+## 
+## $df
+## [1] 4
+## 
+## $p.value
+## [1] 0.9968937
+```
+
+```r
+bench::mark(
+  chisq.test(m),
+  chisq.test2(a, b),
+  check = FALSE
+)
+```
+
+```
+## # A tibble: 2 × 6
+##   expression             min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr>        <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 chisq.test(m)       47.2µs   66.7µs    13106.        0B     6.23
+## 2 chisq.test2(a, b)   13.1µs   14.8µs    50304.        0B     5.03
+```
+
+1.  Can you make a faster version of `table()` for the case of an input of
+    two integer vectors with no missing values? Can you use it to
+    speed up your chi-square test?
+
+When analysing the source code of `table()` we aim to omit everything unnecessary and extract the main building blocks. We observe that `table()` is powered by `tabulate()` which is a very fast counting function. This leaves us with the challenge to compute the pre-processing as performant as possible.
+
+
+```r
+base::table
+```
+
+```
+## function (..., exclude = if (useNA == "no") c(NA, NaN), useNA = c("no", 
+##     "ifany", "always"), dnn = list.names(...), deparse.level = 1) 
+## {
+##     list.names <- function(...) {
+##         l <- as.list(substitute(list(...)))[-1L]
+##         if (length(l) == 1L && is.list(..1) && !is.null(nm <- names(..1))) 
+##             return(nm)
+##         nm <- names(l)
+##         fixup <- if (is.null(nm)) 
+##             seq_along(l)
+##         else nm == ""
+##         dep <- vapply(l[fixup], function(x) switch(deparse.level + 
+##             1, "", if (is.symbol(x)) as.character(x) else "", 
+##             deparse(x, nlines = 1)[1L]), "")
+##         if (is.null(nm)) 
+##             dep
+##         else {
+##             nm[fixup] <- dep
+##             nm
+##         }
+##     }
+##     miss.use <- missing(useNA)
+##     miss.exc <- missing(exclude)
+##     useNA <- if (miss.use && !miss.exc && !match(NA, exclude, 
+##         nomatch = 0L)) 
+##         "ifany"
+##     else match.arg(useNA)
+##     doNA <- useNA != "no"
+##     if (!miss.use && !miss.exc && doNA && match(NA, exclude, 
+##         nomatch = 0L)) 
+##         warning("'exclude' containing NA and 'useNA' != \"no\"' are a bit contradicting")
+##     args <- list(...)
+##     if (length(args) == 1L && is.list(args[[1L]])) {
+##         args <- args[[1L]]
+##         if (length(dnn) != length(args)) 
+##             dnn <- paste(dnn[1L], seq_along(args), sep = ".")
+##     }
+##     if (!length(args)) 
+##         stop("nothing to tabulate")
+##     bin <- 0L
+##     lens <- NULL
+##     dims <- integer()
+##     pd <- 1L
+##     dn <- NULL
+##     for (a in args) {
+##         if (is.null(lens)) 
+##             lens <- length(a)
+##         else if (length(a) != lens) 
+##             stop("all arguments must have the same length")
+##         fact.a <- is.factor(a)
+##         if (doNA) 
+##             aNA <- anyNA(a)
+##         if (!fact.a) {
+##             a0 <- a
+##             op <- options(warn = 2)
+##             on.exit(options(op))
+##             a <- factor(a, exclude = exclude)
+##             options(op)
+##         }
+##         add.na <- doNA
+##         if (add.na) {
+##             ifany <- (useNA == "ifany")
+##             anNAc <- anyNA(a)
+##             add.na <- if (!ifany || anNAc) {
+##                 ll <- levels(a)
+##                 if (add.ll <- !anyNA(ll)) {
+##                   ll <- c(ll, NA)
+##                   TRUE
+##                 }
+##                 else if (!ifany && !anNAc) 
+##                   FALSE
+##                 else TRUE
+##             }
+##             else FALSE
+##         }
+##         if (add.na) 
+##             a <- factor(a, levels = ll, exclude = NULL)
+##         else ll <- levels(a)
+##         a <- as.integer(a)
+##         if (fact.a && !miss.exc) {
+##             ll <- ll[keep <- which(match(ll, exclude, nomatch = 0L) == 
+##                 0L)]
+##             a <- match(a, keep)
+##         }
+##         else if (!fact.a && add.na) {
+##             if (ifany && !aNA && add.ll) {
+##                 ll <- ll[!is.na(ll)]
+##                 is.na(a) <- match(a0, c(exclude, NA), nomatch = 0L) > 
+##                   0L
+##             }
+##             else {
+##                 is.na(a) <- match(a0, exclude, nomatch = 0L) > 
+##                   0L
+##             }
+##         }
+##         nl <- length(ll)
+##         dims <- c(dims, nl)
+##         if (prod(dims) > .Machine$integer.max) 
+##             stop("attempt to make a table with >= 2^31 elements")
+##         dn <- c(dn, list(ll))
+##         bin <- bin + pd * (a - 1L)
+##         pd <- pd * nl
+##     }
+##     names(dn) <- dnn
+##     bin <- bin[!is.na(bin)]
+##     if (length(bin)) 
+##         bin <- bin + 1L
+##     y <- array(tabulate(bin, pd), dims, dimnames = dn)
+##     class(y) <- "table"
+##     y
+## }
+## <bytecode: 0x0000014913532c30>
+## <environment: namespace:base>
+```
+
+
+First, we calculate the dimensions and names of the output table. Then we use `fastmatch::fmatch()` to map the elements of each vector to their position within the vector itself (i.e. the smallest value is mapped to `1L`, the second smallest value to `2L`, etc.). Following the logic within `table()` we combine and shift these values to create a mapping of the integer pairs in our data to the index of the output table. After applying these lookups `tabulate()` counts the values and returns an integer vector with counts for each position in the table. As a last step, we reuse the code from `table()` to assign the correct dimension and class.
+
+
+```r
+table2 <- function(a, b){
+  
+  a_s <- sort(unique(a))
+  b_s <- sort(unique(b))
+  
+  a_l <- length(a_s)
+  b_l <- length(b_s)
+  
+  dims <- c(a_l, b_l)
+  pr <- a_l * b_l
+  dn <- list(a = a_s, b = b_s)
+  
+  bin <- fastmatch::fmatch(a, a_s) +
+    a_l * fastmatch::fmatch(b, b_s) - a_l
+  y <- tabulate(bin, pr)
+  
+  y <- array(y, dim = dims, dimnames = dn)
+  class(y) <- "table"
+  
+  y
+}
+
+a <- sample(100, 10000, TRUE)
+b <- sample(100, 10000, TRUE)
+
+bench::mark(
+  table(a, b),
+  table2(a, b)
+)
+```
+
+```
+## # A tibble: 2 × 6
+##   expression        min   median `itr/sec` mem_alloc `gc/sec`
+##   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+## 1 table(a, b)    1.08ms    1.4ms      513.    1.19MB     9.38
+## 2 table2(a, b)  321.9µs  516.6µs     1699.  576.33KB    16.1
+```
+
+Since we didn't use `table()` in our `chisq.test2()`-implementation, we cannot benefit from the slight performance gain from `table2()`.
+
+
