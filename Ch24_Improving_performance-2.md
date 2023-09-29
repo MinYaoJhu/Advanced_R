@@ -1,0 +1,537 @@
+---
+title: "Ch24_Improving_performance-2"
+author: "Min-Yao"
+date: "2023-09-29"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+## Vectorise {#vectorise}
+\index{vectorisation}
+
+If you've used R for any length of time, you've probably heard the admonishment to "vectorise your code". But what does that actually mean? Vectorising your code is not just about avoiding for loops, although that's often a step. Vectorising is about taking a whole-object approach to a problem, thinking about vectors, not scalars. There are two key attributes of a vectorised function: 
+
+* It makes many problems simpler. Instead of having to think about the 
+  components of a vector, you only think about entire vectors.
+
+* The loops in a vectorised function are written in C instead of R. Loops in C 
+  are much faster because they have much less overhead.
+
+Chapter \@ref(functionals) stressed the importance of vectorised code as a higher level abstraction. Vectorisation is also important for writing fast R code. This doesn't mean simply using `map()` or `lapply()`. Instead, vectorisation means finding the existing R function that is implemented in C and most closely applies to your problem. 
+
+Vectorised functions that apply to many common performance bottlenecks include:
+
+* `rowSums()`, `colSums()`, `rowMeans()`, and `colMeans()`. These vectorised 
+  matrix functions will always be faster than using `apply()`. You can
+  sometimes use these functions to build other vectorised functions. 
+  
+    
+    ```r
+    rowAny <- function(x) rowSums(x) > 0
+    rowAll <- function(x) rowSums(x) == ncol(x)
+    ```
+    
+* Vectorised subsetting can lead to big improvements in speed. Remember the 
+  techniques behind lookup tables (Section \@ref(lookup-tables)) and matching 
+  and merging by hand (Section \@ref(matching-merging)). Also 
+  remember that you can use subsetting assignment to replace multiple values in 
+  a single step. If `x` is a vector, matrix or data frame then 
+  `x[is.na(x)] <- 0` will replace all missing values with 0.
+
+* If you're extracting or replacing values in scattered locations in a matrix
+  or data frame, subset with an integer matrix. 
+  See Section \@ref(matrix-subsetting) for more details.
+
+* If you're converting continuous values to categorical make sure you know
+  how to use `cut()` and `findInterval()`.
+
+* Be aware of vectorised functions like `cumsum()` and `diff()`.
+
+Matrix algebra is a general example of vectorisation. There loops are executed by highly tuned external libraries like BLAS. If you can figure out a way to use matrix algebra to solve your problem, you'll often get a very fast solution. The ability to solve problems with matrix algebra is a product of experience. A good place to start is to ask people with experience in your domain.
+
+Vectorisation has a downside: it is harder to predict how operations will scale. The following example measures how long it takes to use character subsetting to look up 1, 10, and 100 elements from a list. You might expect that looking up 10 elements would take 10 times as long as looking up 1, and that looking up 100 elements would take 10 times longer again. In fact, the following example shows that it only takes about ~10x longer to look up 100 elements than it does to look up 1. That happens because once you get to a certain size, the internal implementation switches to a strategy that has a higher set up cost, but scales better.
+
+
+```r
+lookup <- setNames(as.list(sample(100, 26)), letters)
+
+x1 <- "j"
+x10 <- sample(letters, 10)
+x100 <- sample(letters, 100, replace = TRUE)
+
+bench::mark(
+  lookup[x1],
+  lookup[x10],
+  lookup[x100],
+  check = FALSE
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 3 × 4
+##   expression        min   median `itr/sec`
+##   <bch:expr>   <bch:tm> <bch:tm>     <dbl>
+## 1 lookup[x1]      400ns    500ns  1823287.
+## 2 lookup[x10]       1µs    1.1µs   690222.
+## 3 lookup[x100]    2.7µs    2.9µs   229769.
+```
+
+Vectorisation won't solve every problem, and rather than torturing an existing algorithm into one that uses a vectorised approach, you're often better off writing your own vectorised function in C++. You'll learn how to do so in Chapter \@ref(rcpp). 
+
+### Exercises
+
+1.  The density functions, e.g., `dnorm()`, have a common interface. Which 
+    arguments are vectorised over? What does `rnorm(10, mean = 10:1)` do?
+
+
+We can get a quick overview of how these functions work by looking at the ?dnorm documentation:
+
+
+```r
+#?dnorm
+```
+
+
+```r
+dnorm(x, mean = 0, sd = 1, log = FALSE)
+pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+rnorm(n, mean = 0, sd = 1)
+```
+
+These functions are vectorised over their numeric arguments, which includes the first argument (`x`, `q`, `p`, `n`) as well as `mean` and `sd`.
+
+
+```r
+rnorm(10, mean = 10:1)
+```
+
+```
+##  [1] 9.7051485 7.0770737 7.6305242 6.3614066 6.0612548 3.6634676 4.0035939
+##  [8] 3.9131567 0.7167128 0.9509481
+```
+
+For instance, rnorm(10, mean = 10:1) generates ten random numbers from normal distributions with varying means, starting from 10 and decreasing by 1 for each distribution.
+
+2.  Compare the speed of `apply(x, 1, sum)` with `rowSums(x)` for varying sizes
+    of `x`.
+    
+> The performance difference is negligible for small matrices but becomes more significant as the matrix size increases. Note that while apply() is versatile, it lacks the performance optimization of rowSums().
+    
+
+```r
+rowsums <- bench::press(
+  p = seq(500, 5000, length.out = 10),
+  {
+    mat <- tcrossprod(rnorm(p), rnorm(p))
+    bench::mark(
+      rowSums = rowSums(mat),
+      apply = apply(mat, 1, sum)
+    )
+  }
+)
+```
+
+```
+## Running with:
+##        p
+```
+
+```
+##  1   500
+```
+
+```
+##  2  1000
+```
+
+```
+##  3  1500
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  4  2000
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  5  2500
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  6  3000
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  7  3500
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  8  4000
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+##  9  4500
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```
+## 10  5000
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+```r
+library(ggplot2)
+
+rowsums |>
+  summary() |> 
+  dplyr::mutate(Approach = as.character(expression)) |>
+  ggplot(
+    aes(p, median, color = Approach, group = Approach)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Number of Rows and Columns",
+       y = "Median (s)") +
+  theme(legend.position = "top")
+```
+
+```
+## Warning: Some expressions had a GC in every iteration; so filtering is
+## disabled.
+```
+
+![](Ch24_Improving_performance-2_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+    
+
+  
+3.  How can you use `crossprod()` to compute a weighted sum? How much faster is
+    it than the naive `sum(x * w)`?
+    
+
+You can provide the vectors to crossprod(), which internally converts them into row and column vectors, effectively performing a dot product, which represents a weighted sum.
+
+
+```r
+x <- rnorm(10)
+w <- rnorm(10)
+all.equal(sum(x * w), crossprod(x, w)[[1]])
+```
+
+```
+## [1] TRUE
+```
+
+about the same speed?
+
+
+```r
+weightedsum <- bench::press(
+  n = 1:10,
+  {
+    x <- rnorm(n * 1e6)
+    bench::mark(
+      sum = sum(x * x),
+      crossprod = crossprod(x, x)[[1]]
+    )
+  }
+)
+```
+
+```
+## Running with:
+##        n
+```
+
+```
+##  1     1
+```
+
+```
+##  2     2
+```
+
+```
+##  3     3
+```
+
+```
+##  4     4
+```
+
+```
+##  5     5
+```
+
+```
+##  6     6
+```
+
+```
+##  7     7
+```
+
+```
+##  8     8
+```
+
+```
+##  9     9
+```
+
+```
+## 10    10
+```
+
+```r
+weightedsum |>
+  summary() |>
+  dplyr::mutate(Approach = as.character(expression)) |>
+  ggplot(aes(n, median, color = Approach, group = Approach)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Vector Length (millions)",
+       y = "Median Execution Time (s)") +
+  theme(legend.position = "top")
+```
+
+![](Ch24_Improving_performance-2_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+
+## Avoiding copies {#avoid-copies}
+\index{loops!avoiding copies in}
+\indexc{paste()}
+
+A pernicious source of slow R code is growing an object with a loop. Whenever you use `c()`, `append()`, `cbind()`, `rbind()`, or `paste()` to create a bigger object, R must first allocate space for the new object and then copy the old object to its new home. If you're repeating this many times, like in a for loop, this can be quite expensive. You've entered Circle 2 of the [_R inferno_](http://www.burns-stat.com/pages/Tutor/R_inferno.pdf). 
+
+You saw one example of this type of problem in Section \@ref(memory-profiling), so here I'll show a slightly more complex example of the same basic issue. We first generate some random strings, and then combine them either iteratively with a loop using `collapse()`, or in a single pass using `paste()`. Note that the performance of `collapse()` gets relatively worse as the number of strings grows: combining 100 strings takes almost 30 times longer than combining 10 strings.
+
+
+```r
+random_string <- function() {
+  paste(sample(letters, 50, replace = TRUE), collapse = "")
+}
+strings10 <- replicate(10, random_string())
+strings100 <- replicate(100, random_string())
+
+collapse <- function(xs) {
+  out <- ""
+  for (x in xs) {
+    out <- paste0(out, x)
+  }
+  out
+}
+
+bench::mark(
+  loop10  = collapse(strings10),
+  loop100 = collapse(strings100),
+  vec10   = paste(strings10, collapse = ""),
+  vec100  = paste(strings100, collapse = ""),
+  check = FALSE
+)[c("expression", "min", "median", "itr/sec", "n_gc")]
+```
+
+```
+## # A tibble: 4 × 4
+##   expression      min   median `itr/sec`
+##   <bch:expr> <bch:tm> <bch:tm>     <dbl>
+## 1 loop10       23.6µs   26.6µs    29929.
+## 2 loop100     619.4µs  657.7µs     1273.
+## 3 vec10         4.2µs    4.8µs   165559.
+## 4 vec100       25.3µs   26.9µs    32430.
+```
+
+Modifying an object in a loop, e.g., `x[i] <- y`, can also create a copy, depending on the class of `x`. Section \@ref(single-binding) discusses this issue in more depth and gives you some tools to determine when you're making copies.
+
+## Case study: t-test {#t-test}
+
+The following case study shows how to make t-tests faster using some of the techniques described above. It's based on an example in [_Computing thousands of test statistics simultaneously in R_](http://stat-computing.org/newsletter/issues/scgn-18-1.pdf) by Holger Schwender and Tina Müller. I thoroughly recommend reading the paper in full to see the same idea applied to other tests.
+
+Imagine we have run 1000 experiments (rows), each of which collects data on 50 individuals (columns). The first 25 individuals in each experiment are assigned to group 1 and the rest to group 2. We'll first generate some random data to represent this problem:
+
+
+```r
+m <- 1000
+n <- 50
+X <- matrix(rnorm(m * n, mean = 10, sd = 3), nrow = m)
+grp <- rep(1:2, each = n / 2)
+```
+
+For data in this form, there are two ways to use `t.test()`. We can either use the formula interface or provide two vectors, one for each group. Timing reveals that the formula interface is considerably slower.
+
+
+```r
+system.time(
+  for (i in 1:m) {
+    t.test(X[i, ] ~ grp)$statistic
+  }
+)
+```
+
+```
+##    user  system elapsed 
+##    0.28    0.00    0.52
+```
+
+```r
+system.time(
+  for (i in 1:m) {
+    t.test(X[i, grp == 1], X[i, grp == 2])$statistic
+  }
+)
+```
+
+```
+##    user  system elapsed 
+##    0.08    0.00    0.19
+```
+
+Of course, a for loop computes, but doesn't save the values. We can `map_dbl()` (Section \@ref(map-atomic)) to do that. This adds a little overhead:
+
+
+```r
+compT <- function(i){
+  t.test(X[i, grp == 1], X[i, grp == 2])$statistic
+}
+system.time(t1 <- purrr::map_dbl(1:m, compT))
+```
+
+```
+##    user  system elapsed 
+##    0.06    0.00    0.17
+```
+
+How can we make this faster? First, we could try doing less work. If you look at the source code of `stats:::t.test.default()`, you'll see that it does a lot more than just compute the t-statistic. It also computes the p-value and formats the output for printing. We can try to make our code faster by stripping out those pieces.
+
+
+```r
+my_t <- function(x, grp) {
+  t_stat <- function(x) {
+    m <- mean(x)
+    n <- length(x)
+    var <- sum((x - m) ^ 2) / (n - 1)
+
+    list(m = m, n = n, var = var)
+  }
+
+  g1 <- t_stat(x[grp == 1])
+  g2 <- t_stat(x[grp == 2])
+
+  se_total <- sqrt(g1$var / g1$n + g2$var / g2$n)
+  (g1$m - g2$m) / se_total
+}
+
+system.time(t2 <- purrr::map_dbl(1:m, ~ my_t(X[.,], grp)))
+```
+
+```
+##    user  system elapsed 
+##    0.01    0.00    0.04
+```
+
+```r
+stopifnot(all.equal(t1, t2))
+```
+
+This gives us about a six-fold speed improvement.
+
+Now that we have a fairly simple function, we can make it faster still by vectorising it. Instead of looping over the array outside the function, we will modify `t_stat()` to work with a matrix of values. Thus, `mean()` becomes `rowMeans()`, `length()` becomes `ncol()`, and `sum()` becomes `rowSums()`. The rest of the code stays the same.
+
+
+```r
+rowtstat <- function(X, grp){
+  t_stat <- function(X) {
+    m <- rowMeans(X)
+    n <- ncol(X)
+    var <- rowSums((X - m) ^ 2) / (n - 1)
+
+    list(m = m, n = n, var = var)
+  }
+
+  g1 <- t_stat(X[, grp == 1])
+  g2 <- t_stat(X[, grp == 2])
+
+  se_total <- sqrt(g1$var / g1$n + g2$var / g2$n)
+  (g1$m - g2$m) / se_total
+}
+system.time(t3 <- rowtstat(X, grp))
+```
+
+```
+##    user  system elapsed 
+##    0.02    0.00    0.02
+```
+
+```r
+stopifnot(all.equal(t1, t3))
+```
+
+That's much faster! It's at least 40 times faster than our previous effort, and around 1000 times faster than where we started.
+
+<!-- These timing comparisons are not reflected in the code. In the pdf copy this last function takes 0.011 s while the original version takes 0.191 s (about 17 times slower). Maybe there was improvement in the base version of t.test? -->
+
+## Other techniques {#more-techniques}
+
+Being able to write fast R code is part of being a good R programmer. Beyond the specific hints in this chapter, if you want to write fast R code, you'll need to improve your general programming skills. Some ways to do this are to:
+
+* [Read R blogs](http://www.r-bloggers.com/) to see what performance
+  problems other people have struggled with, and how they have made their
+  code faster.
+
+* Read other R programming books, like _The Art of R Programming_ 
+  [@art-r-prog] or Patrick Burns'
+  [_R Inferno_](http://www.burns-stat.com/documents/books/the-r-inferno/) to
+  learn about common traps.
+
+* Take an algorithms and data structure course to learn some
+  well known ways of tackling certain classes of problems. I have heard
+  good things about Princeton's
+  [Algorithms course](https://www.coursera.org/course/algs4partI) offered on
+  Coursera.
+  
+* Learn how to parallelise your code. Two places to start are
+  _Parallel R_ [@parallel-r] and _Parallel Computing for Data Science_
+  [@parcomp-ds].
+
+* Read general books about optimisation like _Mature optimisation_ [@mature-opt]
+  or the _Pragmatic Programmer_ [@pragprog].
+  
+You can also reach out to the community for help. StackOverflow can be a useful resource. You'll need to put some effort into creating an easily digestible example that also captures the salient features of your problem. If your example is too complex, few people will have the time and motivation to attempt a solution. If it's too simple, you'll get answers that solve the toy problem but not the real problem. If you also try to answer questions on StackOverflow, you'll quickly get a feel for what makes a good question.  
