@@ -439,6 +439,16 @@ Description
 
 The default values for plotting a factor x are the integers 1:length(levels(x)). These functions provide a way of specifying alternate plotting locations for the levels.
 
+give you the first true in the function
+
+```{r}
+f <- function(x) x>5
+x = 1:10
+x
+Position(f,x)
+Find(f,x)
+```
+
 
 > f5: `pmin()`
 
