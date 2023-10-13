@@ -381,27 +381,38 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 double meanC(NumericVector x, bool na_rm = false) {
+  // Get the number of elements in the input NumericVector 'x'
   int n = x.size();
+  // Initialize a variable to accumulate the sum of non-missing values
   double sum = 0.0;
+  // Initialize a variable to count the number of non-missing values
   int count = 0;
 
+  // Iterate over the elements of 'x'
   for (int i = 0; i < n; ++i) {
+    // Check if the current element of 'x' is an NA value
     if (NumericVector::is_na(x[i])) {
+      // If 'na_rm' is FALSE and an NA value is encountered, return NA_REAL
       if (!na_rm) {
-        return NA_REAL;
+        return NA_REAL; // Mean cannot be computed when NAs are not removed
       }
     } else {
+      // If the current element is not an NA, add it to the sum
       sum += x[i];
+      // Increment the count of non-missing values
       count++;
     }
   }
 
+  // If there were no non-missing values in the input, return NA
   if (count == 0) {
-    return NA_REAL;
+    return NA_REAL; // Mean cannot be computed when there are no non-missing values
   }
 
+  // Calculate and return the mean by dividing the sum by the count
   return sum / count;
 }
+
 
 ```
 
@@ -429,28 +440,40 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 double varC(NumericVector x, bool na_rm = false) {
+  // Get the number of elements in the input NumericVector 'x'
   int n = x.size();
+  // Initialize a variable to store the mean of non-missing values
   double mean = 0.0;
+  // Initialize a variable to accumulate the sum of squared differences from the mean
   double sum_squared_diff = 0.0;
+  // Initialize a variable to count the number of non-missing values
   int count = 0;
 
+  // Iterate over the elements of 'x'
   for (int i = 0; i < n; ++i) {
+    // Check if the current element of 'x' is an NA value
     if (NumericVector::is_na(x[i])) {
+      // If 'na_rm' is FALSE and an NA value is encountered, return NA_REAL
       if (!na_rm) {
-        return NA_REAL;
+        return NA_REAL; // Variance cannot be computed when NAs are not removed
       }
     } else {
+      // If the current element is not an NA, add it to the mean
       mean += x[i];
+      // Increment the count of non-missing values
       count++;
     }
   }
 
+  // If there were no non-missing values in the input, return NA
   if (count == 0) {
-    return NA_REAL;
+    return NA_REAL; // Variance cannot be computed when there are no non-missing values
   }
 
+  // Calculate the mean of non-missing values
   mean /= count;
 
+  // Iterate over the elements of 'x' again to compute the sum of squared differences
   for (int i = 0; i < n; ++i) {
     if (!NumericVector::is_na(x[i])) {
       double diff = x[i] - mean;
@@ -458,8 +481,10 @@ double varC(NumericVector x, bool na_rm = false) {
     }
   }
 
+  // Calculate and return the variance, dividing the sum of squared differences by (count - 1)
   return sum_squared_diff / (count - 1);
 }
+
 
 ```
 
