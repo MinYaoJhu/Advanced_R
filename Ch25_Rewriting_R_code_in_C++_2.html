@@ -590,6 +590,9 @@ contains any missing values. Some good functions to practice with are
 <code>min()</code>, <code>max()</code>, <code>range()</code>,
 <code>mean()</code>, and <code>var()</code>.</li>
 </ol>
+<blockquote>
+<p>min</p>
+</blockquote>
 <pre class="cpp"><code>#include &lt;Rcpp.h&gt;
 using namespace Rcpp;
 
@@ -639,6 +642,207 @@ print(result1)</code></pre>
 <pre><code>## [1] 1</code></pre>
 <pre class="r"><code>print(result3)</code></pre>
 <pre><code>## [1] Inf</code></pre>
+<blockquote>
+<p>max</p>
+</blockquote>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// Define a function maxC that calculates the maximum value in a NumericVector
+// while considering missing values based on the &#39;na_rm&#39; argument.
+// If &#39;na_rm&#39; is TRUE, it treats NAs as missing values and returns -Inf if all values are NA.
+// If &#39;na_rm&#39; is FALSE, it returns NA if there is any NA in the input vector.
+
+// [[Rcpp::export]]
+NumericVector maxC(NumericVector x, bool na_rm = false) {
+  int n = x.size();
+  NumericVector out = NumericVector::create(-R_PosInf);
+
+  if (na_rm) {
+    // If &#39;na_rm&#39; is TRUE, ignore NAs and find the maximum value.
+    for (int i = 0; i &lt; n; ++i) {
+      if (x[i] == NA_REAL) {
+        continue; // Ignore NA values
+      }
+      if (x[i] &gt; out[0]) {
+        out[0] = x[i]; // Update maximum if a larger value is found
+      }
+    }
+  } else {
+    // If &#39;na_rm&#39; is FALSE, return NA if there is any NA in the input.
+    for (int i = 0; i &lt; n; ++i) {
+      if (NumericVector::is_na(x[i])) {
+        out[0] = NA_REAL; // Set the result to NA and exit if any NA is encountered
+        return out;
+      }
+      if (x[i] &gt; out[0]) {
+        out[0] = x[i]; // Update maximum if a larger value is found
+      }
+    }
+  }
+
+  return out; // Return the maximum value, which can be either a number or NA
+}
+</code></pre>
+<pre class="r"><code>result1 &lt;- maxC(c(3, 1, 2, 4, NA))
+result2 &lt;- maxC(c(3, 1, 2, 4, NA), na_rm = TRUE)
+result3 &lt;- maxC(c(NA, NA, NA), na_rm = TRUE)
+
+print(result1)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>print(result2)</code></pre>
+<pre><code>## [1] 4</code></pre>
+<pre class="r"><code>print(result3)</code></pre>
+<pre><code>## [1] -Inf</code></pre>
+<blockquote>
+<p>range</p>
+</blockquote>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// Define a function rangeC that calculates the range of a NumericVector
+// while considering missing values based on the &#39;na_rm&#39; argument.
+// If &#39;na_rm&#39; is TRUE, it treats NAs as missing values and returns a range
+// excluding missing values.
+// If &#39;na_rm&#39; is FALSE, it returns a range including NAs if they are present.
+
+// [[Rcpp::export]]
+NumericVector rangeC(NumericVector x, bool na_rm = false) {
+  int n = x.size();
+  double min_val = R_PosInf;
+  double max_val = -R_PosInf;
+
+  for (int i = 0; i &lt; n; ++i) {
+    if (NumericVector::is_na(x[i])) {
+      if (!na_rm) {
+        min_val = NA_REAL;
+        max_val = NA_REAL;
+        break;
+      }
+    } else {
+      if (x[i] &lt; min_val) min_val = x[i];
+      if (x[i] &gt; max_val) max_val = x[i];
+    }
+  }
+
+  return NumericVector::create(min_val, max_val);
+}
+</code></pre>
+<pre class="r"><code>result1 &lt;- rangeC(c(3, 1, 2, 4, NA))
+result2 &lt;- rangeC(c(3, 1, 2, 4, NA), na_rm = TRUE)
+result3 &lt;- rangeC(c(NA, NA, NA), na_rm = TRUE)
+
+print(result1)</code></pre>
+<pre><code>## [1] NA NA</code></pre>
+<pre class="r"><code>print(result2)</code></pre>
+<pre><code>## [1] 1 4</code></pre>
+<pre class="r"><code>print(result3)</code></pre>
+<pre><code>## [1]  Inf -Inf</code></pre>
+<blockquote>
+<p>mean</p>
+</blockquote>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// Define a function meanC that calculates the mean of a NumericVector
+// while considering missing values based on the &#39;na_rm&#39; argument.
+// If &#39;na_rm&#39; is TRUE, it treats NAs as missing values and calculates the mean
+// excluding missing values.
+// If &#39;na_rm&#39; is FALSE, it returns NA if there is any NA in the input vector.
+
+// [[Rcpp::export]]
+double meanC(NumericVector x, bool na_rm = false) {
+  int n = x.size();
+  double sum = 0.0;
+  int count = 0;
+
+  for (int i = 0; i &lt; n; ++i) {
+    if (NumericVector::is_na(x[i])) {
+      if (!na_rm) {
+        return NA_REAL;
+      }
+    } else {
+      sum += x[i];
+      count++;
+    }
+  }
+
+  if (count == 0) {
+    return NA_REAL;
+  }
+
+  return sum / count;
+}
+</code></pre>
+<pre class="r"><code>result1 &lt;- meanC(c(3, 1, 2, 4, NA))
+result2 &lt;- meanC(c(3, 1, 2, 4, NA), na_rm = TRUE)
+result3 &lt;- meanC(c(NA, NA, NA), na_rm = TRUE)
+
+print(result1)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>print(result2)</code></pre>
+<pre><code>## [1] 2.5</code></pre>
+<pre class="r"><code>print(result3)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<blockquote>
+<p>var</p>
+</blockquote>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// Define a function varC that calculates the variance of a NumericVector
+// while considering missing values based on the &#39;na_rm&#39; argument.
+// If &#39;na_rm&#39; is TRUE, it treats NAs as missing values and calculates the variance
+// excluding missing values.
+// If &#39;na_rm&#39; is FALSE, it returns NA if there is any NA in the input vector.
+
+// [[Rcpp::export]]
+double varC(NumericVector x, bool na_rm = false) {
+  int n = x.size();
+  double mean = 0.0;
+  double sum_squared_diff = 0.0;
+  int count = 0;
+
+  for (int i = 0; i &lt; n; ++i) {
+    if (NumericVector::is_na(x[i])) {
+      if (!na_rm) {
+        return NA_REAL;
+      }
+    } else {
+      mean += x[i];
+      count++;
+    }
+  }
+
+  if (count == 0) {
+    return NA_REAL;
+  }
+
+  mean /= count;
+
+  for (int i = 0; i &lt; n; ++i) {
+    if (!NumericVector::is_na(x[i])) {
+      double diff = x[i] - mean;
+      sum_squared_diff += diff * diff;
+    }
+  }
+
+  return sum_squared_diff / (count - 1);
+}
+</code></pre>
+<pre class="r"><code>result1 &lt;- varC(c(3, 1, 2, 4, NA))
+result2 &lt;- varC(c(3, 1, 2, 4, NA), na_rm = TRUE)
+result3 &lt;- varC(c(NA, NA, NA), na_rm = TRUE)
+
+print(result1)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>print(result2)</code></pre>
+<pre><code>## [1] 1.666667</code></pre>
+<pre class="r"><code>print(result3)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<blockquote>
+<p>any</p>
+</blockquote>
 <pre class="cpp"><code>#include &lt;Rcpp.h&gt;
 using namespace Rcpp;
 
@@ -691,6 +895,9 @@ print(result1)</code></pre>
 handle missing values. Note that these functions have slightly more
 complicated behaviour.</li>
 </ol>
+<blockquote>
+<p>cumsum</p>
+</blockquote>
 <pre class="cpp"><code>#include &lt;Rcpp.h&gt;
 using namespace Rcpp;
 
@@ -733,6 +940,9 @@ print(result1)</code></pre>
 <pre><code>## [1]  1  3 NA NA NA NA</code></pre>
 <pre class="r"><code>print(result2)</code></pre>
 <pre><code>## [1]  1  3  3  7  7 10</code></pre>
+<blockquote>
+<p>diff</p>
+</blockquote>
 <pre class="cpp"><code>#include &lt;Rcpp.h&gt;
 using namespace Rcpp;
 
