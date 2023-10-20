@@ -359,7 +359,7 @@ display: none;
 
 <pre class="r"><code>library(Rcpp)</code></pre>
 <div id="stl" class="section level2">
-<h2>Standard Template Library</h2>
+<h2>25.5 Standard Template Library</h2>
 <p>The real strength of C++ is revealed when you need to implement more
 complex algorithms. The standard template library (STL) provides a set
 of extremely useful data structures and algorithms. This section will
@@ -375,7 +375,7 @@ installed, you can use boost data structures and algorithms by including
 the appropriate header file with (e.g.)
 <code>#include &lt;boost/array.hpp&gt;</code>.</p>
 <div id="using-iterators" class="section level3">
-<h3>Using iterators</h3>
+<h3>25.5.1 Using iterators</h3>
 <p>Iterators are used extensively in the STL: many functions either
 accept or return iterators. They are the next step up from basic loops,
 abstracting away the details of the underlying data structure. Iterators
@@ -452,7 +452,7 @@ double sum5(NumericVector x) {
 }</code></pre>
 </div>
 <div id="algorithms" class="section level3">
-<h3>Algorithms</h3>
+<h3>25.5.2 Algorithms</h3>
 <p>The <code>&lt;algorithm&gt;</code> header provides a large number of
 algorithms that work with iterators. A good reference is available at <a href="https://en.cppreference.com/w/cpp/algorithm" class="uri">https://en.cppreference.com/w/cpp/algorithm</a>. For
 example, we could write a basic Rcpp version of
@@ -507,7 +507,7 @@ algorithms also makes the intent of your code more clear, helping to
 make it more readable and more maintainable.</p>
 </div>
 <div id="data-structures-rcpp" class="section level3">
-<h3>Data structures</h3>
+<h3>25.5.3 Data structures</h3>
 <p>The STL provides a large set of data structures: <code>array</code>,
 <code>bitset</code>, <code>list</code>, <code>forward_list</code>,
 <code>map</code>, <code>multimap</code>, <code>multiset</code>,
@@ -529,7 +529,7 @@ equivalents, so you can return them from your functions without
 explicitly converting to R data structures.</p>
 </div>
 <div id="vectors-stl" class="section level3">
-<h3>Vectors</h3>
+<h3>25.5.4 Vectors</h3>
 <p>An STL vector is very similar to an R vector, except that it grows
 efficiently. This makes vectors appropriate to use when you don’t know
 in advance how big the output will be. Vectors are templated, which
@@ -588,7 +588,7 @@ that.)</p>
 <p>Other methods of a vector are described at <a href="https://en.cppreference.com/w/cpp/container/vector" class="uri">https://en.cppreference.com/w/cpp/container/vector</a>.</p>
 </div>
 <div id="sets" class="section level3">
-<h3>Sets</h3>
+<h3>25.5.5 Sets</h3>
 <p>Sets maintain a unique set of values, and can efficiently tell if
 you’ve seen a value before. They are useful for problems that involve
 duplicates or unique values (like <code>unique</code>,
@@ -629,7 +629,7 @@ LogicalVector duplicatedC(IntegerVector x) {
 }</code></pre>
 </div>
 <div id="map" class="section level3">
-<h3>Map</h3>
+<h3>25.5.6 Map</h3>
 <p></p>
 <p>A map is similar to a set, but instead of storing presence or
 absence, it can store additional data. It’s useful for functions like
@@ -657,25 +657,422 @@ std::map&lt;double, int&gt; tableC(NumericVector x) {
 }</code></pre>
 </div>
 <div id="exercises" class="section level3">
-<h3>Exercises</h3>
+<h3>25.5.7 Exercises</h3>
 <p>To practice using the STL algorithms and data structures, implement
 the following using R functions in C++, using the hints provided:</p>
 <ol style="list-style-type: decimal">
-<li><p><code>median.default()</code> using
-<code>partial_sort</code>.</p></li>
-<li><p><code>%in%</code> using <code>unordered_set</code> and the
-<code>find()</code> or <code>count()</code> methods.</p></li>
-<li><p><code>unique()</code> using an <code>unordered_set</code>
-(challenge: do it in one line!).</p></li>
-<li><p><code>min()</code> using <code>std::min()</code>, or
-<code>max()</code> using <code>std::max()</code>.</p></li>
-<li><p><code>which.min()</code> using <code>min_element</code>, or
-<code>which.max()</code> using <code>max_element</code>.</p></li>
-<li><p><code>setdiff()</code>, <code>union()</code>, and
+<li><code>median.default()</code> using <code>partial_sort</code>.</li>
+</ol>
+<pre class="cpp"><code>#include &lt;algorithm&gt;  // Include the C++ standard algorithms library
+#include &lt;Rcpp.h&gt;     // Include Rcpp, a package for interfacing R and C++
+using namespace Rcpp;  // Import the Rcpp namespace for convenience
+
+// Declare a function named &#39;medianC&#39; with the attribute [[Rcpp::export]]
+// This allows the function to be called from R.
+// The function takes a NumericVector &#39;x&#39; as its argument.
+// NumericVector is a vector type used in Rcpp for numerical data.
+// The function returns a double, which is the median of the input vector.
+
+// [[Rcpp::export]]
+double medianC(NumericVector x) {
+  int n = x.size();  // Get the size (number of elements) of the input vector &#39;x&#39;
+
+  if (n % 2 == 0) {
+    // If the vector has an even number of elements:
+    // Sort the first half of the vector in ascending order.
+    std::partial_sort(x.begin(), x.begin() + n / 2 + 1, x.end());
+    
+    // Return the median, which is the average of the middle two elements.
+    return (x[n / 2 - 1] + x[n / 2]) / 2;
+  } else {
+    // If the vector has an odd number of elements:
+    // Sort the first (n + 1) / 2 elements in ascending order.
+    std::partial_sort(x.begin(), x.begin() + (n + 1) / 2, x.end());
+    
+    // Return the middle element as the median.
+    return x[(n + 1) / 2 - 1];
+  }
+}
+</code></pre>
+<pre class="r"><code># Define new test vectors
+test_vector1 &lt;- c(2, 4, 6, 8, 10)     # Even-sized vector
+test_vector2 &lt;- c(3, 1, 4, 1, 5, 9)  # Odd-sized vector
+
+# Test the medianC function with the new vectors
+medianC_result1 &lt;- medianC(test_vector1)
+medianC_result2 &lt;- medianC(test_vector2)
+
+# Print the results
+cat(&quot;Using medianC function:\n&quot;)</code></pre>
+<pre><code>## Using medianC function:</code></pre>
+<pre class="r"><code>cat(&quot;Median of test_vector1:&quot;, medianC_result1, &quot;\n&quot;)</code></pre>
+<pre><code>## Median of test_vector1: 6</code></pre>
+<pre class="r"><code>cat(&quot;Median of test_vector2:&quot;, medianC_result2, &quot;\n&quot;)</code></pre>
+<pre><code>## Median of test_vector2: 3.5</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li><code>%in%</code> using <code>unordered_set</code> and the
+<code>find()</code> or <code>count()</code> methods.</li>
+</ol>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;     // Include Rcpp, a package for interfacing R and C++
+#include &lt;unordered_set&gt; // Include the C++ standard unordered_set container
+using namespace Rcpp;  // Import the Rcpp namespace for convenience
+
+// Declare a function named &#39;inC&#39; with the attribute [[Rcpp::export]]
+// This allows the function to be called from R.
+// The function takes two CharacterVector arguments, &#39;x&#39; and &#39;table&#39;.
+// CharacterVector is a data type used in Rcpp for character vectors.
+// The function returns a LogicalVector, indicating element presence in &#39;table&#39;.
+// [[Rcpp::export]]
+LogicalVector inC(CharacterVector x, CharacterVector table) {
+  std::unordered_set&lt;String&gt; seen;
+  seen.insert(table.begin(), table.end());  // Create an unordered_set from &#39;table&#39;
+  
+  int n = x.size();  // Get the size (number of elements) of the &#39;x&#39; vector
+  LogicalVector out(n);  // Create a LogicalVector &#39;out&#39; to store the results
+
+  // Loop through the elements in &#39;x&#39; and check for membership in &#39;table&#39;
+  for (int i = 0; i &lt; n; ++i) {
+    out[i] = seen.find(x[i]) != seen.end(); // Set &#39;out[i]&#39; to true if &#39;x[i]&#39; is found in &#39;table&#39;
+  }
+
+  return out;  // Return the LogicalVector containing the membership results
+}
+</code></pre>
+<pre class="r"><code># Define vectors for testing
+x &lt;- c(&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;)
+query_vector &lt;- c(&quot;banana&quot;, &quot;date&quot;)
+
+# Test the inC function with different vectors
+result1 &lt;- query_vector %in% x
+result2 &lt;- inC(query_vector, x)
+
+# Print the results
+cat(&quot;Using %in% operator in R:\n&quot;)</code></pre>
+<pre><code>## Using %in% operator in R:</code></pre>
+<pre class="r"><code>cat(&quot;Membership check:&quot;, result1, &quot;\n\n&quot;)</code></pre>
+<pre><code>## Membership check: TRUE FALSE</code></pre>
+<pre class="r"><code>cat(&quot;Using inC function (C++):\n&quot;)</code></pre>
+<pre><code>## Using inC function (C++):</code></pre>
+<pre class="r"><code>cat(&quot;Membership check:&quot;, result2, &quot;\n&quot;)</code></pre>
+<pre><code>## Membership check: TRUE FALSE</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li><code>unique()</code> using an <code>unordered_set</code>
+(challenge: do it in one line!).</li>
+</ol>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+#include &lt;unordered_set&gt;
+using namespace Rcpp;
+
+
+// Declare a function named &#39;uniqueCC&#39; with the attribute [[Rcpp::export]]
+// This function is a one-liner that directly returns an unordered_set.
+// [[Rcpp::export]]
+std::unordered_set&lt;double&gt; uniqueCC(NumericVector x) {
+  // Create and return an unordered_set directly from the input vector &#39;x&#39;.
+  return std::unordered_set&lt;double&gt;(x.begin(), x.end());
+}
+</code></pre>
+<pre class="r"><code># Define the test vector
+x &lt;- c(5, 5, 3, 1, 3, 8, 2, 8)
+
+# Find unique elements using R&#39;s built-in &#39;unique&#39; function
+result1 &lt;- unique(x)
+
+# Find unique elements using the &#39;uniqueC&#39; function (C++)
+result2 &lt;- uniqueCC(x)
+
+# Print the results
+cat(&quot;Using R&#39;s built-in &#39;unique&#39; function:\n&quot;)</code></pre>
+<pre><code>## Using R&#39;s built-in &#39;unique&#39; function:</code></pre>
+<pre class="r"><code>cat(&quot;Unique elements:&quot;, result1, &quot;\n\n&quot;)</code></pre>
+<pre><code>## Unique elements: 5 3 1 8 2</code></pre>
+<pre class="r"><code>cat(&quot;Using &#39;uniqueC&#39; function (C++):\n&quot;)</code></pre>
+<pre><code>## Using &#39;uniqueC&#39; function (C++):</code></pre>
+<pre class="r"><code>cat(&quot;Unique elements:&quot;, result2, &quot;\n&quot;)</code></pre>
+<pre><code>## Unique elements: 8 1 3 2 5</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li><code>min()</code> using <code>std::min()</code>, or
+<code>max()</code> using <code>std::max()</code>.</li>
+</ol>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+double minC(NumericVector x) {
+  // Calculate the size (number of elements) of the input vector &#39;x&#39;
+  int n = x.size();
+  
+  // Initialize &#39;out&#39; to the first element of the vector &#39;x&#39;
+  double out = x[0];
+  
+  // Iterate through the elements of the vector to find the minimum value
+  for (int i = 0; i &lt; n; i++) {
+    // Compare the current value of &#39;out&#39; (the minimum value found so far)
+    // with the current element &#39;x[i]&#39; using the std::min function.
+    // Update &#39;out&#39; to the smaller of the two values.
+    out = std::min(out, x[i]);
+  }
+  
+  // Return the minimum value found in the vector &#39;x&#39;
+  return out;
+}
+</code></pre>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+double maxC(NumericVector x) {
+  int n = x.size();
+  double out = x[0];
+  
+  for (int i = 0; i &lt; n; i++) {
+    out = std::max(out, x[i]);
+  }
+  
+  return out;
+}
+</code></pre>
+<pre class="r"><code># Define a test vector
+x &lt;- c(5, 12, 7, 1, 9, 15, 2, 8)
+
+# Find the minimum and maximum values using R&#39;s built-in functions
+min_result_r &lt;- min(x)
+max_result_r &lt;- max(x)
+
+# Find the minimum and maximum values using the &#39;minC&#39; and &#39;maxC&#39; functions (C++)
+min_result_c &lt;- minC(x)
+max_result_c &lt;- maxC(x)
+
+# Print and compare the results
+cat(&quot;Using R&#39;s built-in &#39;min&#39; function:\n&quot;)</code></pre>
+<pre><code>## Using R&#39;s built-in &#39;min&#39; function:</code></pre>
+<pre class="r"><code>cat(&quot;Minimum value:&quot;, min_result_r, &quot;\n&quot;)</code></pre>
+<pre><code>## Minimum value: 1</code></pre>
+<pre class="r"><code>cat(&quot;Maximum value:&quot;, max_result_r, &quot;\n\n&quot;)</code></pre>
+<pre><code>## Maximum value: 15</code></pre>
+<pre class="r"><code>cat(&quot;Using &#39;minC&#39; and &#39;maxC&#39; functions (C++):\n&quot;)</code></pre>
+<pre><code>## Using &#39;minC&#39; and &#39;maxC&#39; functions (C++):</code></pre>
+<pre class="r"><code>cat(&quot;Minimum value:&quot;, min_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## Minimum value: 1</code></pre>
+<pre class="r"><code>cat(&quot;Maximum value:&quot;, max_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## Maximum value: 15</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li><code>which.min()</code> using <code>min_element</code>, or
+<code>which.max()</code> using <code>max_element</code>.</li>
+</ol>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+#include &lt;algorithm&gt;
+#include &lt;iterator&gt;
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+double which_minC(NumericVector x) {
+  // Use the std::min_element function to find the iterator pointing to the minimum element in the range defined by x.begin() and x.end().
+  // This iterator represents the minimum element in the NumericVector.
+  NumericVector::iterator min_element_iterator = std::min_element(x.begin(), x.end());
+
+  // Calculate the index of the minimum element by calculating the distance between the beginning of the vector (x.begin())
+  // and the iterator pointing to the minimum element.
+  // The result is stored in the &#39;out&#39; variable.
+  int out = std::distance(x.begin(), min_element_iterator);
+
+  // Return the 1-based index of the minimum element.
+  // In R, indexing is 1-based, so we add 1 to the result to make it consistent with R&#39;s indexing.
+  return out + 1;
+}
+</code></pre>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+#include &lt;algorithm&gt;
+#include &lt;iterator&gt;
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+double which_maxC(NumericVector x) {
+  // Use the std::max_element function to find the iterator pointing to the maximum element in the range defined by x.begin() and x.end().
+  // This iterator represents the maximum element in the NumericVector.
+  NumericVector::iterator max_element_iterator = std::max_element(x.begin(), x.end());
+
+  // Calculate the index of the maximum element by calculating the distance between the beginning of the vector (x.begin())
+  // and the iterator pointing to the maximum element.
+  // The result is stored in the &#39;out&#39; variable.
+  int out = std::distance(x.begin(), max_element_iterator);
+
+  // Return the 1-based index of the maximum element.
+  // In R, indexing is 1-based, so we add 1 to the result to make it consistent with R&#39;s indexing.
+  return out + 1;
+}
+</code></pre>
+<pre class="r"><code># Define a test vector
+x &lt;- c(5, 12, 7, 1, 9, 15, 2, 8)
+
+# Find the index of the minimum and maximum values using R&#39;s built-in functions
+which_min_result_r &lt;- which.min(x)
+which_max_result_r &lt;- which.max(x)
+
+# Find the index of the minimum and maximum values using the &#39;which_minC&#39; and &#39;which_maxC&#39; functions (C++)
+which_min_result_c &lt;- which_minC(x)
+which_max_result_c &lt;- which_maxC(x)
+
+# Print and compare the results
+cat(&quot;Using R&#39;s built-in &#39;which.min&#39; and &#39;which.max&#39; functions:\n&quot;)</code></pre>
+<pre><code>## Using R&#39;s built-in &#39;which.min&#39; and &#39;which.max&#39; functions:</code></pre>
+<pre class="r"><code>cat(&quot;Index of minimum value:&quot;, which_min_result_r, &quot;\n&quot;)</code></pre>
+<pre><code>## Index of minimum value: 4</code></pre>
+<pre class="r"><code>cat(&quot;Index of maximum value:&quot;, which_max_result_r, &quot;\n\n&quot;)</code></pre>
+<pre><code>## Index of maximum value: 6</code></pre>
+<pre class="r"><code>cat(&quot;Using &#39;which_minC&#39; and &#39;which_maxC&#39; functions (C++):\n&quot;)</code></pre>
+<pre><code>## Using &#39;which_minC&#39; and &#39;which_maxC&#39; functions (C++):</code></pre>
+<pre class="r"><code>cat(&quot;Index of minimum value:&quot;, which_min_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## Index of minimum value: 4</code></pre>
+<pre class="r"><code>cat(&quot;Index of maximum value:&quot;, which_max_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## Index of maximum value: 6</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li><code>setdiff()</code>, <code>union()</code>, and
 <code>intersect()</code> for integers using sorted ranges and
 <code>set_union</code>, <code>set_intersection</code> and
-<code>set_difference</code>.</p></li>
+<code>set_difference</code>.</li>
 </ol>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+#include &lt;unordered_set&gt;
+#include &lt;algorithm&gt;
+using namespace Rcpp;
+
+// Enable C++11 features
+// [[Rcpp::plugins(cpp11)]]
+
+// Function to find the union of two IntegerVectors without duplicates
+// [[Rcpp::export]]
+IntegerVector unionC(IntegerVector x, IntegerVector y) {
+  int nx = x.size();
+  int ny = y.size();
+  
+  // Create a temporary IntegerVector with enough space to hold all elements from both input vectors
+  IntegerVector tmp(nx + ny);
+  
+  // Sort both input vectors to prepare for set operations
+  std::sort(x.begin(), x.end()); // Sorting for uniqueness
+  std::sort(y.begin(), y.end());
+  
+  // Use std::set_union to find the union of the two sorted vectors and store it in &#39;tmp&#39;
+  IntegerVector::iterator out_end = std::set_union(
+    x.begin(), x.end(), y.begin(), y.end(), tmp.begin()
+  );
+  
+  int prev_value = 0;
+  IntegerVector out;
+  // Iterate through &#39;tmp&#39; and remove duplicate elements
+  for (IntegerVector::iterator it = tmp.begin();
+       it != out_end; ++it) {
+    if ((it != tmp.begin()) &amp;&amp; (prev_value == *it)) continue;
+    
+    out.push_back(*it);
+    
+    prev_value = *it;
+  }
+  
+  // Return the result, which is the union of &#39;x&#39; and &#39;y&#39; without duplicates
+  return out;
+}
+
+// Function to find the intersection of two IntegerVectors without duplicates
+// [[Rcpp::export]]
+IntegerVector intersectC(IntegerVector x, IntegerVector y) {
+  int nx = x.size();
+  int ny = y.size();
+  
+  // Create a temporary IntegerVector with enough space to hold the intersection
+  IntegerVector tmp(std::min(nx, ny));
+  
+  // Sort both input vectors to prepare for set operations
+  std::sort(x.begin(), x.end());
+  std::sort(y.begin(), y.end());
+  
+  // Use std::set_intersection to find the intersection of the two sorted vectors and store it in &#39;tmp&#39;
+  IntegerVector::iterator out_end = std::set_intersection(
+    x.begin(), x.end(), y.begin(), y.end(), tmp.begin()
+  );
+  
+  int prev_value = 0;  
+  IntegerVector out;
+  // Iterate through &#39;tmp&#39; and remove duplicate elements
+  for (IntegerVector::iterator it = tmp.begin();
+       it != out_end; ++it) {
+    if ((it != tmp.begin()) &amp;&amp; (prev_value == *it)) continue;
+    
+    out.push_back(*it);
+    
+    prev_value = *it;
+  }
+  
+  // Return the result, which is the intersection of &#39;x&#39; and &#39;y&#39; without duplicates
+  return out;
+}
+
+// Function to find the set difference of two IntegerVectors
+// [[Rcpp::export]]
+IntegerVector setdiffC(IntegerVector x, IntegerVector y) {
+  int nx = x.size();
+  int ny = y.size();
+  
+  // Create a temporary IntegerVector to store the result
+  IntegerVector tmp(nx);
+  
+  // Sort &#39;x&#39; to prepare for set difference
+  std::sort(x.begin(), x.end());
+  
+  int prev_value = 0;
+  IntegerVector x_dedup;
+  // Iterate through &#39;x&#39; and remove duplicate elements
+  for (IntegerVector::iterator it = x.begin();
+       it != x.end(); ++it) {
+    if ((it != x.begin()) &amp;&amp; (prev_value == *it)) continue;
+    
+    x_dedup.push_back(*it);
+    
+    prev_value = *it;
+  }
+  
+  // Sort &#39;y&#39; to prepare for set difference
+  std::sort(y.begin(), y.end());
+  
+  // Use std::set_difference to find the set difference of &#39;x_dedup&#39; and &#39;y&#39; and store it in &#39;tmp&#39;
+  IntegerVector::iterator out_end = std::set_difference(
+    x_dedup.begin(), x_dedup.end(), y.begin(), y.end(), tmp.begin()
+  );
+  
+  IntegerVector out;
+  // Iterate through &#39;tmp&#39; and store the result
+  for (IntegerVector::iterator it = tmp.begin();
+       it != out_end; ++it) {
+    out.push_back(*it);
+  }
+  
+  // Return the result, which is the set difference of &#39;x&#39; and &#39;y&#39;
+  return out;
+}
+</code></pre>
+<pre class="r"><code># Define new test vectors
+x &lt;- c(1, 2, 3, 4, 5, 6, 7)
+y &lt;- c(4, 5, 6, 7, 8, 9, 10)
+
+# Find the union, intersection, and set difference using the C++ functions
+union_result_c &lt;- unionC(x, y)
+intersect_result_c &lt;- intersectC(x, y)
+setdiff_result_c &lt;- setdiffC(x, y)
+
+# Print the results
+cat(&quot;Union (C++):\n&quot;)</code></pre>
+<pre><code>## Union (C++):</code></pre>
+<pre class="r"><code>cat(union_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## 1 2 3 4 5 6 7 8 9 10</code></pre>
+<pre class="r"><code>cat(&quot;Intersection (C++):\n&quot;)</code></pre>
+<pre><code>## Intersection (C++):</code></pre>
+<pre class="r"><code>cat(intersect_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## 4 5 6 7</code></pre>
+<pre class="r"><code>cat(&quot;Set Difference (C++):\n&quot;)</code></pre>
+<pre><code>## Set Difference (C++):</code></pre>
+<pre class="r"><code>cat(setdiff_result_c, &quot;\n&quot;)</code></pre>
+<pre><code>## 1 2 3</code></pre>
 </div>
 </div>
 <div id="rcpp-case-studies" class="section level2">
@@ -743,8 +1140,8 @@ NumericMatrix gibbs_cpp(int N, int thin) {
 <pre><code>## # A tibble: 2 × 6
 ##   expression              min   median `itr/sec` mem_alloc `gc/sec`
 ##   &lt;bch:expr&gt;         &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-## 1 gibbs_r(100, 10)     13.3ms   15.6ms      58.7    4.99MB     4.52
-## 2 gibbs_cpp(100, 10)  309.6µs  921.6µs    1052.      4.1KB     6.20</code></pre>
+## 1 gibbs_r(100, 10)     7.66ms   14.8ms      71.5    4.98MB     7.15
+## 2 gibbs_cpp(100, 10)  414.9µs    896µs    1210.      4.1KB     8.36</code></pre>
 </div>
 <div id="r-vectorisation-versus-c-vectorisation" class="section level3">
 <h3>R vectorisation versus C++ vectorisation</h3>
@@ -838,9 +1235,9 @@ Finally, we can benchmark our three approaches:</p>
 <pre><code>## # A tibble: 3 × 6
 ##   expression      min   median `itr/sec` mem_alloc `gc/sec`
 ##   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-## 1 vacc1         5.7ms   5.85ms      157.    7.86KB     9.24
-## 2 vacc2       181.4µs  287.5µs     2986.  148.85KB     4.36
-## 3 vacc3          55µs  160.2µs     5549.   14.48KB     0</code></pre>
+## 1 vacc1        1.72ms   1.82ms      492.    7.86KB    30.0 
+## 2 vacc2        74.2µs   89.9µs     9361.  148.85KB    13.2 
+## 3 vacc3        45.1µs   46.8µs    19182.   14.48KB     4.17</code></pre>
 <p>Not surprisingly, our original approach with loops is very slow.
 Vectorising in R gives a huge speedup, and we can eke out even more
 performance (about ten times) with the C++ loop. I was a little
