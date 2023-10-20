@@ -343,6 +343,26 @@ cat("Membership check:", result2, "\n")
 #include <unordered_set>
 using namespace Rcpp;
 
+// [[Rcpp::export]]
+NumericVector uniqueC(NumericVector x) {
+  std::unordered_set<int> seen;
+  int n = x.size();
+  
+  std::vector<double> out;
+  for (int i = 0; i < n; ++i) {
+    if (seen.insert(x[i]).second) out.push_back(x[i]);
+  }
+  
+  return wrap(out);
+}
+```
+
+
+```{Rcpp}
+#include <Rcpp.h>
+#include <unordered_set>
+using namespace Rcpp;
+
 
 // Declare a function named 'uniqueCC' with the attribute [[Rcpp::export]]
 // This function is a one-liner that directly returns an unordered_set.
@@ -354,6 +374,24 @@ std::unordered_set<double> uniqueCC(NumericVector x) {
 
 ```
 
+```{Rcpp}
+#include <Rcpp.h>
+#include <set>  // Use std::set instead of std::unordered_set
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+NumericVector uniqueCCC(NumericVector x) {
+  std::set<double> uniq(x.begin(), x.end());  // Use std::set
+
+  NumericVector result(uniq.size());
+  std::copy(uniq.begin(), uniq.end(), result.begin());
+
+  return result;
+}
+
+```
+
+
 ```{r}
 # Define the test vector
 x <- c(5, 5, 3, 1, 3, 8, 2, 8)
@@ -362,7 +400,11 @@ x <- c(5, 5, 3, 1, 3, 8, 2, 8)
 result1 <- unique(x)
 
 # Find unique elements using the 'uniqueC' function (C++)
-result2 <- uniqueCC(x)
+result2 <- uniqueC(x)
+
+result3 <- uniqueCC(x)
+
+result4 <- uniqueCCC(x)
 
 # Print the results
 cat("Using R's built-in 'unique' function:\n")
@@ -370,6 +412,12 @@ cat("Unique elements:", result1, "\n\n")
 
 cat("Using 'uniqueC' function (C++):\n")
 cat("Unique elements:", result2, "\n")
+
+cat("Using 'uniqueC' function (C++):\n")
+cat("Unique elements:", result3, "\n")
+
+cat("Using 'uniqueC' function (C++):\n")
+cat("Unique elements:", result4, "\n")
 ```
 
 

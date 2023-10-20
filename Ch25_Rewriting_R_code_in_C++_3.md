@@ -398,6 +398,27 @@ cat("Membership check:", result2, "\n")
 #include <unordered_set>
 using namespace Rcpp;
 
+// [[Rcpp::export]]
+NumericVector uniqueC(NumericVector x) {
+  std::unordered_set<int> seen;
+  int n = x.size();
+  
+  std::vector<double> out;
+  for (int i = 0; i < n; ++i) {
+    if (seen.insert(x[i]).second) out.push_back(x[i]);
+  }
+  
+  return wrap(out);
+}
+```
+
+
+
+```cpp
+#include <Rcpp.h>
+#include <unordered_set>
+using namespace Rcpp;
+
 
 // Declare a function named 'uniqueCC' with the attribute [[Rcpp::export]]
 // This function is a one-liner that directly returns an unordered_set.
@@ -410,6 +431,25 @@ std::unordered_set<double> uniqueCC(NumericVector x) {
 ```
 
 
+```cpp
+#include <Rcpp.h>
+#include <set>  // Use std::set instead of std::unordered_set
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+NumericVector uniqueCCC(NumericVector x) {
+  std::set<double> uniq(x.begin(), x.end());  // Use std::set
+
+  NumericVector result(uniq.size());
+  std::copy(uniq.begin(), uniq.end(), result.begin());
+
+  return result;
+}
+
+```
+
+
+
 ```r
 # Define the test vector
 x <- c(5, 5, 3, 1, 3, 8, 2, 8)
@@ -418,7 +458,11 @@ x <- c(5, 5, 3, 1, 3, 8, 2, 8)
 result1 <- unique(x)
 
 # Find unique elements using the 'uniqueC' function (C++)
-result2 <- uniqueCC(x)
+result2 <- uniqueC(x)
+
+result3 <- uniqueCC(x)
+
+result4 <- uniqueCCC(x)
 
 # Print the results
 cat("Using R's built-in 'unique' function:\n")
@@ -449,7 +493,39 @@ cat("Unique elements:", result2, "\n")
 ```
 
 ```
+## Unique elements: 5 3 1 8 2
+```
+
+```r
+cat("Using 'uniqueC' function (C++):\n")
+```
+
+```
+## Using 'uniqueC' function (C++):
+```
+
+```r
+cat("Unique elements:", result3, "\n")
+```
+
+```
 ## Unique elements: 8 1 3 2 5
+```
+
+```r
+cat("Using 'uniqueC' function (C++):\n")
+```
+
+```
+## Using 'uniqueC' function (C++):
+```
+
+```r
+cat("Unique elements:", result4, "\n")
+```
+
+```
+## Unique elements: 1 2 3 5 8
 ```
 
 
@@ -938,8 +1014,8 @@ bench::mark(
 ## # A tibble: 2 × 6
 ##   expression              min   median `itr/sec` mem_alloc `gc/sec`
 ##   <bch:expr>         <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-## 1 gibbs_r(100, 10)     7.66ms   14.8ms      71.5    4.98MB     7.15
-## 2 gibbs_cpp(100, 10)  414.9µs    896µs    1210.      4.1KB     8.36
+## 1 gibbs_r(100, 10)     8.38ms   10.5ms      95.3    4.98MB     7.15
+## 2 gibbs_cpp(100, 10)  271.8µs  621.2µs    1561.      4.1KB    10.8
 ```
 
 ### R vectorisation versus C++ vectorisation
@@ -1049,9 +1125,9 @@ bench::mark(
 ## # A tibble: 3 × 6
 ##   expression      min   median `itr/sec` mem_alloc `gc/sec`
 ##   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-## 1 vacc1        1.72ms   1.82ms      492.    7.86KB    30.0 
-## 2 vacc2        74.2µs   89.9µs     9361.  148.85KB    13.2 
-## 3 vacc3        45.1µs   46.8µs    19182.   14.48KB     4.17
+## 1 vacc1        3.83ms   3.99ms      244.    7.86KB    15.8 
+## 2 vacc2       108.3µs  191.5µs     4476.  148.84KB     6.55
+## 3 vacc3        45.4µs  104.1µs     9332.   14.48KB     2.04
 ```
 
 Not surprisingly, our original approach with loops is very slow.  Vectorising in R gives a huge speedup, and we can eke out even more performance (about ten times) with the C++ loop. I was a little surprised that the C++ was so much faster, but it is because the R version has to create 11 vectors to store intermediate results, where the C++ code only needs to create 1.
