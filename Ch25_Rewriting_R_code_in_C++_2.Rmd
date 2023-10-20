@@ -27,18 +27,31 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 double mpe(List mod) {
-  if (!mod.inherits("lm")) stop("Input must be a linear model");
+  // Check if the input 'mod' is a linear model (inherits from "lm")
+  if (!mod.inherits("lm")) {
+    stop("Input must be a linear model");
+  }
 
+  // Extract the residuals and fitted values from the linear model 'mod'
   NumericVector resid = as<NumericVector>(mod["residuals"]);
   NumericVector fitted = as<NumericVector>(mod["fitted.values"]);
 
+  // Get the number of observations (the length of the residuals vector)
   int n = resid.size();
+
+  // Initialize a variable to accumulate the mean percentage error
   double err = 0;
-  for(int i = 0; i < n; ++i) {
+
+  // Iterate over the residuals and fitted values
+  for (int i = 0; i < n; ++i) {
+    // Calculate the mean percentage error for each observation
     err += resid[i] / (fitted[i] + resid[i]);
   }
+
+  // Calculate the overall mean percentage error by dividing by the number of observations (n)
   return err / n;
 }
+
 ```
 
 ```{r}
@@ -89,14 +102,22 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 NumericVector attribs() {
+  // Create a NumericVector named 'out' with three elements: 1, 2, and 3
   NumericVector out = NumericVector::create(1, 2, 3);
 
+  // Assign names to the elements of the 'out' vector
   out.names() = CharacterVector::create("a", "b", "c");
+
+  // Set a custom attribute named 'my-attr' with the value "my-value" for the 'out' vector
   out.attr("my-attr") = "my-value";
+
+  // Set the class attribute of the 'out' vector to "my-class"
   out.attr("class") = "my-class";
 
+  // Return the 'out' vector with attributes
   return out;
 }
+
 ```
 
 For S4 objects, `.slot()` plays a similar role to `.attr()`.
@@ -119,13 +140,17 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 List scalar_missings() {
+  // Create variables for different scalar types and assign them NA values
   int int_s = NA_INTEGER;
   String chr_s = NA_STRING;
   bool lgl_s = NA_LOGICAL;
   double num_s = NA_REAL;
 
+  // Create a List object and populate it with the variables
   return List::create(int_s, chr_s, lgl_s, num_s);
 }
+
+
 ```
 
 ```{r}
@@ -645,5 +670,9 @@ result2 <- diffC(c(1, NA, 3, 5, NA, 10, 12), lag = 2, na_rm = TRUE)
 
 print(result1)
 print(result2)
+```
+
+```{r}
+diff(c(1, NA, 3, 5, NA, 10, 12), lag = 2)
 ```
 
